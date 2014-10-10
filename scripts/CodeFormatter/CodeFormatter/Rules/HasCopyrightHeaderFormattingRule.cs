@@ -28,10 +28,7 @@ namespace CodeFormatter.Rules
                 return document;
 
             if (HasCopyrightHeader(syntaxNode))
-            {
-                Console.Error.WriteLine("Not adding copyright to {0}", document.FilePath);
                 return document;
-            }
 
             var newNode = AddCopyrightHeader(syntaxNode);
             return document.WithSyntaxRoot(newNode);
