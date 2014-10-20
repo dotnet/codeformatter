@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +11,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CodeFormatter.Rules
 {
-    [Export(typeof(IFormattingRule))]
+    [ExportFormattingRule(2)]
     internal sealed class HasCopyrightHeaderFormattingRule : IFormattingRule
     {
         static readonly string[] CopyrightHeader =

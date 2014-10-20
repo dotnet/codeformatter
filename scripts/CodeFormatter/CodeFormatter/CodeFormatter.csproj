@@ -78,6 +78,8 @@
   <ItemGroup>
     <Compile Include="Engine\FormattingEngine.cs" />
     <Compile Include="Engine\IFormattingEngine.cs" />
+    <Compile Include="Engine\IOrderMetadata.cs" />
+    <Compile Include="Engine\ExportFormattingRuleAttribute.cs" />
     <Compile Include="Rules\HasCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Engine\IFormattingFilter.cs" />
     <Compile Include="Engine\IFormattingRule.cs" />

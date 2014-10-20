@@ -18,10 +18,10 @@ namespace CodeFormatter.Engine
 
         [ImportingConstructor]
         public FormattingEngine([ImportMany] IEnumerable<IFormattingFilter> filters,
-                                [ImportMany] IEnumerable<IFormattingRule> rules)
+                                [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules)
         {
             _filters = filters;
-            _rules = rules;
+            _rules = rules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToArray();
         }
 
         public async Task RunAsync(CancellationToken cancellationToken, Workspace workspace)

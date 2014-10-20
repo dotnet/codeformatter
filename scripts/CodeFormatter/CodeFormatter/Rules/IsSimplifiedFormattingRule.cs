@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,7 +9,7 @@ using Microsoft.CodeAnalysis.Simplification;
 
 namespace CodeFormatter.Rules
 {
-    [Export(typeof (IFormattingRule))]
+    [ExportFormattingRule(Int32.MaxValue / 2)]
     internal sealed class IsSimplifiedFormattingRule : IFormattingRule
     {
         public Task<Document> ProcessAsync(CancellationToken cancellationToken, Document document)
