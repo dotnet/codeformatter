@@ -85,6 +85,7 @@
     <Compile Include="Engine\IFormattingRule.cs" />
     <Compile Include="Filters\IgnoreDesignerGenereatedCodeFilter.cs" />
     <Compile Include="Rules\HasNoXmlBasedCopyrightHeaderFormattingRule.cs" />
+    <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />
     <Compile Include="Rules\IsFormattedFormattingRule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
