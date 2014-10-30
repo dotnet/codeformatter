@@ -1,15 +1,15 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under MIT. See LICENSE in the project root for license information.
 using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 
-using CodeFormatter.Engine;
-
 using Microsoft.CodeAnalysis;
 
-namespace CodeFormatter.Filters
+namespace Microsoft.DotNet.CodeFormatting.Filters
 {
     [Export(typeof(IFormattingFilter))]
-    internal sealed class IgnoreDesignerGenereatedCodeFilter : IFormattingFilter
+    internal sealed class IgnoreDesignerGeneratedCodeFilter : IFormattingFilter
     {
         public Task<bool> ShouldBeProcessedAsync(Document document)
         {

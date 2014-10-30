@@ -1,15 +1,17 @@
-﻿using System.Reflection;
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under MIT. See LICENSE in the project root for license information.
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CodeFormatter")]
+[assembly: AssemblyTitle("Microsoft.DotNet.CodeFormatting")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("CodeFormatter")]
+[assembly: AssemblyProduct("Microsoft.DotNet.CodeFormatting")]
 [assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +22,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("75aaf84b-0b7b-477b-9411-4ba5108ff500")]
+[assembly: Guid("c950a4bd-7014-4d1f-a1e0-9945016cf07f")]
 
 // Version information for an assembly consists of the following four values:
 //

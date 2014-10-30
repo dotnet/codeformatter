@@ -1,17 +1,18 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under MIT. See LICENSE in the project root for license information.
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using CodeFormatter.Engine;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace CodeFormatter.Rules
+namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [ExportFormattingRule(2)]
+    [Export(typeof(IFormattingRule))]
     internal sealed class HasCopyrightHeaderFormattingRule : IFormattingRule
     {
         static readonly string[] CopyrightHeader =
@@ -20,7 +21,7 @@ namespace CodeFormatter.Rules
             "// Licensed under MIT. See LICENSE in the project root for license information."
         };
 
-        public async Task<Document> ProcessAsync(CancellationToken cancellationToken, Document document)
+        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxNode == null)

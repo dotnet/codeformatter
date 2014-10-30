@@ -1,41 +1,40 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under MIT. See LICENSE in the project root for license information.
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using CodeFormatter.Engine;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace CodeFormatter.Rules
+namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [ExportFormattingRule(3)]
+    [Export(typeof(IFormattingRule))]
     internal sealed class HasNoXmlBasedCopyrightHeaderFormattingRule : IFormattingRule
     {
         private const string RulerMarker = "//---";
         private const string StartMarker = "// <copyright ";
         private const string EndMarker = "// </copyright>";
 
-        public async Task<Document> ProcessAsync(CancellationToken cancellationToken, Document document)
+        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxNode == null)
                 return document;
 
-            var filtereredList = GetFiltereredList(syntaxNode.GetLeadingTrivia());
-            var newSyntaxNode = syntaxNode.WithLeadingTrivia(filtereredList);
-            return document.WithSyntaxRoot(newSyntaxNode);
-        }
+            var triviaList = syntaxNode.GetLeadingTrivia();
 
-        private static IEnumerable<SyntaxTrivia> GetFiltereredList(SyntaxTriviaList triviaList)
-        {
             SyntaxTrivia start;
             SyntaxTrivia end;
-            return TryGetStartAndEndOfXmlHeader(triviaList, out start, out end)
-                    ? Filter(triviaList, start, end)
-                    : triviaList;
+            if (!TryGetStartAndEndOfXmlHeader(triviaList, out start, out end))
+                return document;
+
+            var filteredList = Filter(triviaList, start, end);
+            var newSyntaxNode = syntaxNode.WithLeadingTrivia(filteredList);
+            return document.WithSyntaxRoot(newSyntaxNode);
         }
 
         private static IEnumerable<SyntaxTrivia> Filter(SyntaxTriviaList triviaList, SyntaxTrivia start, SyntaxTrivia end)

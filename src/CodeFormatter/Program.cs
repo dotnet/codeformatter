@@ -4,9 +4,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-using CodeFormatter.Engine;
-
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.DotNet.CodeFormatting;
 
 namespace CodeFormatter
 {
@@ -44,7 +43,7 @@ namespace CodeFormatter
             var catalog = new AssemblyCatalog(typeof(Program).Assembly);
             var container = new CompositionContainer(catalog);
             var engine = container.GetExportedValue<IFormattingEngine>();
-            await engine.RunAsync(cancellationToken, workspace);
+            await engine.RunAsync(workspace, cancellationToken);
         }
     }
 }

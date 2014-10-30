@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{76E468B5-5C40-4780-8D1C-BF7446BE3C6A}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{D535641F-A2D7-481C-930D-96C02F052B95}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CodeFormatter</RootNamespace>
-    <AssemblyName>CodeFormatter</AssemblyName>
+    <RootNamespace>Microsoft.DotNet.CodeFormatting</RootNamespace>
+    <AssemblyName>Microsoft.DotNet.CodeFormatting</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,16 +31,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp.Desktop">
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.CSharp.Desktop.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.Features.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.Workspaces.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
@@ -50,17 +47,12 @@
     <Reference Include="Microsoft.CodeAnalysis.Desktop">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.Desktop.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.Features">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.CodeActions.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.Features.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.VisualBasic.Features">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.Features.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.VisualBasic.Features.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Workspaces">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.0.7.4091001-beta\lib\net45\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.1.20.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="System.Collections.Immutable">
       <Private>True</Private>
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.20-beta\lib\portable-net45+win8\System.Collections.Immutable.dll</HintPath>
     </Reference>
@@ -76,23 +68,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Engine\FormattingEngine.cs" />
-    <Compile Include="Engine\IFormattingEngine.cs" />
-    <Compile Include="Engine\IOrderMetadata.cs" />
-    <Compile Include="Engine\ExportFormattingRuleAttribute.cs" />
+    <Compile Include="FormattingEngine.cs" />
+    <Compile Include="FormattingEngineImplementation.cs" />
+    <Compile Include="IFormattingEngine.cs" />
+    <Compile Include="IFormattingFilter.cs" />
+    <Compile Include="IFormattingRule.cs" />
+    <Compile Include="Filters\IgnoreDesignerGeneratedCodeFilter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rules\HasCopyrightHeaderFormattingRule.cs" />
-    <Compile Include="Engine\IFormattingFilter.cs" />
-    <Compile Include="Engine\IFormattingRule.cs" />
-    <Compile Include="Filters\IgnoreDesignerGenereatedCodeFilter.cs" />
     <Compile Include="Rules\HasNoXmlBasedCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />
     <Compile Include="Rules\IsFormattedFormattingRule.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rules\IsSimplifiedFormattingRule.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

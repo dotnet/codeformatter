@@ -1,4 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under MIT. See LICENSE in the project root for license information.
 using System;
+using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,14 +10,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using CodeFormatter.Engine;
-
-namespace CodeFormatter.Rules
+namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [ExportFormattingRule(1)]
+    [Export(typeof(IFormattingRule))]
     internal sealed class HasUsingsOutsideOfNamespaceFormattingRule : IFormattingRule
     {
-        public async Task<Document> ProcessAsync(CancellationToken cancellationToken, Document document)
+        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
 
@@ -53,7 +54,7 @@ namespace CodeFormatter.Rules
                     // by a blank line.
 
                     var trailingTrivia = usings.Last().GetTrailingTrivia();
-                    var linebreak = new[] {SyntaxFactory.CarriageReturnLineFeed};
+                    var linebreak = new[] { SyntaxFactory.CarriageReturnLineFeed };
                     usings[usings.Length - 1] = usings.Last().WithTrailingTrivia(trailingTrivia.Concat(linebreak));
                 }
 
