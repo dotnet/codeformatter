@@ -40,9 +40,7 @@ namespace CodeFormatter
             var workspace = MSBuildWorkspace.Create();
             await workspace.OpenSolutionAsync(solutionFilePath, cancellationToken);
 
-            var catalog = new AssemblyCatalog(typeof(Program).Assembly);
-            var container = new CompositionContainer(catalog);
-            var engine = container.GetExportedValue<IFormattingEngine>();
+            var engine = FormattingEngine.Create();
             await engine.RunAsync(workspace, cancellationToken);
         }
     }
