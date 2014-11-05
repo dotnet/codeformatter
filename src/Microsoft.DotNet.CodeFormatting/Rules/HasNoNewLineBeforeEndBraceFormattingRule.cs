@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [Export(typeof(IFormattingRule))]
-    internal sealed class HasNoNewLineAfterOpenBraceFormattingRule : IFormattingRule
+    internal sealed class HasNoNewLineBeforeEndBraceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             if (syntaxRoot == null)
                 return document;
 
-            var openBraceTokens = syntaxRoot.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.OpenBraceToken);
+            var closeBraceTokens = syntaxRoot.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.CloseBraceToken);
             Func<SyntaxToken, SyntaxToken, SyntaxToken> replacementForTokens = (token, dummy) =>
             {
                 var triviaItem = token.LeadingTrivia.First();
@@ -36,11 +36,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return newToken;
             };
 
-            var tokensToReplace = openBraceTokens.Where((token) =>
-            {
-                var nextToken = token.GetNextToken();
-                return (nextToken.HasLeadingTrivia && nextToken.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);         
-            }).Select((token) => token.GetNextToken());
+            var tokensToReplace = closeBraceTokens.Where((token) => token.HasLeadingTrivia && token.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);
 
             return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replacementForTokens));
         }

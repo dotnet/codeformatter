@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var oldTrivia = syntaxRoot.DescendantTrivia().Where(trivia => trivia.CSharpKind() == SyntaxKind.DisabledTextTrivia);
             Func<SyntaxTrivia, SyntaxTrivia, SyntaxTrivia> replacementTrivia = (trivia, dummy) =>
             {
+                var levelToIndent = trivia.Token.Parent.Ancestors().Count();
                 var compilation = SyntaxFactory.ParseCompilationUnit(trivia.ToString());
                 var formattedTrivia = Formatter.Format(compilation.SyntaxTree.GetRoot(), document.Project.Solution.Workspace).GetText().ToString();
                 return SyntaxFactory.DisabledText(formattedTrivia);
