@@ -32,6 +32,7 @@ namespace CodeFormatter
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
             RunAsnc(solutionPath, ct).Wait(ct);
+            Console.WriteLine("Completed formatting.");
             return 0;
         }
 

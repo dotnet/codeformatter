@@ -37,11 +37,12 @@ namespace Microsoft.DotNet.CodeFormatting
                 var shouldBeProcessed = await ShouldBeProcessedAsync(document);
                 if (!shouldBeProcessed)
                     continue;
-
+                
                 var newDocument = await RewriteDocumentAsync(document, cancellationToken);
                 hasChanges |= newDocument != document;
 
                 await SaveDocumentAsync(newDocument, cancellationToken);
+                Console.WriteLine("Processing document: " + document.Name);
             }
 
             return hasChanges;
@@ -84,11 +85,18 @@ namespace Microsoft.DotNet.CodeFormatting
                 foreach (var rule in _rules)
                     newDocument = await rule.ProcessAsync(newDocument, cancellationToken);
 
-                if (newDocument == previousDocument)
+                if (IsEqual(newDocument, previousDocument))
                     break;
             }
 
             return newDocument;
+        }
+
+        private bool IsEqual(Document newDocument, Document previousDocument)
+        {
+            if (newDocument.GetTextAsync().Result.ToString() == previousDocument.GetTextAsync().Result.ToString())
+                return true;
+            return false;
         }
     }
 }
