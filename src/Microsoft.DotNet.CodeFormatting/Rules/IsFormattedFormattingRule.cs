@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
@@ -17,20 +18,21 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
+            var newDocument = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
             // Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
             // Doing that manually here
-            var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            var oldTrivia = syntaxRoot.DescendantTrivia().Where(trivia => trivia.CSharpKind() == SyntaxKind.DisabledTextTrivia);
-            Func<SyntaxTrivia, SyntaxTrivia, SyntaxTrivia> replacementTrivia = (trivia, dummy) =>
-            {
-                var levelToIndent = trivia.Token.Parent.Ancestors().Count();
-                var compilation = SyntaxFactory.ParseCompilationUnit(trivia.ToString());
-                var formattedTrivia = Formatter.Format(compilation.SyntaxTree.GetRoot(), document.Project.Solution.Workspace).GetText().ToString();
-                return SyntaxFactory.DisabledText(formattedTrivia);
-            };
+            var syntaxRoot = await newDocument.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
+            var preprocessorNamesDefined = newDocument.Project.ParseOptions.PreprocessorSymbolNames;
+            var preprocessorNamesToAdd = syntaxRoot.DescendantTrivia().Where(trivia => trivia.CSharpKind() == SyntaxKind.IfDirectiveTrivia)
+                .SelectMany(trivia => trivia.GetStructure().DescendantNodes().OfType<IdentifierNameSyntax>())
+                .Select(identifier => identifier.Identifier.Text).Distinct().Where((name) => !preprocessorNamesDefined.Contains(name));
+            
+            var newParseOptions = new CSharpParseOptions().WithPreprocessorSymbols(preprocessorNamesToAdd);
 
-            var newDocument = document.WithSyntaxRoot(syntaxRoot.ReplaceTrivia(oldTrivia, replacementTrivia));
-            return await Formatter.FormatAsync(newDocument, cancellationToken: cancellationToken);
+            var documentToProcess = newDocument.Project.WithParseOptions(newParseOptions).GetDocument(newDocument.Id);
+            documentToProcess = await Formatter.FormatAsync(documentToProcess, cancellationToken: cancellationToken);
+
+            return documentToProcess.Project.WithParseOptions(new CSharpParseOptions().WithPreprocessorSymbols(preprocessorNamesDefined)).GetDocument(documentToProcess.Id);
         }
     }
 }
