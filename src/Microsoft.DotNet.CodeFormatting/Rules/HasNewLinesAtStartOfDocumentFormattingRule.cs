@@ -21,14 +21,40 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxRoot == null)
                 return document;
-            Document newDocument;
-            // NewLine between copyright and using directives.
+            IEnumerable<SyntaxNode> nodesToAdd = new List<SyntaxNode>();
             var firstUsing = syntaxRoot.DescendantNodesAndSelf().OfType<UsingDirectiveSyntax>().First();
-            var hasEndOfLineTrivia = firstUsing.GetLeadingTrivia().First().CSharpKind() == SyntaxKind.EndOfLineTrivia;
-            if (!hasEndOfLineTrivia)
+            var firstNamespace = syntaxRoot.DescendantNodesAndSelf().OfType<NamespaceDeclarationSyntax>().First();
+            // NewLine between copyright and using directives.
+            var newUsingTriviaList = !firstUsing.HasLeadingTrivia ? SyntaxTriviaList.Create(SyntaxFactory.EndOfLine("\n")) : SyntaxTriviaList.Empty;
+            if (!newUsingTriviaList.Any())
             {
-                var newTriviaList = firstUsing.GetLeadingTrivia().Insert(0, SyntaxFactory.EndOfLine("\n"));
-                newDocument =  document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstUsing, firstUsing.WithLeadingTrivia(newTriviaList)));
+                newUsingTriviaList = !(firstUsing.GetLeadingTrivia().First().CSharpKind() == SyntaxKind.EndOfLineTrivia) ?
+                firstUsing.GetLeadingTrivia().Insert(0, SyntaxFactory.EndOfLine("\n")) : SyntaxTriviaList.Empty;
+                if (newUsingTriviaList.Any()) nodesToAdd = nodesToAdd.Concat(new[] { firstUsing });
+            }
+
+            // NewLine between copyright and using directives.
+            var newNamespaceTriviaList = !firstNamespace.HasLeadingTrivia ? SyntaxTriviaList.Create(SyntaxFactory.EndOfLine("\n")) : SyntaxTriviaList.Empty;
+            if (!newNamespaceTriviaList.Any())
+            {
+                newNamespaceTriviaList = !(firstNamespace.GetLeadingTrivia().First().CSharpKind() == SyntaxKind.EndOfLineTrivia) ?
+                firstNamespace.GetLeadingTrivia().Insert(0, SyntaxFactory.EndOfLine("\n")) : SyntaxTriviaList.Empty;
+                if (newNamespaceTriviaList.Any()) nodesToAdd = nodesToAdd.Concat(new[] { firstNamespace });
+            }
+
+            Func<SyntaxNode, SyntaxNode, SyntaxNode> replacementForNodes = (node, dummy) =>
+            {
+                if (node as NamespaceDeclarationSyntax != null)
+                    return node.WithLeadingTrivia(newNamespaceTriviaList);
+                if (node as UsingDirectiveSyntax != null)
+                    return node.WithLeadingTrivia(newUsingTriviaList);
+
+                return null;
+            };
+             
+            if (nodesToAdd.Any())
+            {
+                return document.WithSyntaxRoot(syntaxRoot.ReplaceNodes(nodesToAdd, replacementForNodes));
             }
 
             return document;
