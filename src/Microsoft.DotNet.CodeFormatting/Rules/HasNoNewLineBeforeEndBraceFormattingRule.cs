@@ -24,11 +24,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var closeBraceTokens = syntaxRoot.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.CloseBraceToken);
             Func<SyntaxToken, SyntaxToken, SyntaxToken> replacementForTokens = (token, dummy) =>
             {
-                var triviaItem = token.LeadingTrivia.First();
                 int elementsToRemove = 1;
                 if (token.LeadingTrivia.Count > 1)
                 {
-                    while (triviaItem == token.LeadingTrivia.ElementAt(elementsToRemove))
+                    while (elementsToRemove < token.LeadingTrivia.Count && 
+                            token.LeadingTrivia.ElementAt(elementsToRemove).CSharpKind() == SyntaxKind.EndOfLineTrivia)
                         elementsToRemove++;
                 }
 
