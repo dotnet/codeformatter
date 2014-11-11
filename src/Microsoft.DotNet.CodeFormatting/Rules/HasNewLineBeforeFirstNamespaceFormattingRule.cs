@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     int index = trivia.Count - 2;
                     while (index >= 0)
                     {
-                        if (trivia.ElementAt(index).CSharpKind() != SyntaxKind.EndOfLineTrivia)
+                        if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
                             break;
                         index--;
                     }
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
             }
 
-            newTrivia = newTrivia.Concat(new[] { SyntaxFactory.EndOfLine("\n"), SyntaxFactory.EndOfLine("\n") });
+            newTrivia = newTrivia.Concat(new[] { SyntaxFactory.CarriageReturnLineFeed, SyntaxFactory.CarriageReturnLineFeed });
 
             return document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstNamespace, firstNamespace.WithLeadingTrivia(newTrivia)));
         }
