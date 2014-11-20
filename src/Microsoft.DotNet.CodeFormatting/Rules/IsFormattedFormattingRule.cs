@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [Export(typeof(IFormattingRule))]
+    [ExportMetadata("Order", 11)]
     internal sealed class IsFormattedFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
@@ -21,18 +22,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var newDocument = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
             // Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
             // Doing that manually here
-            var syntaxRoot = await newDocument.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            var preprocessorNamesDefined = newDocument.Project.ParseOptions.PreprocessorSymbolNames;
-            var preprocessorNamesToAdd = syntaxRoot.DescendantTrivia().Where(trivia => trivia.CSharpKind() == SyntaxKind.IfDirectiveTrivia)
-                .SelectMany(trivia => trivia.GetStructure().DescendantNodes().OfType<IdentifierNameSyntax>())
-                .Select(identifier => identifier.Identifier.Text).Distinct().Where((name) => !preprocessorNamesDefined.Contains(name));
-            
-            var newParseOptions = new CSharpParseOptions().WithPreprocessorSymbols(preprocessorNamesToAdd);
+            var preprocessorNames = document.DefinedProjectPreprocessorNames();
+            newDocument = await newDocument.GetNewDocumentWithPreprocessorSymbols(preprocessorNames, cancellationToken);
+            newDocument = await Formatter.FormatAsync(newDocument, cancellationToken: cancellationToken);
 
-            var documentToProcess = newDocument.Project.WithParseOptions(newParseOptions).GetDocument(newDocument.Id);
-            documentToProcess = await Formatter.FormatAsync(documentToProcess, cancellationToken: cancellationToken);
-
-            return documentToProcess.Project.WithParseOptions(new CSharpParseOptions().WithPreprocessorSymbols(preprocessorNamesDefined)).GetDocument(documentToProcess.Id);
+            return newDocument.GetOriginalDocumentWithPreprocessorSymbols(preprocessorNames);
         }
     }
 }

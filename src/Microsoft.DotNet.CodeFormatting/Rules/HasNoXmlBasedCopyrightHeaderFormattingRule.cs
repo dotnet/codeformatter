@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [Export(typeof(IFormattingRule))]
+    [ExportMetadata("Order", 1)]
     internal sealed class HasNoXmlBasedCopyrightHeaderFormattingRule : IFormattingRule
     {
         private const string RulerMarker = "//---";

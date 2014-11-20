@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [Export(typeof(IFormattingRule))]
+    [ExportMetadata("Order", 7)]
     internal sealed class HasNoNewLineBeforeEndBraceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)

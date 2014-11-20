@@ -17,23 +17,25 @@ namespace Microsoft.DotNet.CodeFormatting
     {
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<IFormattingRule> _rules;
+        
 
         [ImportingConstructor]
         public FormattingEngineImplementation([ImportMany] IEnumerable<IFormattingFilter> filters,
-                                              [ImportMany] IEnumerable<IFormattingRule> rules)
+                                              [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules)
         {
             _filters = filters;
-            _rules = rules;
+            _rules = rules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
         }
 
         public async Task<bool> RunAsync(Workspace workspace, CancellationToken cancellationToken)
         {
             var solution = workspace.CurrentSolution;
-            var documents = solution.Projects.SelectMany(p => p.Documents);
+            var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
             var hasChanges = false;
 
-            foreach (var document in documents)
+            foreach (var id in documentIds)
             {
+                var document = solution.GetDocument(id);
                 var shouldBeProcessed = await ShouldBeProcessedAsync(document);
                 if (!shouldBeProcessed)
                     continue;
@@ -41,8 +43,14 @@ namespace Microsoft.DotNet.CodeFormatting
                 var newDocument = await RewriteDocumentAsync(document, cancellationToken);
                 hasChanges |= newDocument != document;
 
-                await SaveDocumentAsync(newDocument, cancellationToken);
-                Console.WriteLine("Processing document: " + document.Name);
+                solution = newDocument.Project.Solution;
+
+                Console.WriteLine("Processed document: " + document.Name);
+            }
+
+            if (workspace.TryApplyChanges(solution))
+            {
+                Console.WriteLine("Solution changes committed");
             }
 
             return hasChanges;
@@ -69,34 +77,10 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Document> RewriteDocumentAsync(Document document, CancellationToken cancellationToken)
         {
-            var newDocument = document;
+            foreach (var rule in _rules)
+                document = await rule.ProcessAsync(document, cancellationToken);
 
-            // There is no good ordering for formatting rules because they might interact with each other.
-            //
-            // Thus, we'll run the formatting until no more changes occur. In theory, we could run into an
-            // infinite loop if two formatting rules are undoing each other's change.
-            // 
-            // We'll ignore this for now.
-
-            while (true)
-            {
-                var previousDocument = newDocument;
-
-                foreach (var rule in _rules)
-                    newDocument = await rule.ProcessAsync(newDocument, cancellationToken);
-
-                if (IsEqual(newDocument, previousDocument))
-                    break;
-            }
-
-            return newDocument;
-        }
-
-        private bool IsEqual(Document newDocument, Document previousDocument)
-        {
-            if (newDocument.GetTextAsync().Result.ToString() == previousDocument.GetTextAsync().Result.ToString())
-                return true;
-            return false;
+            return document;
         }
     }
 }

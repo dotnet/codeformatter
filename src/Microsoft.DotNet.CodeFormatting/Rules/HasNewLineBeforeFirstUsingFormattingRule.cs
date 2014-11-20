@@ -14,12 +14,22 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    // [Export(typeof(IFormattingRule))]
-    // This rule negates the changes done by the IsFormatterFormattingRule, when there are #ifdef using 
-    // statements. Thus the formatter will enter an infinite loop. Enable this rule as required.
+    [Export(typeof(IFormattingRule))]
+    [ExportMetadata("Order", 5)]
     internal sealed class HasNewLineBeforeFirstUsingFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        {
+            // Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
+            // Doing that manually here
+            var preprocessorNames = document.DefinedProjectPreprocessorNames();
+            var newDocument = await document.GetNewDocumentWithPreprocessorSymbols(preprocessorNames, cancellationToken);
+            newDocument = await FormatUsingInDocument(newDocument, cancellationToken);
+
+            return await FormatUsingInDocument(newDocument.GetOriginalDocumentWithPreprocessorSymbols(preprocessorNames), cancellationToken);
+        }
+
+        public async Task<Document> FormatUsingInDocument(Document document, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxRoot == null)
@@ -34,27 +44,45 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             if (firstUsing.HasLeadingTrivia)
             {
                 var trivia = firstUsing.GetLeadingTrivia();
-                if (trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia)
+                if (SyntaxKind.EndOfLineTrivia == trivia.Last().CSharpKind())
                 {
-                    int index = trivia.Count - 2;
-                    while (index >= 0)
-                    {
-                        if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
-                            break;
-                        index--;
-                    }
-
-                    newTrivia = trivia.Take(index + 1);
+                    newTrivia = GetCorrectedTrivia(trivia);
+                }
+                else if (trivia.Last().HasStructure)
+                {
+                    var previousTrivia = trivia.Take(trivia.Count - 1);
+                    newTrivia = GetCorrectedTrivia(previousTrivia).Concat(new[] { trivia.Last() });
                 }
                 else
                 {
-                    newTrivia = trivia;
+                    newTrivia = trivia.AddTwoNewLines();
                 }                
             }
-
-            newTrivia = newTrivia.Concat(new[] { SyntaxFactory.CarriageReturnLineFeed, SyntaxFactory.CarriageReturnLineFeed });
-
+            
             return document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstUsing, firstUsing.WithLeadingTrivia(newTrivia)));
+        }
+
+        private IEnumerable<SyntaxTrivia> GetCorrectedTrivia(IEnumerable<SyntaxTrivia> trivia)
+        {
+            int index = trivia.Count() - 2;
+            while (index >= 0)
+            {
+                if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
+                    break;
+                index--;
+            }
+
+            if (index < 0)
+            {
+                return Enumerable.Empty<SyntaxTrivia>();
+            }
+
+            if (trivia.ElementAt(index).HasStructure)
+            {
+                return trivia.Take(index + 1);
+            }
+           
+            return trivia.Take(index + 1).AddTwoNewLines();
         }
     }
 }
