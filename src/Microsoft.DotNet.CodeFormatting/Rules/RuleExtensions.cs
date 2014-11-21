@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under MIT. See LICENSE in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -23,6 +24,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             return trivia.Concat(new[] { SyntaxFactory.CarriageReturnLineFeed });
         }
+        
+        public static IEnumerable<SyntaxTrivia> AddWhiteSpaceTrivia(this IEnumerable<SyntaxTrivia> trivia)
+        {
+            return trivia.Concat(new[] { SyntaxFactory.Tab });
+        }
 
         public async static Task<Document> GetNewDocumentWithPreprocessorSymbols(this Document document, IEnumerable<string> preprocessorNamesDefined, CancellationToken cancellationToken)
         {
@@ -44,6 +50,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public static Document GetOriginalDocumentWithPreprocessorSymbols(this Document document, IEnumerable<string> preprocessorNamesDefined)
         {
             return document.Project.WithParseOptions(new CSharpParseOptions().WithPreprocessorSymbols(preprocessorNamesDefined)).GetDocument(document.Id);
+        }
+
+        public static void WriteConsoleError(this string msg, int lineNo, string documentName)
+        {
+            Console.WriteLine("Error (Line: " + lineNo + ", " + documentName + ") " + msg);
         }
     }
 }

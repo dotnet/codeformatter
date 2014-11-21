@@ -4,31 +4,33 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Reflection;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [Export(typeof(IFormattingRule))]
-    [ExportMetadata("Order", 2)]
+    [RuleOrder(2)]
     internal sealed class HasNoIllegalHeadersFormattingRule : IFormattingRule
     {
-        private static string[] IllegalHeaders = {"Copyright (c) Microsoft Corporation.", "<owner>", "</owner>", "==--==", "==++==", "<OWNER>", "</OWNER>" };
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
+
             var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxNode == null)
                 return document;
 
             var leadingTrivia = syntaxNode.GetLeadingTrivia();
             IEnumerable<SyntaxTrivia> newTrivia = leadingTrivia;
+            var illegalHeaders = GetIllegalHeaders();
 
             foreach (var trivia in leadingTrivia)
             {
-                if (IllegalHeaders.Any(trivia.ToFullString().Contains))
+                if (illegalHeaders.Any(trivia.ToFullString().Contains))
                 {
                     newTrivia = newTrivia.Where(t => t.ToFullString() != trivia.ToFullString());
                 }
@@ -38,6 +40,20 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return document;
 
             return document.WithSyntaxRoot(syntaxNode.WithLeadingTrivia(newTrivia));
+        }
+
+        public static string[] GetIllegalHeaders()
+        {
+            var filePath = Path.Combine(
+                Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
+                "IllegalHeaders.md");
+
+            if (!File.Exists(filePath))
+            {
+                return new string[] { };
+            }
+
+            return File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")).ToArray();
         }
     }
 }

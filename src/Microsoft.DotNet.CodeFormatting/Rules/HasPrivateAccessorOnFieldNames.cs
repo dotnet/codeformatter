@@ -14,8 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [Export(typeof(IFormattingRule))]
-    [ExportMetadata("Order", 9)]
+    [RuleOrder(9)]
     internal sealed class HasPrivateAccessorOnFieldNames : IFormattingRule
     {
         private static string[] AccessorModifiers = {"public", "private", "internal", "protected"};

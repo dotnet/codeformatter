@@ -12,8 +12,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [Export(typeof(IFormattingRule))]
-    [ExportMetadata("Order", 3)]
+    [RuleOrder(3)]
     internal sealed class HasCopyrightHeaderFormattingRule : IFormattingRule
     {
         static readonly string[] CopyrightHeader =

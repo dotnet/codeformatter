@@ -14,8 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [Export(typeof(IFormattingRule))]
-    [ExportMetadata("Order", 6)]
+    [RuleOrder(6)]
     internal sealed class HasNewLineBeforeFirstNamespaceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
@@ -35,27 +34,28 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var trivia = firstNamespace.GetLeadingTrivia();
                 if (SyntaxKind.EndOfLineTrivia == trivia.Last().CSharpKind())
                 {
-                    newTrivia = GetCorrectedTrivia(trivia);
+                    newTrivia = GetLeadingTriviaWithEndNewLines(trivia);
                 }
                 else if (trivia.Last().HasStructure)
                 {
-                    var previousTrivia = trivia.Take(trivia.Count - 1);
-                    newTrivia = GetCorrectedTrivia(previousTrivia).Concat(new[] { trivia.Last() });
+                    newTrivia = GetLeadingTriviaWithEndStructure(trivia);
                 }
                 else
                 {
+                    // Add two new lines, previous element is a comment
                     newTrivia = trivia.AddTwoNewLines();
                 }
             }
             else
             {
+                // Add a new line, previous element is a node
                 newTrivia = newTrivia.AddNewLine();
             }
 
             return document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstNamespace, firstNamespace.WithLeadingTrivia(newTrivia)));
         }
 
-        private IEnumerable<SyntaxTrivia> GetCorrectedTrivia(IEnumerable<SyntaxTrivia> trivia)
+        private IEnumerable<SyntaxTrivia> GetLeadingTriviaWithEndNewLines(IEnumerable<SyntaxTrivia> trivia)
         {
             int index = trivia.Count() - 2;
             while (index >= 0)
@@ -67,15 +67,42 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (index < 0)
             {
+                // Add a new line (previous element is a node)
                 return trivia.Take(index + 1).AddNewLine();
             }
 
             if (index >= 0 && trivia.ElementAt(index).HasStructure)
             {
-                return trivia.Take(index + 1);
+                // Insert new lines before the structured trivia
+                return GetLeadingTriviaWithEndStructure(trivia.Take(index + 1));
             }
 
+            // Add two new lines after the last comment
             return trivia.Take(index + 1).AddTwoNewLines();
+        }
+
+        private IEnumerable<SyntaxTrivia> GetLeadingTriviaWithEndStructure(IEnumerable<SyntaxTrivia> trivia)
+        {
+            int index = trivia.Count() - 1;
+            while (index >= 0 && trivia.ElementAt(index).HasStructure)
+                index--;
+
+            if (index < 0)
+            {
+                // Add a new line (previous element is a node) before the structure trivia list.
+                return trivia.Take(0).AddNewLine().Concat(trivia);
+            }
+
+            // Add two new lines (previous element is a comment) before the structure trivia list.
+            if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
+                return trivia.Take(index + 1).AddTwoNewLines().Concat(trivia.Skip(index + 1));
+
+            // Insert one new line before the structured trivia, previous element is new line
+            if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).CSharpKind())
+                return trivia.Take(index + 1).AddNewLine().Concat(trivia.Skip(index + 1));
+
+            // Already has the right format
+            return trivia;
         }
     }
 }

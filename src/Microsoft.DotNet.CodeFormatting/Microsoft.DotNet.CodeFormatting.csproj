@@ -83,6 +83,7 @@
     <Compile Include="IFormattingFilter.cs" />
     <Compile Include="IFormattingRule.cs" />
     <Compile Include="Filters\IgnoreDesignerGeneratedCodeFilter.cs" />
+    <Compile Include="RuleOrderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IOrderMetadata.cs" />
     <Compile Include="Rules\HasCopyrightHeaderFormattingRule.cs" />
@@ -108,6 +109,5 @@
   <Target Name="BeforeBuild">
   </Target>
   <Target Name="AfterBuild">
-  </Target>
-  -->
+  </Target>-->
 </Project>

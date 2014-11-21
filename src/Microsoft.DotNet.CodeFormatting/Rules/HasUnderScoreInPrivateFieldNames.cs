@@ -15,8 +15,8 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [Export(typeof(IFormattingRule))]
-    [ExportMetadata("Order", 10)]
+    // [RuleOrder(10)]
+    // TODO: Deactivated due to active bug in Roslyn.
     internal sealed class HasUnderScoreInPrivateFieldNames : IFormattingRule
     {
         private static string[] AccessorModifiers = { "public", "internal", "protected", "const" };
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var root = await model.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
                 var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(AnnotationMarker).ElementAt(i), cancellationToken);
                 var newName = "_" + symbol.Name;
-                solution = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options, cancellationToken);
+                solution = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
             }
 
             return solution;

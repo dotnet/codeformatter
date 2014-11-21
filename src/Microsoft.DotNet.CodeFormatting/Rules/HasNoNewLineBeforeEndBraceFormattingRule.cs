@@ -12,8 +12,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [Export(typeof(IFormattingRule))]
-    [ExportMetadata("Order", 7)]
+    [RuleOrder(7)]
     internal sealed class HasNoNewLineBeforeEndBraceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
@@ -23,23 +22,62 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return document;
 
             var closeBraceTokens = syntaxRoot.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.CloseBraceToken);
-            Func<SyntaxToken, SyntaxToken, SyntaxToken> replacementForTokens = (token, dummy) =>
+            Func<SyntaxToken, SyntaxToken, SyntaxToken> replaceTriviaInTokens = (token, dummy) =>
             {
-                int elementsToRemove = 1;
-                if (token.LeadingTrivia.Count > 1)
-                {
-                    while (elementsToRemove < token.LeadingTrivia.Count && 
-                            token.LeadingTrivia.ElementAt(elementsToRemove).CSharpKind() == SyntaxKind.EndOfLineTrivia)
-                        elementsToRemove++;
-                }
-
-                var newToken = token.WithLeadingTrivia(token.LeadingTrivia.Skip(elementsToRemove));
-                return newToken;
+                var newTrivia = RemoveNewLinesFromTop(token.LeadingTrivia);
+                newTrivia = RemoveNewLinesFromBotton(newTrivia);
+                return token.WithLeadingTrivia(newTrivia);
             };
 
-            var tokensToReplace = closeBraceTokens.Where((token) => token.HasLeadingTrivia && token.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);
+            var tokensToReplace = closeBraceTokens.Where((token) => token.HasLeadingTrivia && (
+                                    token.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
+                                    token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia));
+            
+            return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replaceTriviaInTokens));
+        }
 
-            return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replacementForTokens));
+        private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromTop(IEnumerable<SyntaxTrivia> trivia)
+        {
+            int elementsToRemoveAtStart = 1;
+            if (trivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia)
+            {
+                if (trivia.Count() > 1)
+                {
+                    while (elementsToRemoveAtStart < trivia.Count() &&
+                            trivia.ElementAt(elementsToRemoveAtStart).CSharpKind() == SyntaxKind.EndOfLineTrivia)
+                        elementsToRemoveAtStart++;
+                }
+            }
+
+            return trivia.Skip(elementsToRemoveAtStart);
+        }
+
+        private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromBotton(IEnumerable<SyntaxTrivia> trivia)
+        {
+            int elementsToRemoveAtEnd = trivia.Count() - 2;
+            bool addWhitespace = false;
+            if (trivia.Count() > 1 && trivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia)
+            {
+                addWhitespace = true;
+                trivia = trivia.Take(trivia.Count() - 1);
+            }
+
+            if (trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia) 
+            {
+                if (trivia.Count() > 1)
+                {
+                    while (elementsToRemoveAtEnd >= 0 &&
+                            trivia.ElementAt(elementsToRemoveAtEnd).CSharpKind() == SyntaxKind.EndOfLineTrivia)
+                        elementsToRemoveAtEnd--;
+                }
+            }
+
+            if (addWhitespace)
+            {
+                return trivia.Take(elementsToRemoveAtEnd + 1).AddNewLine().AddWhiteSpaceTrivia();
+            }
+
+            return trivia.Take(elementsToRemoveAtEnd + 1);
         }
     }
 }

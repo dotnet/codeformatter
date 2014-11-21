@@ -31,12 +31,12 @@ namespace CodeFormatter
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-            RunAsnc(solutionPath, ct).Wait(ct);
+            RunAsync(solutionPath, ct).Wait(ct);
             Console.WriteLine("Completed formatting.");
             return 0;
         }
 
-        private static async Task RunAsnc(string solutionFilePath, CancellationToken cancellationToken)
+        private static async Task RunAsync(string solutionFilePath, CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
             await workspace.OpenSolutionAsync(solutionFilePath, cancellationToken);

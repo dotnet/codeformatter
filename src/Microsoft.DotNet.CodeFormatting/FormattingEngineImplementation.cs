@@ -39,13 +39,12 @@ namespace Microsoft.DotNet.CodeFormatting
                 var shouldBeProcessed = await ShouldBeProcessedAsync(document);
                 if (!shouldBeProcessed)
                     continue;
-                
+
+                Console.WriteLine("Processing document: " + document.Name);
                 var newDocument = await RewriteDocumentAsync(document, cancellationToken);
                 hasChanges |= newDocument != document;
 
                 solution = newDocument.Project.Solution;
-
-                Console.WriteLine("Processed document: " + document.Name);
             }
 
             if (workspace.TryApplyChanges(solution))
@@ -54,13 +53,6 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             return hasChanges;
-        }
-
-        private static async Task SaveDocumentAsync(Document document, CancellationToken cancellationToken)
-        {
-            var text = await document.GetTextAsync(cancellationToken);
-            using (var textWriter = new StreamWriter(document.FilePath))
-                text.Write(textWriter, cancellationToken);
         }
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
