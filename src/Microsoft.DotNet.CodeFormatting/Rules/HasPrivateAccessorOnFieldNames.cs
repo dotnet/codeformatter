@@ -35,12 +35,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var privateKeyword = SyntaxFactory.Token(SyntaxKind.PrivateKeyword);
                 if (field.Modifiers.Any())
                 {
+                    // There is trivia associated with the first modifier token
                     privateKeyword = privateKeyword.WithLeadingTrivia(field.Modifiers.First().LeadingTrivia);
                     var nextTrivia = field.Modifiers.First().WithLeadingTrivia();
                     tokenList = tokenList.Concat(new[] { privateKeyword, nextTrivia}).Concat(field.Modifiers.Skip(1));
                 }
                 else if (field.ChildNodes().OfType<VariableDeclarationSyntax>().First().GetFirstToken().HasLeadingTrivia)
                 {
+                    // There is trivia association with the first token - not a modifier token
                     var firstToken = field.ChildNodes().OfType<VariableDeclarationSyntax>().First().GetFirstToken();
                     privateKeyword = privateKeyword.WithLeadingTrivia(firstToken.LeadingTrivia);
                     field = field.ReplaceToken(firstToken, firstToken.WithLeadingTrivia());
