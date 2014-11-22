@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     // [RuleOrder(10)]
     // TODO: Deactivated due to active bug in Roslyn.
+    // There is a hack to run this rule, but it's slow. 
+    // If needed, enabled rule and enable the hack at the code below in RenameFields.
     internal sealed class HasUnderScoreInPrivateFieldNames : IFormattingRule
     {
         private static string[] AccessorModifiers = { "public", "internal", "protected", "const" };
@@ -69,11 +71,57 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             int count = privateFields.Count();
             for (int i = 0; i < count; i++)
             {
+                // This is a hack to till the roslyn bug is fixed. Very slow, enable this statement only if the rule is enabled.
+                // solution = await CleanSolutionAsync(solution, cancellationToken);
                 var model = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
                 var root = await model.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
                 var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(AnnotationMarker).ElementAt(i), cancellationToken);
                 var newName = "_" + symbol.Name;
                 solution = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
+            }
+
+            return solution;
+        }
+
+        private async Task<Solution> CleanSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        {
+            var documentIdsToProcess = new List<DocumentId>();
+            foreach (var document in solution.Projects.SelectMany(p => p.Documents))
+            {
+                var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+                if (root.HasAnnotations("Rename") || true)
+                {
+                    documentIdsToProcess.Add(document.Id);
+                }
+            }
+
+            foreach (var documentId in documentIdsToProcess)
+            {
+                var root = await solution.GetDocument(documentId).GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+                while (true)
+                {
+                    var renameNodes = root.DescendantNodes(descendIntoTrivia: true).Where(s => s.GetAnnotations("Rename").Any());
+                    if (!renameNodes.Any())
+                    {
+                        break;
+                    }
+
+                    root = root.ReplaceNode(renameNodes.First(), renameNodes.First().WithoutAnnotations("Rename"));
+                }
+
+                while (true)
+                {
+                    var renameTokens = root.DescendantTokens(descendIntoTrivia: true).Where(s => s.GetAnnotations("Rename").Any());
+                    if (!renameTokens.Any())
+                    {
+                        break;
+                    }
+
+                    root = root.ReplaceToken(renameTokens.First(), renameTokens.First().WithoutAnnotations("Rename"));
+                }
+
+                solution = solution.WithDocumentSyntaxRoot(documentId, root);
             }
 
             return solution;
