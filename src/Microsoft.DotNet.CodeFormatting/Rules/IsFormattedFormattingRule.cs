@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var newDocument = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
-            // TODO: Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
+            // TODO Bug 1076609: Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
             // Doing that manually here
             var preprocessorNames = document.DefinedProjectPreprocessorNames();
             newDocument = await newDocument.GetNewDocumentWithPreprocessorSymbols(preprocessorNames, cancellationToken);

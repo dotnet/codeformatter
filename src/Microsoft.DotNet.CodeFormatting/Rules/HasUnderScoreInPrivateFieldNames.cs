@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.Rename;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     // [RuleOrder(10)]
-    // TODO: Deactivated due to active bug in Roslyn.
+    // TODO Bug 1086632: Deactivated due to active bug in Roslyn.
     // There is a hack to run this rule, but it's slow. 
     // If needed, enabled rule and enable the hack at the code below in RenameFields.
     internal sealed class HasUnderScoreInPrivateFieldNames : IFormattingRule
