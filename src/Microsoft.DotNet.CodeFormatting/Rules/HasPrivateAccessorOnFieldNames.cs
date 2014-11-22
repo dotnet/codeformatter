@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [RuleOrder(9)]
     internal sealed class HasPrivateAccessorOnFieldNames : IFormattingRule
     {
-        private static string[] AccessorModifiers = {"public", "private", "internal", "protected"};
+        private static readonly string[] AccessorModifiers = {"public", "private", "internal", "protected"};
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;

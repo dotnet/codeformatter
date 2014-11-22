@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return document.WithSyntaxRoot(syntaxNode.WithLeadingTrivia(newTrivia));
         }
 
-        public static string[] GetIllegalHeaders()
+        public static HashSet<string> GetIllegalHeaders()
         {
             var filePath = Path.Combine(
                 Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
@@ -50,10 +50,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (!File.Exists(filePath))
             {
-                return new string[] { };
+                return new HashSet<string>();
             }
 
-            return File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")).ToArray();
+            return new HashSet<string>(File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")), StringComparer.OrdinalIgnoreCase);
         }
     }
 }
