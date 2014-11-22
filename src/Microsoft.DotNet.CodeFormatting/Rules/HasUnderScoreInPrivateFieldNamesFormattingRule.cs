@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     // [RuleOrder(10)]
     // TODO Bug 1086632: Deactivated due to active bug in Roslyn.
     // There is a hack to run this rule, but it's slow. 
-    // If needed, enabled rule and enable the hack at the code below in RenameFields.
+    // If needed, enable the rule and enable the hack at the code below in RenameFields.
     internal sealed class HasUnderScoreInPrivateFieldNamesFormattingRule : IFormattingRule
     {
         private static string[] AccessorModifiers = { "public", "internal", "protected", "const" };
