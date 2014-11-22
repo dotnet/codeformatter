@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(9)]
-    internal sealed class HasPrivateAccessorOnFieldNames : IFormattingRule
+    internal sealed class HasPrivateAccessorOnFieldNamesFormattingRule : IFormattingRule
     {
         private static readonly string[] AccessorModifiers = {"public", "private", "internal", "protected"};
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)

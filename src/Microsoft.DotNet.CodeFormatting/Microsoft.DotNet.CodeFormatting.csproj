@@ -93,8 +93,8 @@
     <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRule.cs" />
     <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRule.cs" />
     <Compile Include="Rules\HasNoXmlBasedCopyrightHeaderFormattingRule.cs" />
-    <Compile Include="Rules\HasPrivateAccessorOnFieldNames.cs" />
-    <Compile Include="Rules\HasUnderScoreInPrivateFieldNames.cs" />
+    <Compile Include="Rules\HasPrivateAccessorOnFieldNamesFormattingRule.cs" />
+    <Compile Include="Rules\HasUnderScoreInPrivateFieldNamesFormattingRule.cs" />
     <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />
     <Compile Include="Rules\IsFormattedFormattingRule.cs" />
     <Compile Include="Rules\IsSimplifiedFormattingRule.cs" />
