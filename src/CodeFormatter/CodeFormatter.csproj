@@ -120,6 +120,6 @@
   <Target Name="BeforeBuild">
   </Target>  -->
   <Target Name="AfterBuild">
-    <Copy SourceFiles="$(ProjectDir)IllegalHeaders.md" DestinationFolder="$(ProjectDir)$(OutDir)" ContinueOnError="true" />
+    <Copy SourceFiles="$(ProjectDir)IllegalHeaders.md" DestinationFolder="$(OutDir)" ContinueOnError="true" />
   </Target>
 </Project>
