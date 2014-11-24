@@ -31,7 +31,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             var tokensToReplace = closeBraceTokens.Where((token) => token.HasLeadingTrivia && (
                                     token.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
-                                    token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia));
+                                    token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
+                                    token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia));
             
             return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replaceTriviaInTokens));
         }
@@ -62,7 +63,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 trivia = trivia.Take(trivia.Count() - 1);
             }
 
-            if (trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia) 
+            if (trivia.Any() && trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia) 
             {
                 if (trivia.Count() > 1)
                 {
