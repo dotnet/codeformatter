@@ -21,16 +21,21 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static string StartMarker { get; set;}
         private static string EndMarker { get; set; }
 
+        private const string FileNotFoundError = "The specified CopyrightHeader.md file was not found.";
+
+        private const string FileSyntaxError = "There should be exactly 3 lines in CopyrightHeader.md.";
+
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxNode == null)
                 return document;
 
-            var triviaList = syntaxNode.GetLeadingTrivia();
-
             // SetHeaders
-            SetHeaders();
+            if (!SetHeaders())
+                return document;
+
+            var triviaList = syntaxNode.GetLeadingTrivia();
 
             SyntaxTrivia start;
             SyntaxTrivia end;
@@ -113,7 +118,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                          .FirstOrDefault();
         }
 
-        private static void SetHeaders()
+        private static bool SetHeaders()
         {
             var filePath = Path.Combine(
                 Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
@@ -121,17 +126,22 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (!File.Exists(filePath))
             {
-                RulerMarker = "";
-                StartMarker = "";
-                EndMarker = "";
+                FileNotFoundError.WriteConsoleError(1, "CopyrightHeader.md");
+                return false;
             }
-            else
+
+            var lines = File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")).ToArray();
+            if (lines.Count() != 3)
             {
-                var lines = File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")).ToArray();
-                RulerMarker = lines[0];
-                StartMarker = lines[1];
-                EndMarker = lines[2];
+                FileSyntaxError.WriteConsoleError(1, "CopyrightHeader.md");
+                return false;
             }
-        }
+
+            RulerMarker = lines[0];
+            StartMarker = lines[1];
+            EndMarker = lines[2];
+
+            return true;
+        }       
     }
 }

@@ -60,16 +60,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             SyntaxTriviaList newTrivia = leadingTrivia;
             var index = leadingTrivia.IndexOf(trivia);
-            if (leadingTrivia.ElementAt(index + 1).CSharpKind() == SyntaxKind.EndOfLineTrivia)
+
+            // Remove trivia
+            newTrivia = newTrivia.RemoveAt(index);
+
+            if (index < newTrivia.Count && newTrivia.ElementAt(index).CSharpKind() == SyntaxKind.EndOfLineTrivia)
             {
-                // Remove trivia
-                newTrivia = newTrivia.RemoveAt(index);
                 // Remove end of line after trivia
-                newTrivia = newTrivia.RemoveAt(index);
-            }
-            else
-            {
-                // Remove trivia
                 newTrivia = newTrivia.RemoveAt(index);
             }
 

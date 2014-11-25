@@ -74,16 +74,17 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
             }
 
+            var newTrivia = trivia.Take(elementsToRemoveAtEnd + 1);
+
             if (addWhitespace)
             {
-                var newTrivia = trivia.Take(elementsToRemoveAtEnd + 1);
                 if (newTrivia.Last().IsDirective)
                     return newTrivia.AddWhiteSpaceTrivia();
 
                 return newTrivia.AddNewLine().AddWhiteSpaceTrivia();
             }
 
-            return trivia.Take(elementsToRemoveAtEnd + 1);
+            return newTrivia;
         }
     }
 }
