@@ -56,13 +56,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromBotton(IEnumerable<SyntaxTrivia> trivia)
         {
-            int elementsToRemoveAtEnd = trivia.Count() - 2;
             bool addWhitespace = false;
             if (trivia.Count() > 1 && trivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia)
             {
                 addWhitespace = true;
                 trivia = trivia.Take(trivia.Count() - 1);
             }
+
+            int elementsToRemoveAtEnd = trivia.Count() - 1;
 
             if (trivia.Any() && trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia)
             {
