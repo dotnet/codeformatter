@@ -25,14 +25,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return document;
 
             var leadingTrivia = syntaxNode.GetLeadingTrivia();
-            IEnumerable<SyntaxTrivia> newTrivia = leadingTrivia;
+            SyntaxTriviaList newTrivia = leadingTrivia;
             var illegalHeaders = GetIllegalHeaders();
 
             foreach (var trivia in leadingTrivia)
             {
-                if (illegalHeaders.Any(trivia.ToFullString().Contains))
+                if (illegalHeaders.Any(s => trivia.ToFullString().IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0))
                 {
-                    newTrivia = newTrivia.Where(t => t.ToFullString() != trivia.ToFullString());
+                    newTrivia = RemoveTrivia(newTrivia, trivia);
                 }
             }
 
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return document.WithSyntaxRoot(syntaxNode.WithLeadingTrivia(newTrivia));
         }
 
-        public static HashSet<string> GetIllegalHeaders()
+        private static HashSet<string> GetIllegalHeaders()
         {
             var filePath = Path.Combine(
                 Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
@@ -54,6 +54,26 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             return new HashSet<string>(File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")), StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static SyntaxTriviaList RemoveTrivia(SyntaxTriviaList leadingTrivia, SyntaxTrivia trivia)
+        {
+            SyntaxTriviaList newTrivia = leadingTrivia;
+            var index = leadingTrivia.IndexOf(trivia);
+            if (leadingTrivia.ElementAt(index + 1).CSharpKind() == SyntaxKind.EndOfLineTrivia)
+            {
+                // Remove trivia
+                newTrivia = newTrivia.RemoveAt(index);
+                // Remove end of line after trivia
+                newTrivia = newTrivia.RemoveAt(index);
+            }
+            else
+            {
+                // Remove trivia
+                newTrivia = newTrivia.RemoveAt(index);
+            }
+
+            return newTrivia;
         }
     }
 }
