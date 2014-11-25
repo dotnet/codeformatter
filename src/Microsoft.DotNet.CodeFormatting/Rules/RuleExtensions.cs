@@ -54,7 +54,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         public static void WriteConsoleError(this string msg, int lineNo, string documentName)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Error (Line: " + lineNo + ", " + documentName + ") " + msg);
+            Console.ResetColor();
         }
     }
 }

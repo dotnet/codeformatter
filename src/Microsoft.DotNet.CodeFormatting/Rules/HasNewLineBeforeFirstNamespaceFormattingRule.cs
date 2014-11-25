@@ -84,7 +84,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private IEnumerable<SyntaxTrivia> GetLeadingTriviaWithEndStructure(IEnumerable<SyntaxTrivia> trivia)
         {
             int index = trivia.Count() - 1;
-            while (index >= 0 && trivia.ElementAt(index).HasStructure)
+            while (index >= 0 && 
+                (trivia.ElementAt(index).HasStructure ||
+                trivia.ElementAt(index).CSharpKind() == SyntaxKind.DisabledTextTrivia))
                 index--;
 
             if (index < 0)
@@ -98,7 +100,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return trivia.Take(index + 1).AddTwoNewLines().Concat(trivia.Skip(index + 1));
 
             // Insert one new line before the structured trivia, previous element is new line
-            if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).CSharpKind())
+            if (index != 0 && SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).CSharpKind())
                 return trivia.Take(index + 1).AddNewLine().Concat(trivia.Skip(index + 1));
 
             // Already has the right format
