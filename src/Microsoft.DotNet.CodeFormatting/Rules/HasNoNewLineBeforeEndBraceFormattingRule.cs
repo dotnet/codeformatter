@@ -33,15 +33,16 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                                     token.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
                                     token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
                                     token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia));
-            
+
             return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replaceTriviaInTokens));
         }
 
         private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromTop(IEnumerable<SyntaxTrivia> trivia)
         {
-            int elementsToRemoveAtStart = 1;
+            int elementsToRemoveAtStart = 0;
             if (trivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia)
             {
+                elementsToRemoveAtStart = 1;
                 if (trivia.Count() > 1)
                 {
                     while (elementsToRemoveAtStart < trivia.Count() &&
@@ -63,7 +64,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 trivia = trivia.Take(trivia.Count() - 1);
             }
 
-            if (trivia.Any() && trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia) 
+            if (trivia.Any() && trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia)
             {
                 if (trivia.Count() > 1)
                 {
@@ -75,7 +76,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (addWhitespace)
             {
-                return trivia.Take(elementsToRemoveAtEnd + 1).AddNewLine().AddWhiteSpaceTrivia();
+                var newTrivia = trivia.Take(elementsToRemoveAtEnd + 1);
+                if (newTrivia.Last().IsDirective)
+                    return newTrivia.AddWhiteSpaceTrivia();
+
+                return newTrivia.AddNewLine().AddWhiteSpaceTrivia();
             }
 
             return trivia.Take(elementsToRemoveAtEnd + 1);
