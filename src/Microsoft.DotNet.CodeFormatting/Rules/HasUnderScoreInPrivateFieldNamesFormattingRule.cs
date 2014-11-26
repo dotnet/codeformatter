@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    // [RuleOrder(10)]
+    [RuleOrder(10)]
     // TODO Bug 1086632: Deactivated due to active bug in Roslyn.
     // There is a hack to run this rule, but it's slow. 
     // If needed, enable the rule and enable the hack at the code below in RenameFields.
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             for (int i = 0; i < count; i++)
             {
                 // This is a hack to till the roslyn bug is fixed. Very slow, enable this statement only if the rule is enabled.
-                // solution = await CleanSolutionAsync(solution, cancellationToken);
+                solution = await CleanSolutionAsync(solution, cancellationToken);
                 var model = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
                 var root = await model.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
                 var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(AnnotationMarker).ElementAt(i), cancellationToken);
