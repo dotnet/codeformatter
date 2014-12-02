@@ -77,6 +77,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Filters\TestFilter.cs" />
     <Compile Include="FormattingEngine.cs" />
     <Compile Include="FormattingEngineImplementation.cs" />
     <Compile Include="IFormattingEngine.cs" />
@@ -99,6 +100,8 @@
     <Compile Include="Rules\IsFormattedFormattingRule.cs" />
     <Compile Include="Rules\IsSimplifiedFormattingRule.cs" />
     <Compile Include="Rules\RuleExtensions.cs" />
+    <Compile Include="Rules\UsesXunitForTests.cs" />
+    <Compile Include="RuleTypeConstants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
