@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.ComponentModel.Composition;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CodeGeneration;
+using System.Runtime.Serialization;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
@@ -70,6 +71,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             TransformationTracker transformationTracker = new TransformationTracker();
             RemoveTestClassAttributes(root, semanticModel, transformationTracker);
             ChangeTestMethodAttributesToFact(root, semanticModel, transformationTracker);
+            ChangeAssertCalls(root, semanticModel, transformationTracker);
             root = transformationTracker.TransformRoot(root);
 
 
@@ -121,7 +123,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 nodesToRemove.AddRange(attributesToRemove);
             }
 
-            transformationTracker.AddTransformation(nodesToRemove, (transformationRoot, rewrittenNodes) =>
+            transformationTracker.AddTransformation(nodesToRemove, (transformationRoot, rewrittenNodes, originalNodeMap) =>
             {
                 foreach (AttributeSyntax rewrittenNode in rewrittenNodes)
                 {
@@ -157,14 +159,82 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
             }
 
-            transformationTracker.AddTransformation(nodesToReplace, (transformationRoot, rewrittenNodes) =>
+            transformationTracker.AddTransformation(nodesToReplace, (transformationRoot, rewrittenNodes, originalNodeMap) =>
             {
                 return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
                 {
                     return ((AttributeSyntax)rewrittenNode).WithName(SyntaxFactory.ParseName("Fact")).NormalizeWhitespace();
                 });
             });
-            
+        }
+
+        private void ChangeAssertCalls(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        {
+            Dictionary<string, string> assertMethodsToRename = new Dictionary<string, string>()
+            {
+                { "AreEqual", "Equal" },
+                { "AreNotEqual", "NotEqual" },
+                { "IsNull", "Null" },
+                { "IsNotNull", "NotNull" },
+                { "AreSame", "Same" },
+                { "AreNotSame", "NotSame" },
+                { "IsTrue", "True" },
+                { "IsFalse", "False" },
+                { "IsInstanceOfType", "IsAssignableFrom" },
+
+            };
+
+            Dictionary<SimpleNameSyntax, string> nameReplacementsForNodes = new Dictionary<SimpleNameSyntax, string>();
+            List<InvocationExpressionSyntax> methodCallsToReverseArguments = new List<InvocationExpressionSyntax>();
+
+            foreach (var methodCallSyntax in root.DescendantNodes().OfType<MemberAccessExpressionSyntax>())
+            {
+                var expressionSyntax = methodCallSyntax.Expression;
+                var expressionTypeInfo = semanticModel.GetTypeInfo(expressionSyntax);
+                if (expressionTypeInfo.Type != null)
+                {
+                    string expressionDocID = expressionTypeInfo.Type.GetDocumentationCommentId();
+                    if (expressionDocID == "T:Microsoft.VisualStudio.TestTools.UnitTesting.Assert")
+                    {
+                        string newMethodName;
+                        if (assertMethodsToRename.TryGetValue(methodCallSyntax.Name.Identifier.Text, out newMethodName))
+                        {
+                            nameReplacementsForNodes.Add(methodCallSyntax.Name, newMethodName);
+
+                            if (newMethodName == "IsAssignableFrom" && methodCallSyntax.Parent is InvocationExpressionSyntax)
+                            {
+                                //  Parameter order is reversed between MSTest Assert.IsInstanceOfType and xUnit Assert.IsAssignableFrom
+                                methodCallsToReverseArguments.Add((InvocationExpressionSyntax)methodCallSyntax.Parent);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (nameReplacementsForNodes.Any())
+            {
+                transformationTracker.AddTransformation(nameReplacementsForNodes.Keys, (transformationRoot, rewrittenNodes, originalNodeMap) =>
+                {
+                    return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                    {
+                        var realOriginalNode = (SimpleNameSyntax)originalNodeMap[originalNode];
+                        string newName = nameReplacementsForNodes[realOriginalNode];
+                        return SyntaxFactory.ParseName(newName);
+                    });
+                });
+
+                transformationTracker.AddTransformation(methodCallsToReverseArguments, (transformationRoot, rewrittenNodes, originalNodeMap) =>
+                {
+                    return transformationRoot.ReplaceNodes(rewrittenNodes, (originalNode, rewrittenNode) =>
+                    {
+                        var invocationExpression = (InvocationExpressionSyntax)rewrittenNode;
+                        var oldArguments = invocationExpression.ArgumentList.Arguments;
+                        var newArguments = new SeparatedSyntaxList<ArgumentSyntax>().AddRange(new[] { oldArguments[1], oldArguments[0] });
+
+                        return invocationExpression.WithArgumentList(invocationExpression.ArgumentList.WithArguments(newArguments));                        
+                    });
+                });
+            }
         }
 
         private static SyntaxTriviaList RemoveCompilerDirectives(SyntaxTriviaList stl)
@@ -186,10 +256,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         class TransformationTracker
         {
-            Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, CompilationUnitSyntax>> _annotationToTransformation = new Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, CompilationUnitSyntax>>();
+            Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>> _annotationToTransformation = new Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>>();
             Dictionary<SyntaxNode, List<SyntaxAnnotation>> _nodeToAnnotations = new Dictionary<SyntaxNode, List<SyntaxAnnotation>>();
+            Dictionary<SyntaxAnnotation, SyntaxNode> _originalNodeLookup = new Dictionary<SyntaxAnnotation, SyntaxNode>();
 
-            public void AddTransformation(IEnumerable<SyntaxNode> nodesToTransform, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, CompilationUnitSyntax> transformerFunc)
+            public void AddTransformation(IEnumerable<SyntaxNode> nodesToTransform, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax> transformerFunc)
             {
                 var annotation = new SyntaxAnnotation();
                 _annotationToTransformation[annotation] = transformerFunc;
@@ -203,6 +274,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         _nodeToAnnotations[node] = annotationsForNode;
                     }
                     annotationsForNode.Add(annotation);
+
+                    var originalNodeAnnotation = new SyntaxAnnotation();
+                    _originalNodeLookup[originalNodeAnnotation] = node;
+                    annotationsForNode.Add(originalNodeAnnotation);
                 }
             }
 
@@ -210,15 +285,28 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             {
                 root = root.ReplaceNodes(_nodeToAnnotations.Keys, (originalNode, rewrittenNode) =>
                 {
-                    return rewrittenNode.WithAdditionalAnnotations(_nodeToAnnotations[originalNode]);
+                    var ret = rewrittenNode.WithAdditionalAnnotations(_nodeToAnnotations[originalNode]);
+
+                    return ret;
                 });
 
                 foreach (var kvp in _annotationToTransformation)
                 {
+                    Dictionary<SyntaxNode, SyntaxNode> originalNodeMap = new Dictionary<SyntaxNode, SyntaxNode>();
+                    foreach (var originalNodeKvp in _originalNodeLookup)
+                    {
+                        var annotatedNodes = root.GetAnnotatedNodes(originalNodeKvp.Key).ToList();
+                        SyntaxNode annotatedNode = annotatedNodes.SingleOrDefault();
+                        if (annotatedNode != null)
+                        {
+                            originalNodeMap[annotatedNode] = originalNodeKvp.Value;
+                        }
+                    }
+
                     var syntaxAnnotation = kvp.Key;
                     var transformation = kvp.Value;
                     var nodesToTransform = root.GetAnnotatedNodes(syntaxAnnotation);
-                    root = transformation(root, nodesToTransform);
+                    root = transformation(root, nodesToTransform, originalNodeMap);
                 }
 
                 return root;
