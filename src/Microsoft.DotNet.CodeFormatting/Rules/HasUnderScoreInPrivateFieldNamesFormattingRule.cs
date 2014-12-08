@@ -76,11 +76,29 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var model = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
                 var root = await model.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
                 var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(AnnotationMarker).ElementAt(i), cancellationToken);
-                var newName = "_" + symbol.Name;
+                var newName = GetNewSymbolName(symbol);
                 solution = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
             }
 
             return solution;
+        }
+
+        private static string GetNewSymbolName(ISymbol symbol)
+        {
+            if (symbol.IsStatic)
+            {
+                if (symbol.GetType().Equals(typeof(Thread)))
+                {
+                    if (!symbol.Name.StartsWith("t_"))
+                        return "t_" + symbol.Name;
+                }
+                else if (!symbol.Name.StartsWith("s_"))
+                    return "s_" + symbol.Name;
+
+                return symbol.Name;
+            }
+
+            return "_" + symbol.Name;
         }
 
         private async Task<Solution> CleanSolutionAsync(Solution solution, CancellationToken cancellationToken)
