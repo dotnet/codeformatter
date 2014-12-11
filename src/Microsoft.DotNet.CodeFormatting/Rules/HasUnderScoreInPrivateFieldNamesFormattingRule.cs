@@ -87,7 +87,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             if (symbol.IsStatic)
             {
-                if (symbol.GetType().Equals(typeof(Thread)))
+                // Check for ThreadStatic private fields.
+                if (symbol.GetAttributes().Any(a => a.AttributeClass.Name.Equals("ThreadStatic")))
                 {
                     if (!symbol.Name.StartsWith("t_"))
                         return "t_" + symbol.Name;

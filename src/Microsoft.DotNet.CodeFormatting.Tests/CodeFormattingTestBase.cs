@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return new Rules.IsFormattedFormattingRule();
         }
 
-        internal static Solution CreateSolution(string[] sources, string language = LanguageNames.CSharp)
+        private static Solution CreateSolution(string[] sources, string language = LanguageNames.CSharp)
         {
             string fileExtension = language == LanguageNames.CSharp ? CSharpFileExtension : VBFileExtension;
             var projectId = ProjectId.CreateNewId(TestProjectName);
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return solution;
         }
 
-        internal static async Task<Solution> Format(Solution solution, IFormattingRule rule)
+        private static async Task<Solution> Format(Solution solution, IFormattingRule rule)
         {
             var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
 
@@ -66,13 +66,13 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return solution;
         }
 
-        internal static async Task<Document> RewriteDocumentAsync(Document document, IFormattingRule rule)
+        private static async Task<Document> RewriteDocumentAsync(Document document, IFormattingRule rule)
         {
             document = await rule.ProcessAsync(document, CancellationToken.None);
             return await GetDefaultVSFormatter().ProcessAsync(document, CancellationToken.None);
         }
 
-        internal static void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
+        private static void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
         {
             var expectedDocuments = expectedSolution.Projects.SelectMany(p => p.Documents);
             var actualDocuments = actualSolution.Projects.SelectMany(p => p.Documents);
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             }
         }
 
-        internal void Verify(string[] sources, string[] expected, IFormattingRule rule)
+        private static void Verify(string[] sources, string[] expected, IFormattingRule rule)
         {
             var inputSolution = CreateSolution(sources);
             var expectedSolution = CreateSolution(expected);
@@ -101,12 +101,12 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             AssertSolutionEqual(expectedSolution, actualSolution);
         }
 
-        internal void Verify(string[] source, string[] expected)
+        protected void Verify(string[] source, string[] expected)
         {
             Verify(source, expected, GetFormattingRule());
         }
 
-        internal void Verify(string source, string expected)
+        protected void Verify(string source, string expected)
         {
             Verify(new string[] { source }, new string[] { expected });
         }
