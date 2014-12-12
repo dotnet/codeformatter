@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,9 +16,9 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 {
     public abstract class CodeFormattingTestBase
     {
-        private static readonly MetadataReference CorlibReference = MetadataReference.CreateFromAssembly(typeof(object).Assembly);
-        private static readonly MetadataReference SystemCoreReference = MetadataReference.CreateFromAssembly(typeof(Enumerable).Assembly);
-        private static readonly MetadataReference CodeFormatterReference = MetadataReference.CreateFromAssembly(typeof(IFormattingEngine).Assembly);
+        private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromAssembly(typeof(object).Assembly);
+        private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromAssembly(typeof(Enumerable).Assembly);
+        private static readonly MetadataReference s_CodeFormatterReference = MetadataReference.CreateFromAssembly(typeof(IFormattingEngine).Assembly);
 
         private const string FileNamePrefix = "Test";
         private const string CSharpFileExtension = ".cs";
@@ -37,12 +40,12 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             var solution = new CustomWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
-                .AddMetadataReference(projectId, CorlibReference)
-                .AddMetadataReference(projectId, SystemCoreReference)
-                .AddMetadataReference(projectId, CodeFormatterReference);
+                .AddMetadataReference(projectId, s_CorlibReference)
+                .AddMetadataReference(projectId, s_SystemCoreReference)
+                .AddMetadataReference(projectId, s_CodeFormatterReference);
 
             int count = 0;
-            foreach(var source in sources)
+            foreach (var source in sources)
             {
                 var fileName = FileNamePrefix + count + fileExtension;
                 var documentId = DocumentId.CreateNewId(projectId, fileName);
@@ -52,24 +55,26 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return solution;
         }
 
-        private static async Task<Solution> Format(Solution solution, IFormattingRule rule)
+        private static async Task<Solution> Format(Solution solution, IFormattingRule rule, bool runFormatter)
         {
             var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
 
             foreach (var id in documentIds)
             {
                 var document = solution.GetDocument(id);
-                var newDocument = await RewriteDocumentAsync(document, rule);
+                var newDocument = await RewriteDocumentAsync(document, rule, runFormatter);
                 solution = newDocument.Project.Solution;
             }
 
             return solution;
         }
 
-        private static async Task<Document> RewriteDocumentAsync(Document document, IFormattingRule rule)
+        private static async Task<Document> RewriteDocumentAsync(Document document, IFormattingRule rule, bool runFormatter)
         {
             document = await rule.ProcessAsync(document, CancellationToken.None);
-            return await GetDefaultVSFormatter().ProcessAsync(document, CancellationToken.None);
+            if (runFormatter)
+                return await GetDefaultVSFormatter().ProcessAsync(document, CancellationToken.None);
+            return document;
         }
 
         private static void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
@@ -89,11 +94,11 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             }
         }
 
-        private static void Verify(string[] sources, string[] expected, IFormattingRule rule)
+        private static void Verify(string[] sources, string[] expected, IFormattingRule rule, bool runFormatter)
         {
             var inputSolution = CreateSolution(sources);
             var expectedSolution = CreateSolution(expected);
-            var actualSolution = Format(inputSolution, rule).Result;
+            var actualSolution = Format(inputSolution, rule, runFormatter).Result;
 
             if (actualSolution == null)
                 Assert.False(true, "Solution is null. Test Failed.");
@@ -101,14 +106,14 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             AssertSolutionEqual(expectedSolution, actualSolution);
         }
 
-        protected void Verify(string[] source, string[] expected)
+        protected void Verify(string[] source, string[] expected, bool runFormatter)
         {
-            Verify(source, expected, GetFormattingRule());
+            Verify(source, expected, GetFormattingRule(), runFormatter);
         }
 
-        protected void Verify(string source, string expected)
+        protected void Verify(string source, string expected, bool runFormatter = true)
         {
-            Verify(new string[] { source }, new string[] { expected });
+            Verify(new string[] { source }, new string[] { expected }, runFormatter);
         }
     }
 }

@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -39,7 +40,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var tokensToReplace = openBraceTokens.Where((token) =>
             {
                 var nextToken = token.GetNextToken();
-                return (nextToken.HasLeadingTrivia && nextToken.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);         
+                return (nextToken.HasLeadingTrivia && nextToken.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);
             }).Select((token) => token.GetNextToken());
 
             return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replacementForTokens));

@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [RuleOrder(3)]
     internal sealed class HasCopyrightHeaderFormattingRule : IFormattingRule
     {
-        static readonly string[] CopyrightHeader =
+        private static readonly string[] s_copyrightHeader =
         {
             "// Copyright (c) Microsoft. All rights reserved.",
             "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
@@ -37,12 +38,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static bool HasCopyrightHeader(SyntaxNode syntaxNode)
         {
             var leadingComments = syntaxNode.GetLeadingTrivia().Where(t => t.CSharpKind() == SyntaxKind.SingleLineCommentTrivia).ToArray();
-            if (leadingComments.Length < CopyrightHeader.Length)
+            if (leadingComments.Length < s_copyrightHeader.Length)
                 return false;
 
-            return leadingComments.Take(CopyrightHeader.Length)
+            return leadingComments.Take(s_copyrightHeader.Length)
                                   .Select(t => t.ToFullString())
-                                  .SequenceEqual(CopyrightHeader);
+                                  .SequenceEqual(s_copyrightHeader);
         }
 
         private static SyntaxNode AddCopyrightHeader(CSharpSyntaxNode syntaxNode)
@@ -53,7 +54,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         private static IEnumerable<SyntaxTrivia> GetCopyrightHeader()
         {
-            foreach (var headerLine in CopyrightHeader)
+            foreach (var headerLine in s_copyrightHeader)
             {
                 yield return SyntaxFactory.Comment(headerLine);
                 yield return SyntaxFactory.CarriageReturnLineFeed;

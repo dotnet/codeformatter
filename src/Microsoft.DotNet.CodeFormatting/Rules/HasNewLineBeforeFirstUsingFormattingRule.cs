@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxRoot == null)
                 return document;
-           
+
             var firstUsing = syntaxRoot.DescendantNodesAndSelf().OfType<UsingDirectiveSyntax>().FirstOrDefault();
             if (firstUsing == null)
                 return document;
@@ -55,9 +56,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 {
                     // Add two new lines, previous element is a comment
                     newTrivia = trivia.AddTwoNewLines();
-                }                
+                }
             }
-            
+
             return document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstUsing, firstUsing.WithLeadingTrivia(newTrivia)));
         }
 
@@ -82,7 +83,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 // Insert new lines before the structured trivia
                 return GetLeadingTriviaWithEndStructure(trivia.Take(index + 1));
             }
-           
+
             // Add two new lines, previous element is a comment
             return trivia.Take(index + 1).AddTwoNewLines();
         }
@@ -98,13 +99,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 // There is no element before the structured trivia
                 return trivia;
             }
-            
+
             // Insert two new lines before the structured trivia, previous element is a comment
             if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
                 return trivia.Take(index + 1).AddTwoNewLines().Concat(trivia.Skip(index + 1));
 
             // Insert one new line before the structured trivia, previous element is new line
-            if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).CSharpKind())
+            if (index != 0 && SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).CSharpKind())
                 return trivia.Take(index + 1).AddNewLine().Concat(trivia.Skip(index + 1));
 
             // Already has the right format

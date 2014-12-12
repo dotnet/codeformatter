@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [RuleOrder(9)]
     internal sealed class HasPrivateAccessorOnFieldNamesFormattingRule : IFormattingRule
     {
-        private static readonly string[] AccessorModifiers = {"public", "private", "internal", "protected"};
+        private static readonly string[] s_nonPrivateAccessorModifiers = { "public", "private", "internal", "protected" };
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
@@ -38,7 +39,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     // There is trivia associated with the first modifier token
                     privateKeyword = privateKeyword.WithLeadingTrivia(field.Modifiers.First().LeadingTrivia);
                     var nextTrivia = field.Modifiers.First().WithLeadingTrivia();
-                    tokenList = tokenList.Concat(new[] { privateKeyword, nextTrivia}).Concat(field.Modifiers.Skip(1));
+                    tokenList = tokenList.Concat(new[] { privateKeyword, nextTrivia }).Concat(field.Modifiers.Skip(1));
                 }
                 else if (field.ChildNodes().OfType<VariableDeclarationSyntax>().First().GetFirstToken().HasLeadingTrivia)
                 {
@@ -64,7 +65,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             IEnumerable<FieldDeclarationSyntax> fieldsWithNoAccessor = Enumerable.Empty<FieldDeclarationSyntax>();
             foreach (var type in typeNodes)
             {
-                fieldsWithNoAccessor = fieldsWithNoAccessor.Concat(type.ChildNodes().OfType<FieldDeclarationSyntax>().Where(f => !AccessorModifiers.Any(f.Modifiers.ToString().Contains)));
+                fieldsWithNoAccessor = fieldsWithNoAccessor.Concat(type.ChildNodes().OfType<FieldDeclarationSyntax>().Where(f => !s_nonPrivateAccessorModifiers.Any(f.Modifiers.ToString().Contains)));
             }
 
             return fieldsWithNoAccessor;

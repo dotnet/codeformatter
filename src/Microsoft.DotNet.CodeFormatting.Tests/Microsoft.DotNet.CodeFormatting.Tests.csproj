@@ -102,6 +102,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
+    <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
+    <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
+    <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRuleTests.cs" />
+    <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasPrivateAccessorOnFieldNamesFormattingRuleTests.cs" />
   </ItemGroup>
   <ItemGroup>

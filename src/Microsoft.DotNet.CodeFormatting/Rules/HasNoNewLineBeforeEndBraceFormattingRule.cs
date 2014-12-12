@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -25,7 +26,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             Func<SyntaxToken, SyntaxToken, SyntaxToken> replaceTriviaInTokens = (token, dummy) =>
             {
                 var newTrivia = RemoveNewLinesFromTop(token.LeadingTrivia);
-                newTrivia = RemoveNewLinesFromBotton(newTrivia);
+                newTrivia = RemoveNewLinesFromBottom(newTrivia);
                 return token.WithLeadingTrivia(newTrivia);
             };
 
@@ -54,13 +55,22 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return trivia.Skip(elementsToRemoveAtStart);
         }
 
-        private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromBotton(IEnumerable<SyntaxTrivia> trivia)
+        private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromBottom(IEnumerable<SyntaxTrivia> trivia)
         {
             bool addWhitespace = false;
-            if (trivia.Count() > 1 && trivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia)
+            bool addNewLine = false;
+            var initialCount = trivia.Count();
+            if (initialCount > 1 && trivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia)
             {
                 addWhitespace = true;
-                trivia = trivia.Take(trivia.Count() - 1);
+                trivia = trivia.Take(initialCount - 1);
+            }
+            else if (initialCount > 1 &&
+                trivia.ElementAt(initialCount - 2).CSharpKind() != SyntaxKind.EndOfLineTrivia &&
+                trivia.ElementAt(initialCount - 2).CSharpKind() != SyntaxKind.WhitespaceTrivia &&
+                !trivia.ElementAt(initialCount - 2).HasStructure)
+            {
+                addNewLine = true;
             }
 
             int elementsToRemoveAtEnd = trivia.Count() - 1;
@@ -83,6 +93,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return newTrivia.AddWhiteSpaceTrivia();
 
                 return newTrivia.AddNewLine().AddWhiteSpaceTrivia();
+            }
+
+            if (addNewLine)
+            {
+                return newTrivia.AddNewLine();
             }
 
             return newTrivia;

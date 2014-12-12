@@ -1,5 +1,5 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private IEnumerable<SyntaxTrivia> GetLeadingTriviaWithEndStructure(IEnumerable<SyntaxTrivia> trivia)
         {
             int index = trivia.Count() - 1;
-            while (index >= 0 && 
+            while (index >= 0 &&
                 (trivia.ElementAt(index).HasStructure ||
                 trivia.ElementAt(index).CSharpKind() == SyntaxKind.DisabledTextTrivia))
                 index--;

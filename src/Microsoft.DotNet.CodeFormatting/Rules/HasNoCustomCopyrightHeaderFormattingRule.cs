@@ -1,5 +1,6 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     internal sealed class HasNoCustomCopyrightHeaderFormattingRule : IFormattingRule
     {
         private static string RulerMarker { get; set; }
-        private static string StartMarker { get; set;}
+        private static string StartMarker { get; set; }
         private static string EndMarker { get; set; }
 
         private const string FileNotFoundError = "The specified CopyrightHeader.md file was not found.";
@@ -142,6 +143,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             EndMarker = lines[2];
 
             return true;
-        }       
+        }
     }
 }

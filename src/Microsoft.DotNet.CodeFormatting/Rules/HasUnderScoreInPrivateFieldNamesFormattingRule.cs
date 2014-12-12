@@ -1,5 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under MIT. See LICENSE in the project root for license information.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,9 +22,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     // If needed, enable the rule and enable the hack at the code below in RenameFields.
     internal sealed class HasUnderScoreInPrivateFieldNamesFormattingRule : IFormattingRule
     {
-        private static string[] AccessorModifiers = { "public", "internal", "protected", "const" };
+        private static string[] s_keywordsToIgnore = { "public", "internal", "protected", "const" };
 
-        private static readonly SyntaxAnnotation AnnotationMarker = new SyntaxAnnotation();
+        private static readonly SyntaxAnnotation s_annotationMarker = new SyntaxAnnotation();
 
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
@@ -49,7 +50,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             foreach (var type in typeNodes)
             {
                 privateFields = privateFields.Concat(type.ChildNodes().OfType<FieldDeclarationSyntax>()
-                    .Where(f => !AccessorModifiers.Any(f.Modifiers.ToString().Contains)).SelectMany(f => f.Declaration.Variables))
+                    .Where(f => !s_keywordsToIgnore.Any(f.Modifiers.ToString().Contains)).SelectMany(f => f.Declaration.Variables))
                     .Where(v => !(v as VariableDeclaratorSyntax).Identifier.Text.StartsWith("_"));
             }
 
@@ -60,7 +61,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             Func<SyntaxNode, SyntaxNode, SyntaxNode> addAnnotation = (variable, dummy) =>
             {
-                return variable.WithAdditionalAnnotations(AnnotationMarker);
+                return variable.WithAdditionalAnnotations(s_annotationMarker);
             };
 
             return document.WithSyntaxRoot(syntaxRoot.ReplaceNodes(privateFields, addAnnotation)).Project.Solution;
@@ -75,7 +76,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 solution = await CleanSolutionAsync(solution, cancellationToken);
                 var model = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
                 var root = await model.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
-                var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(AnnotationMarker).ElementAt(i), cancellationToken);
+                var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(s_annotationMarker).ElementAt(i), cancellationToken);
                 var newName = GetNewSymbolName(symbol);
                 solution = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
             }
@@ -85,34 +86,27 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         private static string GetNewSymbolName(ISymbol symbol)
         {
+            var symbolName = symbol.Name.TrimStart('_');
             if (symbol.IsStatic)
             {
                 // Check for ThreadStatic private fields.
                 if (symbol.GetAttributes().Any(a => a.AttributeClass.Name.Equals("ThreadStatic")))
                 {
-                    if (!symbol.Name.StartsWith("t_"))
-                        return "t_" + symbol.Name;
+                    if (!symbolName.StartsWith("t_", StringComparison.OrdinalIgnoreCase))
+                        return "t_" + symbolName;
                 }
-                else if (!symbol.Name.StartsWith("s_"))
-                    return "s_" + symbol.Name;
+                else if (!symbolName.StartsWith("s_", StringComparison.OrdinalIgnoreCase))
+                    return "s_" + symbolName;
 
-                return symbol.Name;
+                return symbolName;
             }
 
-            return "_" + symbol.Name;
+            return "_" + symbolName;
         }
 
         private async Task<Solution> CleanSolutionAsync(Solution solution, CancellationToken cancellationToken)
         {
-            var documentIdsToProcess = new List<DocumentId>();
-            foreach (var document in solution.Projects.SelectMany(p => p.Documents))
-            {
-                var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-                if (root.HasAnnotations("Rename") || true)
-                {
-                    documentIdsToProcess.Add(document.Id);
-                }
-            }
+            var documentIdsToProcess = solution.Projects.SelectMany(p => p.DocumentIds).ToList();
 
             foreach (var documentId in documentIdsToProcess)
             {
