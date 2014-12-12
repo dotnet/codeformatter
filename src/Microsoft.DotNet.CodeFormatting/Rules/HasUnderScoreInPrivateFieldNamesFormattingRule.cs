@@ -87,6 +87,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static string GetNewSymbolName(ISymbol symbol)
         {
             var symbolName = symbol.Name.TrimStart('_');
+            if (symbolName.StartsWith("m_", StringComparison.OrdinalIgnoreCase)) symbolName = symbolName.Remove(0, 2);
             if (symbol.IsStatic)
             {
                 // Check for ThreadStatic private fields.
