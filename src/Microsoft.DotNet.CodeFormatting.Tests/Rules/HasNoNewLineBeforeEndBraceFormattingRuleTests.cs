@@ -34,6 +34,11 @@ class O
 
 }
 class M {
+}
+class R
+{
+    // some comment
+
 }";
             var expected = @"
 using System;
@@ -57,6 +62,10 @@ class O
 }
 class M
 {
+}
+class R
+{
+    // some comment
 }";
             Verify(text, expected);
         }
@@ -81,6 +90,44 @@ class L
 { // some comment
 }
 ";
+            Verify(text, expected);
+        }
+
+        [Fact]
+        public void TestNoNewLineBeforeEndBrace03()
+        {
+            var text = @"
+class S 
+{
+
+
+    }    
+
+  
+";
+            var expected = @"
+class S
+{
+}
+
+
+";
+            Verify(text, expected);
+        }
+
+        [Fact]
+        public void TestNoNewLineBeforeEndBrace04()
+        {
+            var text = @"
+class S 
+{   
+    
+
+}";
+            var expected = @"
+class S
+{
+}";
             Verify(text, expected);
         }
 

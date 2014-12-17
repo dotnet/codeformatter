@@ -87,6 +87,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             var newTrivia = trivia.Take(elementsToRemoveAtEnd + 1);
 
+            if (newTrivia.Any() && newTrivia.Last().CSharpKind().ToString().ToLower().Contains("comment"))
+                addNewLine = true;
+
             if (addWhitespace)
             {
                 if (newTrivia.Last().IsDirective)

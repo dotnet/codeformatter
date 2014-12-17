@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -87,11 +88,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static string GetNewSymbolName(ISymbol symbol)
         {
             var symbolName = symbol.Name.TrimStart('_');
-            if (symbolName.StartsWith("m_", StringComparison.OrdinalIgnoreCase)) symbolName = symbolName.Remove(0, 2);
+            Regex regex = new Regex("^(.)_");
+            if (regex.IsMatch(symbolName)) symbolName = symbolName.Remove(0, 2);
             if (symbol.IsStatic)
             {
                 // Check for ThreadStatic private fields.
-                if (symbol.GetAttributes().Any(a => a.AttributeClass.Name.Equals("ThreadStatic")))
+                if (symbol.GetAttributes().Any(a => a.AttributeClass.Name.Equals("ThreadStaticAttribute")))
                 {
                     if (!symbolName.StartsWith("t_", StringComparison.OrdinalIgnoreCase))
                         return "t_" + symbolName;
