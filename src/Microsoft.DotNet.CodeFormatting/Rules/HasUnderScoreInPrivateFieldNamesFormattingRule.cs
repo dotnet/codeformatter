@@ -110,31 +110,31 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private async Task<Solution> CleanSolutionAsync(Solution solution, CancellationToken cancellationToken)
         {
             var documentIdsToProcess = solution.Projects.SelectMany(p => p.DocumentIds).ToList();
-
+            const string rename = "Rename";
             foreach (var documentId in documentIdsToProcess)
             {
                 var root = await solution.GetDocument(documentId).GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
                 while (true)
                 {
-                    var renameNodes = root.DescendantNodes(descendIntoTrivia: true).Where(s => s.GetAnnotations("Rename").Any());
+                    var renameNodes = root.DescendantNodes(descendIntoTrivia: true).Where(s => s.GetAnnotations(rename).Any());
                     if (!renameNodes.Any())
                     {
                         break;
                     }
 
-                    root = root.ReplaceNode(renameNodes.First(), renameNodes.First().WithoutAnnotations("Rename"));
+                    root = root.ReplaceNode(renameNodes.First(), renameNodes.First().WithoutAnnotations(rename));
                 }
 
                 while (true)
                 {
-                    var renameTokens = root.DescendantTokens(descendIntoTrivia: true).Where(s => s.GetAnnotations("Rename").Any());
+                    var renameTokens = root.DescendantTokens(descendIntoTrivia: true).Where(s => s.GetAnnotations(rename).Any());
                     if (!renameTokens.Any())
                     {
                         break;
                     }
 
-                    root = root.ReplaceToken(renameTokens.First(), renameTokens.First().WithoutAnnotations("Rename"));
+                    root = root.ReplaceToken(renameTokens.First(), renameTokens.First().WithoutAnnotations(rename));
                 }
 
                 solution = solution.WithDocumentSyntaxRoot(documentId, root);
