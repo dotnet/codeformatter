@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static string GetNewSymbolName(ISymbol symbol)
         {
             var symbolName = symbol.Name.TrimStart('_');
-            Regex regex = new Regex("^(.)_");
+            Regex regex = new Regex("^._");
             if (regex.IsMatch(symbolName)) symbolName = symbolName.Remove(0, 2);
             if (symbol.IsStatic)
             {
