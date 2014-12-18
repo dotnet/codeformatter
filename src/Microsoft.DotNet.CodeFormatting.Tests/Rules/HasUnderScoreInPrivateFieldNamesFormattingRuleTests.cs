@@ -19,7 +19,7 @@ class T
     // some trivia
     private static int m_z;
     // some trivia
-    private int k = 1, m_s = 2;
+    private int k = 1, m_s = 2, rsk_yz = 3, x_y_z;
     // some trivia
     [ThreadStatic] static int r;
     [ThreadStaticAttribute] static int b_r;
@@ -33,7 +33,7 @@ class T
     // some trivia
     private static int s_z;
     // some trivia
-    private int _k = 1, _s = 2;
+    private int _k = 1, _s = 2, _rsk_yz = 3, _y_z;
     // some trivia
     [ThreadStatic]
     static int t_r;

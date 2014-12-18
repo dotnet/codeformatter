@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -70,10 +72,19 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Document> RewriteDocumentAsync(Document document, CancellationToken cancellationToken)
         {
+            var docText = await document.GetTextAsync();
+            var originalEncoding = docText.Encoding;
             foreach (var rule in _rules)
                 document = await rule.ProcessAsync(document, cancellationToken);
 
-            return document;
+            return await ChangeEncoding(document, originalEncoding);
+        }
+
+        private async Task<Document> ChangeEncoding(Document document, Encoding encoding)
+        {
+            var text = await document.GetTextAsync();
+            var newText = SourceText.From(text.ToString(), encoding);
+            return document.WithText(newText);
         }
     }
 }
