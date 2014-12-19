@@ -5,20 +5,20 @@ using System.Linq;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition;
 using System.Collections.Generic;
+using Microsoft.DotNet.CodeFormatting.Rules;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingEngine
     {
+        private const string RuleTypeNotFoundError = "The specified rule type was not found: ";
+
         public static IFormattingEngine Create(IEnumerable<string> ruleTypes)
         {
             var catalog = new AssemblyCatalog(typeof(FormattingEngine).Assembly);
 
-            var ruleTypesHash = new HashSet<string>(ruleTypes);
-            if (ruleTypesHash.Count == 0)
-            {
-                ruleTypesHash.Add(RuleTypeConstants.FormatCodeRuleType);
-            }
+            var ruleTypesHash = new HashSet<string>(ruleTypes, StringComparer.InvariantCultureIgnoreCase);
+            var notFoundRuleTypes = new HashSet<string>(ruleTypes, StringComparer.InvariantCultureIgnoreCase);
 
             var filteredCatalog = new FilteredCatalog(catalog, cpd =>
             {
@@ -27,11 +27,15 @@ namespace Microsoft.DotNet.CodeFormatting
                     em.ContractName == AttributedModelServices.GetContractName(typeof(IFormattingFilter))))
                 {
                     object ruleType;
-                    if (cpd.Metadata.TryGetValue("RuleType", out ruleType))
+                    if (cpd.Metadata.TryGetValue(RuleTypeConstants.PartMetadataKey, out ruleType))
                     {
-                        if (ruleType is string && !ruleTypesHash.Contains((string)ruleType))
+                        if (ruleType is string)
                         {
-                            return false;
+                            notFoundRuleTypes.Remove((string)ruleType);
+                            if (!ruleTypesHash.Contains((string)ruleType))
+                            {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -41,6 +45,13 @@ namespace Microsoft.DotNet.CodeFormatting
 
             var container = new CompositionContainer(filteredCatalog);
             var engine = container.GetExportedValue<IFormattingEngine>();
+
+            //  Need to do this after the catalog is queried, otherwise the lambda won't have been run
+            foreach (var notFoundRuleType in notFoundRuleTypes)
+            {
+                (RuleTypeNotFoundError + notFoundRuleType).WriteConsoleError(1, "");
+            }
+
             return engine;
         }
     }

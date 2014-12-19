@@ -11,19 +11,30 @@ using System.ComponentModel.Composition;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CodeGeneration;
 using System.Runtime.Serialization;
+using System.IO;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(1)]
+    [RuleOrder(101)]
     [PartMetadata(RuleTypeConstants.PartMetadataKey, RuleTypeConstants.ConvertTestsRuleType)]
-    internal sealed class UsesXunitForTests : IFormattingRule
+    internal sealed class UsesXunitForTestsFormattingRule : IFormattingRule
     {
+        private static object _lockObject = new object();
+        private static HashSet<string> _mstestNamespaces;
+
+        private const string FileNotFoundError = "The MSTestNamespaces.txt file was not found.";
+
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
 
             if (root == null)
                 return document;
+
+            if (!LoadMSTestNamespaces())
+            {
+                return document;
+            }
 
             var originalRoot = root;
 
@@ -38,9 +49,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 if (symbolInfo.Symbol != null)
                 {
                     string namespaceDocID = symbolInfo.Symbol.GetDocumentationCommentId();
-                    if (namespaceDocID == "N:Microsoft.VisualStudio.TestPlatform.UnitTestFramework" ||
-                        namespaceDocID == "N:Microsoft.Bcl.Testing" ||
-                        namespaceDocID == "N:Microsoft.VisualStudio.TestTools.UnitTesting")
+                    if (_mstestNamespaces.Contains(namespaceDocID))
                     {
                         needsChanges = true;
                     }
@@ -111,7 +120,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     if (typeInfo.Type != null)
                     {
                         string attributeTypeDocID = typeInfo.Type.GetDocumentationCommentId();
-                        if (attributeTypeDocID == "T:Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute")
+                        if (IsTestNamespaceType(attributeTypeDocID, "TestClassAttribute"))
                         {
                             return true;
 
@@ -152,7 +161,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 if (typeInfo.Type != null)
                 {
                     string attributeTypeDocID = typeInfo.Type.GetDocumentationCommentId();
-                    if (attributeTypeDocID == "T:Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute")
+                    if (IsTestNamespaceType(attributeTypeDocID, "TestMethodAttribute"))
                     {
                         nodesToReplace.Add(attributeSyntax);
                     }
@@ -194,7 +203,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 if (expressionTypeInfo.Type != null)
                 {
                     string expressionDocID = expressionTypeInfo.Type.GetDocumentationCommentId();
-                    if (expressionDocID == "T:Microsoft.VisualStudio.TestTools.UnitTesting.Assert")
+                    if (IsTestNamespaceType(expressionDocID, "Assert"))
                     {
                         string newMethodName;
                         if (assertMethodsToRename.TryGetValue(methodCallSyntax.Name.Identifier.Text, out newMethodName))
@@ -252,6 +261,58 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             return stl;
+        }
+
+        private static bool IsTestNamespaceType(string docID, string simpleTypeName)
+        {
+            if (docID == null)
+            {
+                return false;
+            }
+
+            int lastPeriod = docID.LastIndexOf('.');
+            if (lastPeriod < 0)
+            {
+                return false;
+            }
+
+            string simpleTypeNameFromDocID = docID.Substring(lastPeriod + 1);
+            if (simpleTypeNameFromDocID != simpleTypeName)
+            {
+                return false;
+            }
+
+            string namespaceDocID = "N" + docID.Substring(1, lastPeriod - 1);
+            return _mstestNamespaces.Contains(namespaceDocID);
+        }
+
+        private static bool LoadMSTestNamespaces()
+        {
+            lock(_lockObject)
+            {
+                if (_mstestNamespaces != null)
+                {
+                    return true;
+                }
+
+                var filePath = Path.Combine(
+                    Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(typeof(UsesXunitForTestsFormattingRule).Assembly.CodeBase).Path)),
+                    "MSTestNamespaces.txt");
+
+                if (!File.Exists(filePath))
+                {
+                    FileNotFoundError.WriteConsoleError(1, "MSTestNamespaces.txt");
+                    return false;
+                }
+
+                var lines = File.ReadAllLines(filePath);
+                _mstestNamespaces = new HashSet<string>(lines);
+                return true;
+            }
+
+            
+
+
         }
 
         class TransformationTracker

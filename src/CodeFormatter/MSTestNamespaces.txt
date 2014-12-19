@@ -1,0 +1,4 @@
+﻿N:Microsoft.VisualStudio.TestPlatform.UnitTestFramework
+N:Microsoft.Bcl.Testing
+N:Microsoft.VisualStudio.TestTools.UnitTesting
+N:CoreFXTestLibrary

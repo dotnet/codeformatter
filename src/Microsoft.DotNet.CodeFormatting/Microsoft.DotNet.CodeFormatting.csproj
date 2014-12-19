@@ -100,7 +100,7 @@
     <Compile Include="Rules\IsFormattedFormattingRule.cs" />
     <Compile Include="Rules\IsSimplifiedFormattingRule.cs" />
     <Compile Include="Rules\RuleExtensions.cs" />
-    <Compile Include="Rules\UsesXunitForTests.cs" />
+    <Compile Include="Rules\UsesXunitForTestsFormattingRule.cs" />
     <Compile Include="RuleTypeConstants.cs" />
   </ItemGroup>
   <ItemGroup>

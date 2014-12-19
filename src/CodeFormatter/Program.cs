@@ -1,13 +1,11 @@
 ﻿using System;
-using System.ComponentModel.Composition.Hosting;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
-using System.Collections.Generic;
 
 namespace CodeFormatter
 {
