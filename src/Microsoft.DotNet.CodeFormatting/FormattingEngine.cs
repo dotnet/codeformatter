@@ -7,6 +7,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition;
 using System.Collections.Generic;
 using Microsoft.DotNet.CodeFormatting.Rules;
+using Microsoft.DotNet.CodeFormatting.Filters;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -14,7 +15,7 @@ namespace Microsoft.DotNet.CodeFormatting
     {
         private const string RuleTypeNotFoundError = "The specified rule type was not found: ";
 
-        public static IFormattingEngine Create(IEnumerable<string> ruleTypes)
+        public static IFormattingEngine Create(IEnumerable<string> ruleTypes, IEnumerable<string> filenames)
         {
             var catalog = new AssemblyCatalog(typeof(FormattingEngine).Assembly);
 
@@ -45,6 +46,12 @@ namespace Microsoft.DotNet.CodeFormatting
             });
 
             var container = new CompositionContainer(filteredCatalog);
+
+            if (filenames.Any())
+            {
+                container.ComposeExportedValue<IFormattingFilter>(new FilenameFilter(filenames));
+            }
+
             var engine = container.GetExportedValue<IFormattingEngine>();
 
             //  Need to do this after the catalog is queried, otherwise the lambda won't have been run

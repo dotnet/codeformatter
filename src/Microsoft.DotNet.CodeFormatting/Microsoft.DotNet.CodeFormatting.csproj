@@ -77,7 +77,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Filters\TestFilter.cs" />
+    <Compile Include="Filters\FilenameFilter.cs" />
     <Compile Include="FormattingEngine.cs" />
     <Compile Include="FormattingEngineImplementation.cs" />
     <Compile Include="IFormattingEngine.cs" />

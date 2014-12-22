@@ -32,7 +32,14 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return new Rules.IsFormattedFormattingRule();
         }
 
-        private static Solution CreateSolution(string[] sources, string language = LanguageNames.CSharp)
+        protected virtual IEnumerable<MetadataReference> GetSolutionMetadataReferences()
+        {
+            yield return s_CorlibReference;
+            yield return s_SystemCoreReference;
+            yield return s_CodeFormatterReference;
+        }
+
+        private Solution CreateSolution(string[] sources, string language = LanguageNames.CSharp)
         {
             string fileExtension = language == LanguageNames.CSharp ? CSharpFileExtension : VBFileExtension;
             var projectId = ProjectId.CreateNewId(TestProjectName);
@@ -40,9 +47,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             var solution = new CustomWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
-                .AddMetadataReference(projectId, s_CorlibReference)
-                .AddMetadataReference(projectId, s_SystemCoreReference)
-                .AddMetadataReference(projectId, s_CodeFormatterReference);
+                .AddMetadataReferences(projectId, GetSolutionMetadataReferences());
 
             int count = 0;
             foreach (var source in sources)
@@ -94,7 +99,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             }
         }
 
-        private static void Verify(string[] sources, string[] expected, IFormattingRule rule, bool runFormatter)
+        private void Verify(string[] sources, string[] expected, IFormattingRule rule, bool runFormatter)
         {
             var inputSolution = CreateSolution(sources);
             var expectedSolution = CreateSolution(expected);
