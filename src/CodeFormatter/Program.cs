@@ -18,7 +18,10 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.Error.WriteLine("CodeFormatter <solution> [<rule types>] [/file <filename>]");
+                Console.WriteLine("CodeFormatter <solution> [<rule types>] [/file <filename>]");
+                Console.WriteLine("    <rule types> - Rule types to use in addition to the default ones.");
+                Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
+                Console.WriteLine("    <filename> - Only apply changes to files with specified name.");
                 return -1;
             }
 
