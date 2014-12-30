@@ -1,18 +1,17 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
@@ -24,12 +23,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         // We are going to remove any multiline comments that *only* contain these characters
         private const string CommentFormattingCharacters = "*/=-";
-
-        [ImportingConstructor]
-        public HasNoIllegalHeadersFormattingRule()
-        {
-
-        }
 
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
