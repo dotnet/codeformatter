@@ -12,6 +12,8 @@
     <AssemblyName>Microsoft.DotNet.CodeFormatting.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -104,6 +106,7 @@
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
+    <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRuleTests.cs" />
@@ -115,6 +118,10 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\CodeFormatter\IllegalHeaders.md">
+      <Link>IllegalHeaders.md</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +146,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.0.99.9-build1021\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.0.99.9-build1021\build\net20\xunit.runner.visualstudio.props'))" />
   </Target>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

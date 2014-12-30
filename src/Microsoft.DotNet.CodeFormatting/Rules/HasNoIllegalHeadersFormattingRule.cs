@@ -12,12 +12,25 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Reflection;
+using System.Text;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(2)]
     internal sealed class HasNoIllegalHeadersFormattingRule : IFormattingRule
     {
+        // We are going to replace this header with the actual filename of the document being processed
+        private const string FileNameIllegalHeader = "<<<filename>>>";
+
+        // We are going to remove any multiline comments that *only* contain these characters
+        private const string CommentFormattingCharacters = "*/=-";
+
+        [ImportingConstructor]
+        public HasNoIllegalHeadersFormattingRule()
+        {
+
+        }
+
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
@@ -26,13 +39,45 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             var leadingTrivia = syntaxNode.GetLeadingTrivia();
             SyntaxTriviaList newTrivia = leadingTrivia;
-            var illegalHeaders = GetIllegalHeaders();
+            var illegalHeaders = GetIllegalHeaders(document);
 
-            foreach (var trivia in leadingTrivia)
+            // We also want to add the filename (without path but with extension) to this list.
+
+            // because we are mutating the list, once we remove a header, we won't remove any others...
+            for (int idx = 0; idx < illegalHeaders.Length; idx++)
             {
-                if (illegalHeaders.Any(s => trivia.ToFullString().IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0))
+                var illegalHeader = illegalHeaders[idx];
+                foreach (var trivia in newTrivia)
                 {
-                    newTrivia = RemoveTrivia(newTrivia, trivia);
+                    // If we have an illegal header here...
+                    if (trivia.ToFullString().IndexOf(illegalHeader, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        if (trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+                        {
+                            // For multiline comment trivia we need to process them line by line and remove all the illegal headers.
+                            // We then need to re-create the multiline comment and append it to the list.
+                            var modifiedTrivia = RemoveIllegalHeadersFromMultilineComment(newTrivia, trivia, illegalHeader);
+
+                            // We need to go back and re-try the current illegal header if we have modified the multiline trivia.
+                            if (modifiedTrivia != newTrivia)
+                            {
+                                newTrivia = modifiedTrivia;
+                                idx--;
+                            }
+                            break;
+                        }
+                        else
+                        {
+                            var index = newTrivia.IndexOf(trivia);
+
+                            newTrivia = RemoveTriviaAtIndex(newTrivia, index);
+
+                            // We need to re-try the current illegal header to make sure there are no other comments containing it
+                            // further down the trivia list
+                            idx--;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -42,31 +87,101 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return document.WithSyntaxRoot(syntaxNode.WithLeadingTrivia(newTrivia));
         }
 
-        private static HashSet<string> GetIllegalHeaders()
+        private string[] GetIllegalHeaders(Document document)
         {
             var filePath = Path.Combine(
                 Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
                 "IllegalHeaders.md");
 
-            if (!File.Exists(filePath))
-            {
-                return new HashSet<string>();
-            }
+            var illegalHeaders = new HashSet<string>(File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")), StringComparer.OrdinalIgnoreCase);
 
-            return new HashSet<string>(File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")), StringComparer.OrdinalIgnoreCase);
+            // Generate the dynamic header (if applicable)
+            if (illegalHeaders.Contains(FileNameIllegalHeader))
+            {
+                illegalHeaders.Remove(FileNameIllegalHeader);
+                illegalHeaders.Add(document.Name);
+            }
+            
+            return illegalHeaders.ToArray();
         }
 
-        private static SyntaxTriviaList RemoveTrivia(SyntaxTriviaList leadingTrivia, SyntaxTrivia trivia)
+        private SyntaxTriviaList RemoveIllegalHeadersFromMultilineComment(SyntaxTriviaList newTrivia, SyntaxTrivia trivia, string illegalHeader)
         {
-            SyntaxTriviaList newTrivia = leadingTrivia;
-            var index = leadingTrivia.IndexOf(trivia);
+            StringBuilder newTriviaString = new StringBuilder();
+            bool commentHasMeaningfulInfo = false;
+            bool removedIllegalHeaders = false;
+            using (StringReader sr = new StringReader(trivia.ToFullString()))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    // If the current line contains the illegal header
+                    if (line.IndexOf(illegalHeader, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        // special care must be had to keep the /* and */ tokens.
+                        if (line.TrimStart().StartsWith("/*"))
+                        {
+                            // Note: This will also cover the case where the comment is: /* illegalHeader */ as we remove the entire line (including the */).
+                            newTriviaString.AppendLine("/*");
+                        }
+                        else if (line.TrimEnd().EndsWith("*/"))
+                        {
+                            newTriviaString.AppendLine("*/");
+                        }
+                        removedIllegalHeaders = true;
+                    }
+                    else
+                    {
+                        commentHasMeaningfulInfo |= CommentLineContainsMeaningfulIInformation(line);
 
+                        newTriviaString.AppendLine(line);
+                    }
+                }
+            }
+
+            // We should not remove any comments if we don't have to.
+            if (!removedIllegalHeaders)
+            {
+                return newTrivia;
+            }
+
+            // Remove the old trivia and replace it with the new trivia
+            var index = newTrivia.IndexOf(trivia);
+            newTrivia = RemoveTriviaAtIndex(newTrivia, index);
+
+            if (commentHasMeaningfulInfo)
+            {
+                // we need to remove the original multiline comment and replace it with this new one.
+                var newMultilineComment = SyntaxFactory.Comment(newTriviaString.ToString());
+                newTrivia = newTrivia.Insert(index, newMultilineComment);
+            }
+
+            return newTrivia;
+        }
+
+        private static bool CommentLineContainsMeaningfulIInformation(string line)
+        {
+            // We are going to assume that any comments that only contain:
+            // *, / , =, - are safe to remove.
+            string newLine = line;
+            for (int i = 0; i < CommentFormattingCharacters.Length; i++)
+            {
+                newLine = newLine.Replace(CommentFormattingCharacters[i],' ');
+            }
+            if (newLine.Trim() == string.Empty)
+                return false;
+
+            return true;
+        }
+
+        private static SyntaxTriviaList RemoveTriviaAtIndex(SyntaxTriviaList newTrivia, int index)
+        {
             // Remove trivia
             newTrivia = newTrivia.RemoveAt(index);
 
+            // Remove end of line after trivia
             if (index < newTrivia.Count && newTrivia.ElementAt(index).CSharpKind() == SyntaxKind.EndOfLineTrivia)
             {
-                // Remove end of line after trivia
                 newTrivia = newTrivia.RemoveAt(index);
             }
 
