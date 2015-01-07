@@ -111,7 +111,6 @@
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRuleTests.cs" />
-    <Compile Include="Rules\HasPrivateAccessorOnFieldNamesFormattingRuleTests.cs" />
     <Compile Include="Rules\HasUnderScoreInPrivateFieldNamesFormattingRuleTests.cs" />
     <Compile Include="Rules\UsesXunitForTestsFormattingRuleTests.cs" />
   </ItemGroup>

@@ -236,5 +236,35 @@ internal struct S
 
             Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void TestPrivateFields()
+        {
+            var text = @"
+using System;
+class T
+{
+    static int x;
+    private static int y;
+    // some trivia
+    protected internal int z;
+    // some trivia
+    int k = 1, s = 2;
+    // some trivia
+}";
+            var expected = @"
+using System;
+internal class T
+{
+    private static int x;
+    private static int y;
+    // some trivia
+    protected internal int z;
+    // some trivia
+    private int k = 1, s = 2;
+    // some trivia
+}";
+            Verify(text, expected);
+        }
     }
 }
