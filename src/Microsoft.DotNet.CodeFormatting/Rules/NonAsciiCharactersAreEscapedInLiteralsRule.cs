@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         /// <summary>
         ///  Rewrites string and character literals which contain non ascii characters to instead use the \uXXXX or \UXXXXXXXX syntax.
         /// </summary>
-        class UnicodeCharacterEscapingSyntaxRewriter : CSharpSyntaxRewriter
+        internal class UnicodeCharacterEscapingSyntaxRewriter : CSharpSyntaxRewriter
         {
             public static readonly UnicodeCharacterEscapingSyntaxRewriter Rewriter = new UnicodeCharacterEscapingSyntaxRewriter();
 
