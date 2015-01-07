@@ -118,6 +118,7 @@ internal interface I
             var text = @"
 interface I1
 {
+    int this[int index] { get; set; }
     int Prop { get; set; }
     void M();
     event EventHandler E;
@@ -130,6 +131,11 @@ class C : I1
         get { return 0; }
         set { }
     }
+    int I1.this[int index] 
+    {
+        get { return 0; }
+        set { } 
+    }
     void I1.M() { } 
     event EventHandler I1.E;
     void M() { }
@@ -139,6 +145,7 @@ class C : I1
             var expected = @"
 internal interface I1
 {
+    int this[int index] { get; set; }
     int Prop { get; set; }
     void M();
     event EventHandler E;
@@ -150,6 +157,11 @@ internal class C : I1
     {
         get { return 0; }
         set { }
+    }
+    int I1.this[int index] 
+    {
+        get { return 0; }
+        set { } 
     }
     void I1.M() { } 
     event EventHandler I1.E;
