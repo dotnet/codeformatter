@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -94,7 +97,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     root = root.ReplaceNode(firstMember, firstMember.WithLeadingTrivia(newLeadingTrivia));
                 }
             }
-            
+
             var xUnitUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("Xunit")).NormalizeWhitespace();
             newUsings.Add(xUnitUsing);
 
@@ -123,7 +126,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         if (IsTestNamespaceType(attributeTypeDocID, "TestClassAttribute"))
                         {
                             return true;
-
                         }
                     }
                     return false;
@@ -149,7 +151,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
                 return transformationRoot;
             });
-
         }
         private void ChangeTestMethodAttributesToFact(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
         {
@@ -190,7 +191,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 { "IsTrue", "True" },
                 { "IsFalse", "False" },
                 { "IsInstanceOfType", "IsAssignableFrom" },
-
             };
 
             Dictionary<SimpleNameSyntax, string> nameReplacementsForNodes = new Dictionary<SimpleNameSyntax, string>();
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         var oldArguments = invocationExpression.ArgumentList.Arguments;
                         var newArguments = new SeparatedSyntaxList<ArgumentSyntax>().AddRange(new[] { oldArguments[1], oldArguments[0] });
 
-                        return invocationExpression.WithArgumentList(invocationExpression.ArgumentList.WithArguments(newArguments));                        
+                        return invocationExpression.WithArgumentList(invocationExpression.ArgumentList.WithArguments(newArguments));
                     });
                 });
             }
@@ -288,7 +288,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         private static bool LoadMSTestNamespaces()
         {
-            lock(_lockObject)
+            lock (_lockObject)
             {
                 if (_mstestNamespaces != null)
                 {
@@ -310,16 +310,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return true;
             }
 
-            
-
-
         }
 
         class TransformationTracker
         {
-            Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>> _annotationToTransformation = new Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>>();
-            Dictionary<SyntaxNode, List<SyntaxAnnotation>> _nodeToAnnotations = new Dictionary<SyntaxNode, List<SyntaxAnnotation>>();
-            Dictionary<SyntaxAnnotation, SyntaxNode> _originalNodeLookup = new Dictionary<SyntaxAnnotation, SyntaxNode>();
+            private Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>> _annotationToTransformation = new Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>>();
+            private Dictionary<SyntaxNode, List<SyntaxAnnotation>> _nodeToAnnotations = new Dictionary<SyntaxNode, List<SyntaxAnnotation>>();
+            private Dictionary<SyntaxAnnotation, SyntaxNode> _originalNodeLookup = new Dictionary<SyntaxAnnotation, SyntaxNode>();
 
             public void AddTransformation(IEnumerable<SyntaxNode> nodesToTransform, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax> transformerFunc)
             {

@@ -35,7 +35,7 @@ namespace CodeFormatter
             List<string> ruleTypes = new List<string>();
             List<string> filenames = new List<string>();
 
-            for (int i=1; i<args.Length; i++)
+            for (int i = 1; i < args.Length; i++)
             {
                 string arg = args[i];
                 if (arg.Equals("/file", StringComparison.InvariantCultureIgnoreCase))

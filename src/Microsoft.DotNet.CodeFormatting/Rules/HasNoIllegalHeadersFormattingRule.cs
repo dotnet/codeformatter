@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 illegalHeaders.Remove(FileNameIllegalHeader);
                 illegalHeaders.Add(document.Name);
             }
-            
+
             return illegalHeaders.ToArray();
         }
 
@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             string newLine = line;
             for (int i = 0; i < CommentFormattingCharacters.Length; i++)
             {
-                newLine = newLine.Replace(CommentFormattingCharacters[i],' ');
+                newLine = newLine.Replace(CommentFormattingCharacters[i], ' ');
             }
             if (newLine.Trim() == string.Empty)
                 return false;
