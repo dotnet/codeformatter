@@ -3,7 +3,7 @@
 SETLOCAL
 
 SET CACHED_NUGET=%LocalAppData%\NuGet\NuGet.exe
-SET SOLUTION_PATH=%~dp0src\BuildToolsInternal.sln
+SET SOLUTION_PATH=%~dp0src\CodeFormatter.sln
 
 IF EXIST %CACHED_NUGET% goto restore
 echo Downloading latest version of NuGet.exe...
