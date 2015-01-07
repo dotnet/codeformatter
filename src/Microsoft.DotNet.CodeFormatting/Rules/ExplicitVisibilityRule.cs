@@ -19,32 +19,32 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
             {
                 node = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
-                var visibilityKind = GetTypeDefaultVisibility(node);
+                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
             }
 
             public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
             {
-                var visibilityKind = GetTypeDefaultVisibility(node);
+                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
             }
 
             public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax node)
             {
                 node = (StructDeclarationSyntax)base.VisitStructDeclaration(node);
-                var visibilityKind = GetTypeDefaultVisibility(node);
+                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
             }
 
             public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
             {
-                var visibilityKind = GetTypeDefaultVisibility(node);
+                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
             }
 
             public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node)
             {
-                var visibilityKind = GetTypeDefaultVisibility(node);
+                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
             }
 
