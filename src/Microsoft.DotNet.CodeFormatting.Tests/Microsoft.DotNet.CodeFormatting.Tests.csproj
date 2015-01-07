@@ -105,6 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
+    <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
@@ -122,7 +123,9 @@
       <Link>IllegalHeaders.md</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.CodeFormatting\Microsoft.DotNet.CodeFormatting.csproj">

@@ -87,6 +87,7 @@
     <Compile Include="RuleOrderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IOrderMetadata.cs" />
+    <Compile Include="Rules\ExplicitVisibilityRule.cs" />
     <Compile Include="Rules\HasCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRule.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRule.cs" />
