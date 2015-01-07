@@ -120,6 +120,7 @@ interface I1
 {
     int Prop { get; set; }
     void M();
+    event EventHandler E;
 }
 
 class C : I1
@@ -130,6 +131,8 @@ class C : I1
         set { }
     }
     void I1.M() { } 
+    event EventHandler I1.E;
+    void M() { }
 }
 ";
 
@@ -138,6 +141,7 @@ internal interface I1
 {
     int Prop { get; set; }
     void M();
+    event EventHandler E;
 }
 
 internal class C : I1
@@ -148,6 +152,8 @@ internal class C : I1
         set { }
     }
     void I1.M() { } 
+    event EventHandler I1.E;
+    private void M() { }
 }
 ";
 

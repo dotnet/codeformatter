@@ -80,6 +80,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitEventDeclaration(EventDeclarationSyntax node)
             {
+                if (node.ExplicitInterfaceSpecifier != null)
+                {
+                    return node;
+                }
+
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
             }
 
