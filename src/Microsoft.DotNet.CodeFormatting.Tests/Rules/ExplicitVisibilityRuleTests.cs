@@ -111,5 +111,130 @@ internal interface I
 
                 Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void TestExplicitInterfaceImplementation()
+        {
+            var text = @"
+interface I1
+{
+    int Prop { get; set; }
+    void M();
+}
+
+class C : I1
+{
+    int I1.Prop
+    {
+        get { return 0; }
+        set { }
+    }
+    void I1.M() { } 
+}
+";
+
+            var expected = @"
+internal interface I1
+{
+    int Prop { get; set; }
+    void M();
+}
+
+internal class C : I1
+{
+    int I1.Prop
+    {
+        get { return 0; }
+        set { }
+    }
+    void I1.M() { } 
+}
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestFieldImplementation()
+        {
+            var text = @"
+class C
+{
+    const int Max;
+    int Field1;
+    public int Field2;
+    event EventHandler E1;
+    public event EventHandler E2;
+}
+
+struct C
+{
+    const int Max;
+    int Field1;
+    public int Field2;
+    event EventHandler E1;
+    public event EventHandler E2;
+}
+";
+
+            var expected = @"
+internal class C
+{
+    private const int Max;
+    private int Field1;
+    public int Field2;
+    private event EventHandler E1;
+    public event EventHandler E2;
+}
+
+internal struct C
+{
+    private const int Max;
+    private int Field1;
+    public int Field2;
+    private event EventHandler E1;
+    public event EventHandler E2;
+}
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestConstructor()
+        {
+            var text = @"
+class C
+{
+    static C() { } 
+    C() { } 
+    internal C(int p) { } 
+}
+
+struct S
+{
+    static S() { } 
+    S(int p) { } 
+    internal S(int p1, int p2) { } 
+}
+";
+            var expected = @"
+internal class C
+{
+    static C() { } 
+    private C() { } 
+    internal C(int p) { } 
+}
+
+internal struct S
+{
+    static S() { } 
+    private S(int p) { } 
+    internal S(int p1, int p2) { } 
+}
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
     }
 }

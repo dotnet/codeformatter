@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
+    [RuleOrder(12)]
     internal sealed class ExplicitVisibilityRule : IFormattingRule
     {
         private sealed class VisibilityRewriter : CSharpSyntaxRewriter
@@ -47,9 +48,48 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
             }
 
+            public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+            {
+                if (node.Modifiers.Any(x => x.CSharpKind() == SyntaxKind.StaticKeyword))
+                {
+                    return node;
+                }
+
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+            }
+
             public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
             {
-                node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
+                if (node.ExplicitInterfaceSpecifier != null)
+                {
+                    return node;
+                }
+
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+            }
+
+            public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+            {
+                if (node.ExplicitInterfaceSpecifier != null)
+                {
+                    return node;
+                }
+
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+            }
+
+            public override SyntaxNode VisitEventDeclaration(EventDeclarationSyntax node)
+            {
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+            }
+
+            public override SyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
+            {
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+            }
+
+            public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
+            {
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
             }
 
@@ -74,6 +114,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return false;
             }
 
+            /// <summary>
+            /// Return a node declaration that has a visibility modifier.  If one isn't present it will be added as the 
+            /// first modifier.  Any trivia before the node will be added as leading trivia to the added <see cref="SyntaxToken"/>.
+            /// </summary>
             private static MemberDeclarationSyntax EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, SyntaxKind visibilityKind) where T : MemberDeclarationSyntax
             {
                 Debug.Assert(SyntaxFacts.IsAccessibilityModifier(visibilityKind));
