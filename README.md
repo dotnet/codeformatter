@@ -17,6 +17,8 @@ CodeFormatter <solution> [<rule types>] [/file <filename>]
     <filename> - Only apply changes to files with specified name.
 ```
 
+Note: In order to run this tool you will need to have Microsoft Build Tools 2015 Preview installed.  This comes as a part of Visual Studio 2015 Preview or can be installed separately from [here](http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs).
+
 ## Contributing
 
 We follow the same contribution process that [corefx is using][corefx-contributing].
