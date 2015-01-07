@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     {
         private static string[] s_keywordsToIgnore = { "public", "internal", "protected", "const" };
         private static readonly SyntaxAnnotation s_annotationMarker = new SyntaxAnnotation();
-        private static readonly Regex regex = new Regex("^._");
+        private static readonly Regex s_regex = new Regex("^._");
 
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static string GetNewSymbolName(ISymbol symbol)
         {
             var symbolName = symbol.Name.TrimStart('_');
-            if (regex.IsMatch(symbolName)) symbolName = symbolName.Remove(0, 2);
+            if (s_regex.IsMatch(symbolName)) symbolName = symbolName.Remove(0, 2);
             if (symbol.IsStatic)
             {
                 // Check for ThreadStatic private fields.
