@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
-    static class RuleTypeConstants
+    internal static class RuleTypeConstants
     {
         public const string PartMetadataKey = "RuleType";
         public const string ConvertTestsRuleType = "ConvertTests";
