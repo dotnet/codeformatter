@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(9)]
+    [RuleOrder(RuleOrder.ExplicitVisibilityRule)]
     internal sealed class ExplicitVisibilityRule : IFormattingRule
     {
         private sealed class VisibilityRewriter : CSharpSyntaxRewriter

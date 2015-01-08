@@ -18,7 +18,7 @@ using System.IO;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(101)]
+    [RuleOrder(RuleOrder.UsesXunitForTestsFormattingRule)]
     [PartMetadata(RuleTypeConstants.PartMetadataKey, RuleTypeConstants.ConvertTestsRuleType)]
     internal sealed class UsesXunitForTestsFormattingRule : IFormattingRule
     {

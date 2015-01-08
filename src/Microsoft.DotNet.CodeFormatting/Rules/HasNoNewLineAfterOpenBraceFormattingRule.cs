@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(8)]
+    [RuleOrder(RuleOrder.HasNoNewLineAfterOpenBraceFormattingRule)]
     internal sealed class HasNoNewLineAfterOpenBraceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)

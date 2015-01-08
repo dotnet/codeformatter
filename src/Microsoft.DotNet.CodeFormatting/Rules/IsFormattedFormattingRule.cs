@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(11)]
+    [RuleOrder(RuleOrder.IsFormattedFormattingRule)]
     internal sealed class IsFormattedFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
