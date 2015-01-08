@@ -1,5 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // Licensed under MIT. See LICENSE in the project root for license information.
+
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
@@ -48,7 +50,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         return RewriteCharacterLiteralExpression(node);
                 }
 
-                return base.Visit(node);                
+                return base.Visit(node);
             }
 
             private static SyntaxNode RewriteStringLiteralExpression(LiteralExpressionSyntax node)
@@ -120,7 +122,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
                 return sb.ToString();
             }
-
         }
     }
 }

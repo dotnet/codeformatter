@@ -309,10 +309,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 _mstestNamespaces = new HashSet<string>(lines);
                 return true;
             }
-
         }
 
-        class TransformationTracker
+        private class TransformationTracker
         {
             private Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>> _annotationToTransformation = new Dictionary<SyntaxAnnotation, Func<CompilationUnitSyntax, IEnumerable<SyntaxNode>, Dictionary<SyntaxNode, SyntaxNode>, CompilationUnitSyntax>>();
             private Dictionary<SyntaxNode, List<SyntaxAnnotation>> _nodeToAnnotations = new Dictionary<SyntaxNode, List<SyntaxAnnotation>>();

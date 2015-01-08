@@ -11,7 +11,6 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-
     public class UsesXunitForTestsFormattingRuleTests : CodeFormattingTestBase
     {
         [Fact]
