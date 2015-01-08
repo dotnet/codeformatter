@@ -24,5 +24,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int HasUnderScoreInPrivateFieldNamesFormattingRule = 10;
         public const int IsFormattedFormattingRule = 11;
         public const int UsesXunitForTestsFormattingRule = 12;
+        public const int NonAsciiChractersAreEscapedInLiterals = 13;
     }
 }

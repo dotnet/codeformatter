@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
+    [RuleOrder(RuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiChractersAreEscapedInLiterals : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
