@@ -48,6 +48,21 @@ class Test
             Verify(text, expected);
         }
 
+        [Fact]
+        public void NonAsciiRewriterHandlesNonStringLiterals()
+        {
+            var text = @"
+using System;
+
+class Test
+{
+    public const int OkayInt = 12345;
+}
+";
+
+            Verify(text, text);
+        }
+
         internal override IFormattingRule GetFormattingRule()
         {
             return new Rules.NonAsciiChractersAreEscapedInLiterals();

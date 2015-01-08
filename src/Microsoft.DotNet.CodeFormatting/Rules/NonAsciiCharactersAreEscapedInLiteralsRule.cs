@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         return RewriteCharacterLiteralExpression(node);
                 }
 
-                return base.Visit(node);
+                return node;
             }
 
             private static SyntaxNode RewriteStringLiteralExpression(LiteralExpressionSyntax node)
