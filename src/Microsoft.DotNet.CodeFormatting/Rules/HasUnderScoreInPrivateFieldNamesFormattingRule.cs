@@ -17,7 +17,7 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(10)]
+    [RuleOrder(RuleOrder.HasUnderScoreInPrivateFieldNamesFormattingRule)]
     // TODO Bug 1086632: Deactivated due to active bug in Roslyn.
     // There is a hack to run this rule, but it's slow. 
     // If needed, enable the rule and enable the hack at the code below in RenameFields.

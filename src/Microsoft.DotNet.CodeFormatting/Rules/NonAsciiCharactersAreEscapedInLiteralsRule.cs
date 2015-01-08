@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
+    [RuleOrder(RuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiChractersAreEscapedInLiterals : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
@@ -50,7 +51,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         return RewriteCharacterLiteralExpression(node);
                 }
 
-                return base.Visit(node);
+                return node;
             }
 
             private static SyntaxNode RewriteStringLiteralExpression(LiteralExpressionSyntax node)

@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(4)]
+    [RuleOrder(RuleOrder.HasUsingsOutsideOfNamespaceFormattingRule)]
     internal sealed class HasUsingsOutsideOfNamespaceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)

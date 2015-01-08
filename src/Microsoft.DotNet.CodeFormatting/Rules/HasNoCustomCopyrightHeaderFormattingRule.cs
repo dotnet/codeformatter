@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(1)]
+    [RuleOrder(RuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
     internal sealed class HasNoCustomCopyrightHeaderFormattingRule : IFormattingRule
     {
         private static string RulerMarker { get; set; }

@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(6)]
+    [RuleOrder(RuleOrder.HasNewLineBeforeFirstNamespaceFormattingRule)]
     internal sealed class HasNewLineBeforeFirstNamespaceFormattingRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
