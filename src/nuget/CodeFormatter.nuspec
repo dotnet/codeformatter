@@ -11,7 +11,6 @@
     <dependencies>
       <dependency id="Microsoft.CodeAnalysis" version="1.0.0-beta1-20141031-01" />
       <dependency id="Microsoft.CodeAnalysis.CSharp.Workspaces" version="1.0.0-beta1-20141031-01" />
-      <dependency id="Microsoft.CodeAnalysis.VisualBasic.Workspaces" version="1.0.0-beta1-20141031-01" />
       <dependency id="Microsoft.CodeAnalysis.Workspaces.Common" version="1.0.0-beta1-20141031-01" />
       <dependency id="Microsoft.Composition" version="1.0.0-beta1-20141031-01" />
       <dependency id="System.Reflection.Metadata" version="1.0.0-beta1-20141031-01" />
