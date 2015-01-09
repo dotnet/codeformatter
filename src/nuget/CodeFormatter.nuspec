@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>CodeFormatter</id>
+    <version>1.0.0-prerelease</version>
+    <title>CodeFormatter</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <description>CodeFormatter tool that enforces default coding guidelines.</description>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+    <dependencies>
+      <dependency id="Microsoft.CodeAnalysis" version="1.0.0-beta1-20141031-01" />
+      <dependency id="Microsoft.CodeAnalysis.CSharp.Workspaces" version="1.0.0-beta1-20141031-01" />
+      <dependency id="Microsoft.CodeAnalysis.Workspaces.Common" version="1.0.0-beta1-20141031-01" />
+      <dependency id="Microsoft.Composition" version="1.0.0-beta1-20141031-01" />
+      <dependency id="System.Reflection.Metadata" version="1.0.0-beta1-20141031-01" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="CodeFormatter.exe" target="lib\net45" />
+    <file src="Microsoft.DotNet.CodeFormatting.dll" target="lib\net45" />
+    <file src="CopyrightHeader.md" target="lib\net45" />
+    <file src="IllegalHeaders.md" target="lib\net45" />
+    <file src="MSTestNamespaces.txt" target="lib\net45" />
+  </files>
+</package>
