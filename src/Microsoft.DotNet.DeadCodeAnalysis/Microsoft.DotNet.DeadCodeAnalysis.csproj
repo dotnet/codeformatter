@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalysisEngine.cs" />
+    <Compile Include="AnalysisOptions.cs" />
     <Compile Include="CleanUp.cs" />
     <Compile Include="ConditionalRegion.cs" />
     <Compile Include="ConditionalRegionChain.cs" />

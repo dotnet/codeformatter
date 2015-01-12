@@ -107,7 +107,22 @@ namespace DeadCode
 
         private static void PrintUsage()
         {
-            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/printenabled] [/printdisabled] [/printvarying] [/ignore <symbol list>] [/define <symbol list>] [/edit] [@<response file>]");
+            Console.WriteLine(
+@"
+SYNTAX
+  DeadRegions [<project> ...] [options]
+  DeadRegions [<source file> ...] [options]
+
+PARAMETERS
+  /config  <symbol list>
+  /ignore  <symbol list>
+  /define  <symbol list>
+  /disable <symbol list>
+  /printenabled
+  /printdisabled
+  /printvarying
+  /edit
+  @<response file>");
         }
     }
 }
