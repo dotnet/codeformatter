@@ -88,6 +88,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 return;
             }
 
+            // TODO: If this region becomes varying, then all subsequent regions in the chain must become varying. Fix in intersection op on Chain.
             if (State != other.State)
             {
                 State = ConditionalRegionState.Varying;

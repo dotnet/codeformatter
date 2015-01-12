@@ -42,7 +42,15 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         private static List<SpanToReplace> CalculateSpansToRemove(DocumentConditionalRegionInfo info)
         {
+            // TODO: Just sort the spans.  I don't think we really need a flat list of regions.  The only reasons regions needed to be sorted were for
+            // the sake of intersection (but we can also sort chains for the same effect), and having a sorted list of spans at the end.
             var spans = new List<SpanToReplace>();
+
+            // TODO: If this loop is through each chain, then we know the index in the chain, and we can assert that we have not seen any varying.
+
+            // TODO: Spans don't need to be combined because we know that we're either going to remove all of the directives, or we're going to
+            // remove the always disabled directives preceding the varying directives.
+            // Two cases for removing all directives: All disabled, or all disabled but one (which could be at the beginning, in the middle, or at the end).
 
             foreach (var region in info.Regions)
             {
@@ -56,6 +64,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         // THIS_CONDITION and the preceding region can be removed altogether.
                         //
                         // So, remove the start and end directives as well as the contents of the region.
+
+                        // Assert that all preceding regions are not varying. If there are varying spans preceding this one, then this span is also varying.
+                        for (int i = 0; i < region.IndexInChain; i++)
+                        {
+                            Debug.Assert(region.Chain[i].State != ConditionalRegionState.Varying);
+                        }
+
                         spans.Add(new SpanToReplace(region.FullSpan, GetReplacementText(region, region.Chain.Count > 3)));
                         break;
                     case ConditionalRegionState.AlwaysEnabled:
@@ -75,6 +90,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         }
 
                         // Check if all following regions in the chain are always disabled
+                        // TODO: Could keep track of "canRemoveAlwaysEnabled", just add at end after the scan.
                         bool safeToRemove = true;
                         for (int i = region.IndexInChain + 1; i < region.Chain.Count; i++)
                         {
