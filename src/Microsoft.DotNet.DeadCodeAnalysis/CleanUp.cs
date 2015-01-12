@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
         }
 
-        private static async Task<Document> RemoveUnnecessaryRegions(Document document, List<List<ConditionalRegion>> chains, CancellationToken cancellationToken)
+        private static async Task<Document> RemoveUnnecessaryRegions(Document document, List<ConditionalRegionChain> chains, CancellationToken cancellationToken)
         {
             if (document == null)
             {
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return document.WithText(newText);
         }
 
-        private static List<SpanToReplace> CalculateSpansToReplace(List<List<ConditionalRegion>> chains)
+        private static List<SpanToReplace> CalculateSpansToReplace(List<ConditionalRegionChain> chains)
         {
             var spans = new List<SpanToReplace>();
 
@@ -79,18 +79,18 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return spans;
         }
 
-        private static void CalculateSpansToReplace(List<ConditionalRegion> chain, List<SpanToReplace> results)
+        private static void CalculateSpansToReplace(ConditionalRegionChain chain, List<SpanToReplace> results)
         {
-            Debug.Assert(chain.Count > 0);
+            Debug.Assert(chain.Regions.Count > 0);
 
-            ConditionalRegion startRegion = chain[0];
+            ConditionalRegion startRegion = chain.Regions[0];
             ConditionalRegion enabledRegion = null;
-            ConditionalRegion endRegion = chain[chain.Count - 1];
+            ConditionalRegion endRegion = chain.Regions[chain.Regions.Count - 1];
             bool endRegionNeedsReplacement = false;
 
-            for (int indexInChain = 0; indexInChain < chain.Count; indexInChain++)
+            for (int indexInChain = 0; indexInChain < chain.Regions.Count; indexInChain++)
             {
-                var region = chain[indexInChain];
+                var region = chain.Regions[indexInChain];
 
                 switch (region.State)
                 {
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         else
                         {
                             // All preceding regions are always disabled. Do not remove this region or any that follow.
-                            endRegion = chain[indexInChain - 1];
+                            endRegion = chain.Regions[indexInChain - 1];
                             endRegionNeedsReplacement = true;
                             goto ScanFinished;
                         }

@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             {
                 foreach (var chain in info.Chains)
                 {
-                    foreach (var region in chain)
+                    foreach (var region in chain.Regions)
                     {
                         switch (region.State)
                         {
@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         private async Task<DocumentConditionalRegionInfo> GetConditionalRegionInfo(Document document, CancellationToken cancellationToken)
         {
-            var chains = new List<List<ConditionalRegion>>();
+            var chains = new List<ConditionalRegionChain>();
             var regions = new List<ConditionalRegion>();
 
             var syntaxTree = await document.GetSyntaxTreeAsync(cancellationToken) as CSharpSyntaxTree;
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     var chain = ParseConditionalRegionChain(currentDirective.GetLinkedDirectives(), visitedDirectives);
                     if (chain != null)
                     {
-                        chains.Add(chain);
+                        chains.Add(new ConditionalRegionChain(chain));
                     }
 
                     do

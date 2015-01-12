@@ -15,10 +15,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
     {
         public Document Document { get; private set; }
 
-        // TODO: It might be cleaner if there were a struct for a chain
-        public List<List<ConditionalRegion>> Chains { get; private set; }
+        public List<ConditionalRegionChain> Chains { get; private set; }
 
-        internal DocumentConditionalRegionInfo(Document document, List<List<ConditionalRegion>> chains)
+        internal DocumentConditionalRegionInfo(Document document, List<ConditionalRegionChain> chains)
         {
             if (document == null)
             {
@@ -41,31 +40,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 return;
             }
 
-            Debug.Assert(Chains.Count == other.Chains.Count);
-            // TODO: Is this a codegen bug in Roslyn? the for loop never seems to break even though the assert is never hit.
-            int originalChainCount = Chains.Count;
-            for (int i = 0; i < originalChainCount; i++)
+            for (int i = 0; i < Chains.Count; i++)
             {
-                Debug.Assert(Chains.Count == originalChainCount);
-                var chainA = Chains[i];
-                var chainB = other.Chains[i];
-                Debug.Assert(chainA.Count == chainB.Count);
-
-                bool conditionVaries = false;
-
-                for (int j = 0; j < chainA.Count; i++)
-                {
-                    var region = chainA[j];
-                    region.Intersect(chainB[j]);
-
-                    // If the condition of a region varies, then the conditions of all following regions in the chain
-                    // are implicitly varying.
-                    if (conditionVaries || region.State == ConditionalRegionState.Varying)
-                    {
-                        conditionVaries = true;
-                        region.State = ConditionalRegionState.Varying;
-                    }
-                }
+                Chains[i].Intersect(other.Chains[i]);
             }
         }
 
@@ -76,7 +53,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 return 1;
             }
 
-            return string.Compare(Document.FilePath, other.Document.FilePath, StringComparison.InvariantCultureIgnoreCase);
+            int result = string.Compare(Document.FilePath, other.Document.FilePath, StringComparison.InvariantCultureIgnoreCase);
+            if (result == 0)
+            {
+                return Chains.Count - other.Chains.Count;
+            }
+
+            return result;
         }
 
         public bool Equals(DocumentConditionalRegionInfo other)
