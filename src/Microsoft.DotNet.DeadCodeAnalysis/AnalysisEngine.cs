@@ -54,9 +54,14 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             PrintConditionalRegionInfo(regionInfo);
         }
 
-        private static void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfo)
+        private void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfo)
         {
             var originalForegroundColor = Console.ForegroundColor;
+
+            int disabledCount = 0;
+            int enabledCount = 0;
+            int varyingCount = 0;
+            int explicitlyVaryingCount = 0;
 
             foreach (var info in regionInfo)
             {
@@ -67,13 +72,20 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         switch (region.State)
                         {
                             case ConditionalRegionState.AlwaysDisabled:
-                                Console.ForegroundColor = ConsoleColor.DarkGray;
+                                disabledCount++;
+                                Console.ForegroundColor = ConsoleColor.Blue;
                                 break;
                             case ConditionalRegionState.AlwaysEnabled:
-                                Console.ForegroundColor = ConsoleColor.White;
+                                enabledCount++;
+                                Console.ForegroundColor = ConsoleColor.Green;
                                 break;
                             case ConditionalRegionState.Varying:
-                                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                                varyingCount++;
+                                if (region.ExplicitlyVaries)
+                                {
+                                    explicitlyVaryingCount++;
+                                }
+                                Console.ForegroundColor = ConsoleColor.DarkGray;
                                 break;
                         }
                         Console.WriteLine(region);
@@ -81,7 +93,28 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 }
             }
 
-            // TODO: Print summary
+            Console.ForegroundColor = originalForegroundColor;
+
+            // Print summary
+            int totalRegionCount = disabledCount + enabledCount + varyingCount;
+
+            Console.WriteLine();
+            Console.WriteLine("Found");
+            Console.WriteLine("  {0,5} conditional regions total", totalRegionCount);
+
+            string alwaysString = m_projects.Count > 1 ? "always " : string.Empty;
+            Console.WriteLine("  {0,5} {1}disabled", disabledCount, alwaysString);
+            Console.WriteLine("  {0,5} {1}enabled", enabledCount, alwaysString);
+
+            if (varyingCount > 0)
+            {
+                Console.WriteLine("  {0,5} varying", varyingCount);
+                Console.WriteLine("    {0,5} due to real varying symbols", varyingCount - explicitlyVaryingCount);
+                Console.WriteLine("    {0,5} due to ignored symbols", explicitlyVaryingCount);
+            }
+
+            // TODO: Lines of dead code.  A chain struct might be useful because there are many operations on a chain.
+            // This involves calculating unnecessary regions, converting those to line spans
         }
 
         public async Task RemoveUnnecessaryConditionalRegions(CancellationToken cancellationToken = default(CancellationToken))
