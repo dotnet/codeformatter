@@ -16,4 +16,4 @@ IF EXIST "%~dp0src\packages" goto build
 
 :build
 
-"%ProgramFiles(x86)%\MSBuild\14.0\bin\MSBuild.exe" %SOLUTION_PATH% /p:OutDir="%~dp0bin " /nologo /m /v:m /flp:verbosity=normal %*
+"%ProgramFiles(x86)%\MSBuild\14.0\bin\MSBuild.exe" %SOLUTION_PATH% /p:Configuration=Release /nologo /m /v:m /flp:verbosity=normal %*

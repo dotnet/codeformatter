@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             {
                 var document = await RemoveUnnecessaryRegions(solution.GetDocument(info.Document.Id), info.Chains, cancellationToken);
                 solution = document.Project.Solution;
+
+                PendTfsEdit(document.FilePath);
             }
 
             if (workspace.TryApplyChanges(solution))
