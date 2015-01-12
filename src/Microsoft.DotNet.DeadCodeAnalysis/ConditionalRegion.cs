@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public override string ToString()
         {
-            return string.Format("{0}, line {1}: \"{2}\" : {3}",
+            return string.Format("{0}({1}): \"{2}\" : {3}",
                 StartDirective.SyntaxTree.FilePath,
                 Location.GetLineSpan().StartLinePosition.Line,
                 StartDirective.ToString(),

@@ -26,7 +26,7 @@ namespace DeadCode
 
             bool edit = false;
 
-            for (int i = 1; i < args.Length; i++)
+            for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
                 if (arg[0] == '/' || arg[0] == '-')
@@ -77,6 +77,8 @@ namespace DeadCode
             var ct = cts.Token;
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
+            Console.WriteLine("Analyzing...");
+
             try
             {
                 // TODO: Clean this up.
@@ -106,7 +108,7 @@ namespace DeadCode
 
         private static void PrintUsage()
         {
-            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/nodisabled] [/inactive] [/ignore <symbol list>] [/define <symbol list>] [/edit] [@<response file>]");
+            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/printsummary] [/printenabled] [/printdisabled] [/printvarying] [/ignore <symbol list>] [/define <symbol list>] [/edit] [@<response file>]");
         }
     }
 }

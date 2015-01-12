@@ -80,6 +80,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     }
                 }
             }
+
+            // TODO: Print summary
         }
 
         public async Task RemoveUnnecessaryConditionalRegions(CancellationToken cancellationToken = default(CancellationToken))
@@ -236,7 +238,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     return false;
             }
 
-            foreach (var child in condition.ChildNodes())
+            foreach (var child in condition.DescendantNodesAndSelf())
             {
                 var identifier = child as IdentifierNameSyntax;
                 if (identifier != null)
