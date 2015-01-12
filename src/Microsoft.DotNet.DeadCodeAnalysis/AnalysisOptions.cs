@@ -10,11 +10,11 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     public class AnalysisOptions
     {
-        public IEnumerable<Project> Projects { get; private set; }
-
         public IEnumerable<string> ProjectFiles { get; private set; }
 
         public IEnumerable<string> SourceFiles { get; private set; }
+
+        public IEnumerable<string> Sources { get; private set; }
 
         public IEnumerable<IEnumerable<string>> SymbolConfigurations { get; private set; }
 
@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         public AnalysisOptions(
             IEnumerable<string> files = null,
             IEnumerable<Project> projects = null,
+            IEnumerable<string> sources = null,
             IEnumerable<IEnumerable<string>> symbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
@@ -38,9 +39,17 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             bool printVarying = false,
             bool edit = false)
         {
-            if (!files.Any())
+            if (files != null)
             {
-                throw new ArgumentException("files");
+                if (!files.Any())
+                {
+                    throw new ArgumentException("files");
+                }
+
+                if (projects != null || sources != null)
+                {
+                    throw new ArgumentException("files");
+                }
             }
 
             var firstFileExt = Path.GetExtension(files.First());

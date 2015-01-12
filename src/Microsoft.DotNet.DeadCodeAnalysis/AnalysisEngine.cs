@@ -74,10 +74,18 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                             case ConditionalRegionState.AlwaysDisabled:
                                 disabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Blue;
+                                if (true)
+                                {
+                                    Console.WriteLine(region);
+                                }
                                 break;
                             case ConditionalRegionState.AlwaysEnabled:
                                 enabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Green;
+                                if (true)
+                                {
+                                    Console.WriteLine(region);
+                                }
                                 break;
                             case ConditionalRegionState.Varying:
                                 varyingCount++;
@@ -86,9 +94,12 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                                     explicitlyVaryingCount++;
                                 }
                                 Console.ForegroundColor = ConsoleColor.DarkGray;
+                                if (false)
+                                {
+                                    Console.WriteLine(region);
+                                }
                                 break;
                         }
-                        Console.WriteLine(region);
                     }
                 }
             }

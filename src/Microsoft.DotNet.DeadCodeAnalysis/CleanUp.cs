@@ -7,8 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation.VersionControl.Client;
 using System;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
@@ -23,8 +21,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             {
                 var document = await RemoveUnnecessaryRegions(solution.GetDocument(info.Document.Id), info.Chains, cancellationToken);
                 solution = document.Project.Solution;
-
-                PendTfsEdit(document.FilePath);
             }
 
             if (workspace.TryApplyChanges(solution))
@@ -123,6 +119,11 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         {
                             return;
                         }
+                        else if (indexInChain == 0)
+                        {
+                            // All regions in this chain are varying
+                            return;
+                        }
                         else
                         {
                             // All preceding regions are always disabled. Do not remove this region or any that follow.
@@ -143,6 +144,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             {
                 // Remove all regions from the start region up to the enabled region, but only remove the start
                 // directive of the enabled region.
+                Debug.Assert(startRegion != null);
+                Debug.Assert(enabledRegion != null);
+                Debug.Assert(results != null);
                 results.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
             }
 
@@ -191,17 +195,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
 
             return string.Empty;
-        }
-
-        private static void PendTfsEdit(string filePath)
-        {
-            var workspaceInfo = Workstation.Current.GetLocalWorkspaceInfo(filePath);
-            if (workspaceInfo != null)
-            {
-                var server = new TfsTeamProjectCollection(workspaceInfo.ServerUri);
-                var workspace = workspaceInfo.GetWorkspace(server);
-                workspace.PendEdit(filePath);
-            }
         }
 
         private class SpanToReplace : IComparable<SpanToReplace>

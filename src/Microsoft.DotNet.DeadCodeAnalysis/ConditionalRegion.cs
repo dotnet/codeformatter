@@ -110,9 +110,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public static bool operator== (ConditionalRegion x, ConditionalRegion y)
         {
-            if (object.Equals(x, null))
+            if (object.Equals(x, y))
             {
-                return object.Equals(y, null);
+                return true;
             }
 
             return x.Equals(y);
@@ -120,9 +120,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public static bool operator!= (ConditionalRegion x, ConditionalRegion y)
         {
-            if (object.Equals(x, null))
+            if (object.Equals(x, y))
             {
-                return object.Equals(y, null);
+                return false;
             }
 
             return x.Equals(y);
