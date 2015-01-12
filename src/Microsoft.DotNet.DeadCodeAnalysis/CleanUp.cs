@@ -15,18 +15,38 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     public static class CleanUp
     {
-        public static async Task<Document> RemoveUnnecessaryRegions(DocumentConditionalRegionInfo regionInfo, CancellationToken cancellationToken)
+        internal static async Task RemoveUnnecessaryRegions(CodeAnalysis.Workspace workspace, IEnumerable<DocumentConditionalRegionInfo> regionInfo, CancellationToken cancellationToken)
         {
-            if (regionInfo == null)
+            var solution = workspace.CurrentSolution;
+
+            foreach (var info in regionInfo)
             {
-                throw new ArgumentException("regionInfo");
+                var document = await RemoveUnnecessaryRegions(solution.GetDocument(info.Document.Id), info.Chains, cancellationToken);
+                solution = document.Project.Solution;
             }
 
-            var document = regionInfo.Document;
-            var spans = CalculateSpansToRemove(regionInfo);
+            if (workspace.TryApplyChanges(solution))
+            {
+                Console.WriteLine("Solution changes committed.");
+            }
+        }
+
+        private static async Task<Document> RemoveUnnecessaryRegions(Document document, List<List<ConditionalRegion>> chains, CancellationToken cancellationToken)
+        {
+            if (document == null)
+            {
+                throw new ArgumentException("document");
+            }
+
+            if (chains == null)
+            {
+                throw new ArgumentException("chains");
+            }
+
+            var spans = CalculateSpansToReplace(chains);
             if (spans == null || spans.Count == 0)
             {
-                return regionInfo.Document;
+                return document;
             }
 
             // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
@@ -41,43 +61,15 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return document.WithText(newText);
         }
 
-        private class SpanToReplace : IComparable<SpanToReplace>
-        {
-            public TextSpan Span { get; private set; }
-
-            public string ReplacementText { get; private set; }
-
-            public SpanToReplace(int start, int end, string replacementText)
-            {
-                if (end < start)
-                {
-                    throw new ArgumentOutOfRangeException("end");
-                }
-
-                Span = new TextSpan(start, end - start);
-                ReplacementText = replacementText;
-            }
-
-            public int CompareTo(SpanToReplace other)
-            {
-                return Span.CompareTo(other.Span);
-            }
-        }
-
-        private static List<SpanToReplace> CalculateSpansToRemove(DocumentConditionalRegionInfo info)
+        private static List<SpanToReplace> CalculateSpansToReplace(List<List<ConditionalRegion>> chains)
         {
             var spans = new List<SpanToReplace>();
 
-            // TODO: Spans don't need to be combined because we know that we're either going to remove all of the directives, or we're going to
-            // remove the always disabled directives preceding the varying directives.
-            // Two cases for removing all directives: All disabled, or all disabled but one (which could be at the beginning, in the middle, or at the end).
-
             // TODO: A chain struct could have a GetUnnecessarySpans() method
 
-            foreach (var chain in info.Chains)
+            foreach (var chain in chains)
             {
-                var chainSpans = CalculateSpansToRemove(chain);
-                spans.AddRange(chainSpans);
+                CalculateSpansToReplace(chain, spans);
             }
 
             spans.Sort();
@@ -85,7 +77,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return spans;
         }
 
-        private static void CalculateSpansToRemove(List<ConditionalRegion> chain, List<SpanToReplace> results)
+        private static void CalculateSpansToReplace(List<ConditionalRegion> chain, List<SpanToReplace> results)
         {
             Debug.Assert(chain.Count > 0);
 
@@ -170,160 +162,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
         }
 
-        public static async Task<Document> RemoveInactiveDirectives(Document document, IList<DirectiveTriviaSyntax> directives, CancellationToken cancellationToken)
-        {
-            if (directives == null)
-            {
-                // No directives to remove
-                return document;
-            }
-
-            var originalText = await document.GetTextAsync(cancellationToken);
-
-            var spansToRemove = CalculateInactiveSpansToRemove(directives.ToArray(), originalText);
-            if (spansToRemove == null || spansToRemove.Count == 0)
-            {
-                return document;
-            }
-
-            // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
-            var newText = originalText;
-
-            for (int i = spansToRemove.Count - 1; i >= 0; --i)
-            {
-                var span = spansToRemove[i];
-                newText = newText.Replace(span.FullSpan, GetReplacementText(span));
-            }
-
-            return document.WithText(newText);
-        }
-
-        private static List<SpanToRemove> CalculateInactiveSpansToRemove(IList<DirectiveTriviaSyntax> unnecessaryDirectives, SourceText text)
-        {
-            var spans = new List<SpanToRemove>();
-            int unnecessaryIndex = 0;
-
-            while (unnecessaryIndex < unnecessaryDirectives.Count)
-            {
-                var startDirective = unnecessaryDirectives[unnecessaryIndex];
-                var linkedDirectives = startDirective.GetLinkedDirectives();
-
-                var nextLinkedIndex = linkedDirectives.IndexOf(startDirective) + 1;
-                if (nextLinkedIndex >= linkedDirectives.Count)
-                {
-                    // A branching directive (#if, #elif, #else) should always be followed by another directive.
-                    // If this is not the case, there is an error in the code, so don't bother to remove anything.
-                    return null;
-                }
-
-                // If the next linked directive is also the next unnecessary directive, we can continue to grow this span to remove.
-                var endDirective = linkedDirectives[nextLinkedIndex];
-                int directivesInSpan = 2;
-
-                while (++unnecessaryIndex < unnecessaryDirectives.Count && endDirective == unnecessaryDirectives[unnecessaryIndex])
-                {
-                    if (++nextLinkedIndex >= linkedDirectives.Count)
-                    {
-                        // Since we know endDirective is an unnecessary branching directive, we know it must be followed by another directive.
-                        // Again, if this is not the case, there is an error in the code, so don't bother to remove anything.
-                        return null;
-                    }
-
-                    endDirective = linkedDirectives[nextLinkedIndex];
-                    ++directivesInSpan;
-                }
-
-                // If this span includes all but one region in the set of linked directives, add a span to remove the book-ending
-                // #if or #endif directive.
-                DirectiveTriviaSyntax endIfDirective = null;
-
-                if (directivesInSpan == linkedDirectives.Count - 1)
-                {
-                    if (startDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia)
-                    {
-                        endIfDirective = linkedDirectives[linkedDirectives.Count - 1];
-                        Debug.Assert(endIfDirective.CSharpKind() == SyntaxKind.EndIfDirectiveTrivia);
-                    }
-                    else
-                    {
-                        var ifDirective = linkedDirectives[0];
-                        Debug.Assert(ifDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia);
-                        spans.Add(new SpanToRemove(ifDirective, ifDirective));
-                    }
-                }
-
-                // Add the span we previously calculated followed by the book-ending #endif directive to preserve prefix document ordering.
-                spans.Add(new SpanToRemove(startDirective, endDirective, needsReplacement: linkedDirectives.Count > 3));
-
-                if (endIfDirective != null)
-                {
-                    spans.Add(new SpanToRemove(endIfDirective, endIfDirective));
-                }
-            }
-
-            // Combine overlapping spans
-            var combinedSpans = new List<SpanToRemove>();
-
-            for (int i = 0; i < spans.Count;)
-            {
-                var newSpan = spans[i];
-                var previousSpan = newSpan;
-                int j;
-
-                for (j = i + 1; j < spans.Count; j++)
-                {
-                    var endSpan = spans[j];
-
-                    if (previousSpan.End < endSpan.Start)
-                    {
-                        break;
-                    }
-
-                    newSpan.EndDirective = endSpan.EndDirective;
-                    if (previousSpan.NeedsReplacement || endSpan.NeedsReplacement)
-                    {
-                        newSpan.NeedsReplacement = true;
-                    }
-
-                    previousSpan = endSpan;
-                }
-
-                i = j;
-                combinedSpans.Add(newSpan);
-            }
-
-            return combinedSpans;
-        }
-
-        private static string GetReplacementText(SpanToRemove span)
-        {
-            if (span.NeedsReplacement)
-            {
-                if (span.StartDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia)
-                {
-                    Debug.Assert(span.EndDirective.CSharpKind() == SyntaxKind.ElifDirectiveTrivia);
-                    var elifDirective = (ElifDirectiveTriviaSyntax)span.EndDirective;
-                    var elifKeyword = elifDirective.ElifKeyword;
-                    var newIfDirective = SyntaxFactory.IfDirectiveTrivia(
-                        elifDirective.HashToken,
-                        SyntaxFactory.Token(elifKeyword.LeadingTrivia, SyntaxKind.IfKeyword, "if", "if", elifKeyword.TrailingTrivia),
-                        elifDirective.Condition,
-                        elifDirective.EndOfDirectiveToken,
-                        elifDirective.IsActive,
-                        elifDirective.BranchTaken,
-                        elifDirective.ConditionValue);
-
-                    return newIfDirective.ToFullString();
-                }
-                else
-                {
-                    return span.EndDirective.ToFullString();
-                }
-            }
-
-            return string.Empty;
-        }
-
         private static string GetReplacementText(ConditionalRegion region, bool needsReplacement)
         {
             if (needsReplacement)
@@ -364,63 +202,26 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
         }
 
-        private class SpanToRemove
+        private class SpanToReplace : IComparable<SpanToReplace>
         {
-            private DirectiveTriviaSyntax m_startDirective;
-            private DirectiveTriviaSyntax m_endDirective;
+            public TextSpan Span { get; private set; }
 
-            public DirectiveTriviaSyntax StartDirective
+            public string ReplacementText { get; private set; }
+
+            public SpanToReplace(int start, int end, string replacementText)
             {
-                get { return m_startDirective; }
-                set
+                if (end < start)
                 {
-                    m_startDirective = value;
-                    Start = CalculateStart(value);
-                }
-            }
-
-            public DirectiveTriviaSyntax EndDirective
-            {
-                get { return m_endDirective; }
-                set
-                {
-                    m_endDirective = value;
-                    End = m_endDirective.FullSpan.End;
-                }
-            }
-
-            public int Start { get; private set; }
-
-            public int End { get; private set; }
-
-            public bool NeedsReplacement;
-
-            public TextSpan FullSpan { get { return new TextSpan(Start, End - Start); } }
-
-            public SpanToRemove(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective, bool needsReplacement = false)
-            {
-                StartDirective = startDirective;
-                EndDirective = endDirective;
-                NeedsReplacement = needsReplacement;
-            }
-
-            private static int CalculateStart(DirectiveTriviaSyntax startDirective)
-            {
-                int start = startDirective.FullSpan.Start;
-
-                // Consume whitespace trivia preceding the start directive
-                var leadingTrivia = startDirective.ParentTrivia.Token.LeadingTrivia;
-                var triviaIndex = leadingTrivia.IndexOf(startDirective.ParentTrivia);
-                if (triviaIndex > 0)
-                {
-                    var previousTrivia = leadingTrivia[triviaIndex - 1];
-                    if (previousTrivia.CSharpKind() == SyntaxKind.WhitespaceTrivia)
-                    {
-                        start = previousTrivia.FullSpan.Start;
-                    }
+                    throw new ArgumentOutOfRangeException("end");
                 }
 
-                return start;
+                Span = new TextSpan(start, end - start);
+                ReplacementText = replacementText;
+            }
+
+            public int CompareTo(SpanToReplace other)
+            {
+                return Span.CompareTo(other.Span);
             }
         }
     }

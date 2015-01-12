@@ -14,23 +14,26 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     public class AnalysisEngine
     {
-        private IEnumerable<string> m_projectPaths;
+        private IList<Project> m_projects;
 
         private HashSet<string> m_ignoredSymbols;
 
-        private bool m_includeInactiveDirectives;
-
-        // TODO: we should not build ignored regions up incrementally- an ignored region is simply a varying region
-        // It doesn't mean we're ignoring a whole chain, it just means we can't remove always active ifdef's following in the chain.
-
-        public AnalysisEngine(IEnumerable<string> projectPaths, IEnumerable<string> ignoredSymbols = null, bool includeInactiveDirectives = false)
+        public static async Task<AnalysisEngine> Create(IEnumerable<string> projectPaths, IEnumerable<string> enabledSymbols = null, IEnumerable<string> ignoredSymbols = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (projectPaths == null || projectPaths.Count() == 0)
+            if (projectPaths == null || !projectPaths.Any())
             {
                 throw new ArgumentException("Must specify at least one project", "projectPaths");
             }
 
-            m_projectPaths = projectPaths;
+            var projects = await Task.WhenAll(from path in projectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
+
+            return new AnalysisEngine(projects, enabledSymbols, ignoredSymbols);
+        }
+
+        internal AnalysisEngine(IList<Project> projects, IEnumerable<string> enabledSymbols = null, IEnumerable<string> ignoredSymbols = null)
+        {
+            Debug.Assert(projects != null);
+            m_projects = projects;
 
             m_ignoredSymbols = new HashSet<string>();
             if (ignoredSymbols != null)
@@ -45,26 +48,64 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
         }
 
+        public async Task PrintConditionalRegionInfoAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var regionInfo = await GetConditionalRegionInfo(cancellationToken);
+            PrintConditionalRegionInfo(regionInfo);
+        }
+
+        private static void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfo)
+        {
+            var originalForegroundColor = Console.ForegroundColor;
+
+            foreach (var info in regionInfo)
+            {
+                foreach (var chain in info.Chains)
+                {
+                    foreach (var region in chain)
+                    {
+                        switch (region.State)
+                        {
+                            case ConditionalRegionState.AlwaysDisabled:
+                                Console.ForegroundColor = ConsoleColor.DarkGray;
+                                break;
+                            case ConditionalRegionState.AlwaysEnabled:
+                                Console.ForegroundColor = ConsoleColor.White;
+                                break;
+                            case ConditionalRegionState.Varying:
+                                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                                break;
+                        }
+                        Console.WriteLine(region);
+                    }
+                }
+            }
+        }
+
+        public async Task RemoveUnnecessaryConditionalRegions(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var regionInfo = await GetConditionalRegionInfo(cancellationToken);
+            await CleanUp.RemoveUnnecessaryRegions(m_projects[0].Solution.Workspace, regionInfo, cancellationToken);
+        }
+
         /// <summary>
         /// Returns the intersection of <see cref="DocumentConditionalRegionInfo"/> in the given projects.
         /// The contained <see cref="Document"/> objects will all be from the first project.
         /// </summary>
         public async Task<IList<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            var projects = Task.WhenAll(from path in m_projectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken)).Result;
-
-            if (projects.Length == 1)
+            if (m_projects.Count == 1)
             {
-                return await GetConditionalRegionInfo(projects[0], d => true, cancellationToken);
+                return await GetConditionalRegionInfo(m_projects[0], d => true, cancellationToken);
             }
 
             // Intersect the set of files in the projects so that we only analyze the set of files shared between all projects
-            var filePaths = projects[0].Documents.Select(d => d.FilePath);
+            var filePaths = m_projects[0].Documents.Select(d => d.FilePath);
 
-            for (int i = 1; i < projects.Length; i++)
+            for (int i = 1; i < m_projects.Count; i++)
             {
                 filePaths = filePaths.Intersect(
-                    projects[i].Documents.Select(d => d.FilePath),
+                    m_projects[i].Documents.Select(d => d.FilePath),
                     StringComparer.InvariantCultureIgnoreCase);
             }
 
@@ -72,11 +113,11 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             Predicate<Document> shouldAnalyzeDocument = doc => filePathSet.Contains(doc.FilePath);
 
             // Intersect the conditional regions of each document shared between all the projects
-            IList<DocumentConditionalRegionInfo> infoA = await GetConditionalRegionInfo(projects[0], shouldAnalyzeDocument, cancellationToken);
+            IList<DocumentConditionalRegionInfo> infoA = await GetConditionalRegionInfo(m_projects[0], shouldAnalyzeDocument, cancellationToken);
 
-            for (int i = 1; i < projects.Length; i++)
+            for (int i = 1; i < m_projects.Count; i++)
             {
-                var infoB = await GetConditionalRegionInfo(projects[i], shouldAnalyzeDocument, cancellationToken);
+                var infoB = await GetConditionalRegionInfo(m_projects[i], shouldAnalyzeDocument, cancellationToken);
                 infoA = IntersectConditionalRegionInfo(infoA, infoB);
             }
 
@@ -86,7 +127,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         /// <summary>
         /// Returns a sorted array of <see cref="DocumentConditionalRegionInfo"/> for the specified project, filtered by the given predicate.
         /// </summary>
-        internal async Task<DocumentConditionalRegionInfo[]> GetConditionalRegionInfo(Project project, Predicate<Document> predicate, CancellationToken cancellationToken)
+        private async Task<DocumentConditionalRegionInfo[]> GetConditionalRegionInfo(Project project, Predicate<Document> predicate, CancellationToken cancellationToken)
         {
             var documentInfos = await Task.WhenAll(
                 from document in project.Documents
@@ -147,9 +188,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
                 if (previousDirective != null)
                 {
-                    // Unless explicitly specified, ignore chains with inactive directives because their
-                    // conditions are not evaluated by the parser.
-                    if (!m_includeInactiveDirectives && !previousDirective.IsActive)
+                    // Ignore chains with inactive directives because their conditions are not evaluated by the parser.
+                    if (!previousDirective.IsActive)
                     {
                         return null;
                     }

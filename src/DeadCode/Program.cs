@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.DeadCodeAnalysis;
+using System.Threading;
 
 namespace DeadCode
 {
@@ -20,7 +21,10 @@ namespace DeadCode
             }
 
             var projectPaths = new List<string>();
-            var ignoredSymbols = new HashSet<string>();
+            IEnumerable<string> ignoredSymbols = null;
+            IEnumerable<string> definedSymbols = null;
+
+            bool edit = false;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -32,17 +36,29 @@ namespace DeadCode
                     {
                         if (++i < args.Length)
                         {
-                            var symbolList = args[i].Split(';', ',', ' ', '\t', '\n');
-                            foreach (var symbol in symbolList)
-                            {
-                                ignoredSymbols.Add(symbol.Trim());
-                            }
+                            ignoredSymbols = args[i].Split(';', ',', ' ', '\t', '\n');
                         }
                         else
                         {
                             PrintUsage();
                             return -1;
                         }
+                    }
+                    else if (argName.Equals("define", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (++i < args.Length)
+                        {
+                            definedSymbols = args[i].Split(';', ',', ' ', '\t', '\n');
+                        }
+                        else
+                        {
+                            PrintUsage();
+                            return -1;
+                        }
+                    }
+                    else if (argName.Equals("edit", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        edit = true;
                     }
                 }
                 else
@@ -56,17 +72,41 @@ namespace DeadCode
                 PrintUsage();
                 return -1;
             }
-            else
+
+            var cts = new CancellationTokenSource();
+            var ct = cts.Token;
+            Console.CancelKeyPress += delegate { cts.Cancel(); };
+
+            try
             {
+                // TODO: Clean this up.
+                var createTask = AnalysisEngine.Create(projectPaths, definedSymbols, ignoredSymbols, ct);
+                createTask.Wait(ct);
+
+                var analysisEngine = createTask.Result;
                 
+                if (edit)
+                {
+                    analysisEngine.RemoveUnnecessaryConditionalRegions(ct).Wait(ct);
+                }
+                else
+                {
+                    analysisEngine.PrintConditionalRegionInfoAsync(ct).Wait(ct);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Canceled.");
+                return 1;
             }
 
+            Console.WriteLine("Done.");
             return 0;
         }
 
         private static void PrintUsage()
         {
-            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/nodisabled] [/inactive] [/ignore <symbol list>] [/define <symbol list>] [/disable <symbol list>] [/edit] [@<response file>]");
+            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/nodisabled] [/inactive] [/ignore <symbol list>] [/define <symbol list>] [/edit] [@<response file>]");
         }
     }
 }

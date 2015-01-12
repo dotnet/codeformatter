@@ -6,6 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7C57FD95-030E-48B2-B369-6694BB922C8C}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(MsBuildThisFileDirectory)..\..\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MsBuildThisFileDirectory)..\..\obj\$(Configuration)\</IntermediateOutputPath>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.DotNet.DeadCodeAnalysis.Tests</RootNamespace>
     <AssemblyName>Microsoft.DotNet.DeadCodeAnalysis.Tests</AssemblyName>
@@ -16,7 +18,6 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -24,7 +25,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

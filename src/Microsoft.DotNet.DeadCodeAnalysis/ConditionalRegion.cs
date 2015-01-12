@@ -15,15 +15,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public DirectiveTriviaSyntax EndDirective { get; private set; }
 
-        public IReadOnlyList<ConditionalRegion> Chain { get; private set; }
-
-        public int IndexInChain { get; private set; }
-
         public int SpanStart { get; private set; }
 
         public int SpanEnd { get; private set; }
-
-        public TextSpan FullSpan { get { return Location.SourceSpan; } }
 
         public Location Location { get; private set; }
 
@@ -37,8 +31,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
             StartDirective = startDirective;
             EndDirective = endDirective;
-            Chain = chain;
-            IndexInChain = indexInChain;
 
             SpanStart = CalculateSpanStart(startDirective);
             SpanEnd = endDirective.FullSpan.End;

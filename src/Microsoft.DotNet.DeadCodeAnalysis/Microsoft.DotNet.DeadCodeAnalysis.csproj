@@ -6,6 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{27F04393-37FD-4D02-B574-0084BB7F6A59}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(MsBuildThisFileDirectory)..\..\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MsBuildThisFileDirectory)..\..\obj\$(Configuration)\</IntermediateOutputPath>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.DotNet.DeadCodeAnalysis</RootNamespace>
     <AssemblyName>Microsoft.DotNet.DeadCodeAnalysis</AssemblyName>
@@ -16,7 +18,6 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -24,7 +25,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -84,7 +84,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analysis.cs" />
     <Compile Include="AnalysisEngine.cs" />
     <Compile Include="CleanUp.cs" />
     <Compile Include="ConditionalRegion.cs" />
