@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public Location Location { get; private set; }
 
-        public ConditionalRegionState State { get; private set; }
+        public ConditionalRegionState State { get; set; }
 
         public bool ExplicitlyVaries { get; private set; }
 
@@ -114,6 +114,26 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         public bool Equals(ConditionalRegion other)
         {
             return CompareTo(other) == 0;
+        }
+
+        public static bool operator== (ConditionalRegion x, ConditionalRegion y)
+        {
+            if (x == null)
+            {
+                return y == null;
+            }
+
+            return x.Equals(y);
+        }
+
+        public static bool operator!= (ConditionalRegion x, ConditionalRegion y)
+        {
+            if (x == null)
+            {
+                return y == null;
+            }
+
+            return x.Equals(y);
         }
 
         public override string ToString()

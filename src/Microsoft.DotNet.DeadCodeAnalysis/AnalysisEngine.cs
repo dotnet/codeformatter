@@ -98,11 +98,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return documentInfos;
         }
 
-        /// <summary>
-        /// Returns a list of condition region chains in a given document in prefix document order
-        /// </summary>
         private async Task<DocumentConditionalRegionInfo> GetConditionalRegionInfo(Document document, CancellationToken cancellationToken)
         {
+            var chains = new List<List<ConditionalRegion>>();
             var regions = new List<ConditionalRegion>();
 
             var syntaxTree = await document.GetSyntaxTreeAsync(cancellationToken) as CSharpSyntaxTree;
@@ -118,7 +116,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     var chain = ParseConditionalRegionChain(currentDirective.GetLinkedDirectives(), visitedDirectives);
                     if (chain != null)
                     {
-                        regions.AddRange(chain);
+                        chains.Add(chain);
                     }
 
                     do
@@ -128,7 +126,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 }
             }
 
-            return new DocumentConditionalRegionInfo(document, regions);
+            return new DocumentConditionalRegionInfo(document, chains);
         }
 
         private List<ConditionalRegion> ParseConditionalRegionChain(List<DirectiveTriviaSyntax> directives, HashSet<DirectiveTriviaSyntax> visitedDirectives)

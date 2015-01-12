@@ -22,38 +22,82 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 throw new ArgumentException("regionInfo");
             }
 
+            var document = regionInfo.Document;
+            var spans = CalculateSpansToRemove(regionInfo);
+            if (spans == null || spans.Count == 0)
+            {
+                return regionInfo.Document;
+            }
 
+            // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
+            var newText = await document.GetTextAsync(cancellationToken);
 
-            throw new NotImplementedException();
+            for (int i = spans.Count - 1; i >= 0; --i)
+            {
+                var span = spans[i];
+                newText = newText.Replace(span.Span, span.ReplacementText);
+            }
+
+            return document.WithText(newText);
         }
 
-        private class SpanToReplace
+        private class SpanToReplace : IComparable<SpanToReplace>
         {
             public TextSpan Span { get; private set; }
 
             public string ReplacementText { get; private set; }
 
-            public SpanToReplace(TextSpan span, string replacementText)
+            public SpanToReplace(int start, int end, string replacementText)
             {
-                Span = span;
+                if (end < start)
+                {
+                    throw new ArgumentOutOfRangeException("end");
+                }
+
+                Span = new TextSpan(start, end - start);
                 ReplacementText = replacementText;
+            }
+
+            public int CompareTo(SpanToReplace other)
+            {
+                return Span.CompareTo(other.Span);
             }
         }
 
         private static List<SpanToReplace> CalculateSpansToRemove(DocumentConditionalRegionInfo info)
         {
-            // TODO: Just sort the spans.  I don't think we really need a flat list of regions.  The only reasons regions needed to be sorted were for
-            // the sake of intersection (but we can also sort chains for the same effect), and having a sorted list of spans at the end.
             var spans = new List<SpanToReplace>();
-
-            // TODO: If this loop is through each chain, then we know the index in the chain, and we can assert that we have not seen any varying.
 
             // TODO: Spans don't need to be combined because we know that we're either going to remove all of the directives, or we're going to
             // remove the always disabled directives preceding the varying directives.
             // Two cases for removing all directives: All disabled, or all disabled but one (which could be at the beginning, in the middle, or at the end).
 
-            foreach (var region in info.Regions)
+            // TODO: A chain struct could have a GetUnnecessarySpans() method
+
+            foreach (var chain in info.Chains)
             {
+                var chainSpans = CalculateSpansToRemove(chain);
+                spans.AddRange(chainSpans);
+            }
+
+            spans.Sort();
+
+            return spans;
+        }
+
+        private static void CalculateSpansToRemove(List<ConditionalRegion> chain, List<SpanToReplace> results)
+        {
+            Debug.Assert(chain.Count > 0);
+
+            ConditionalRegion startRegion = chain[0];
+            ConditionalRegion enabledRegion = null;
+            ConditionalRegion endRegion = chain[chain.Count - 1];
+            bool endRegionNeedsReplacement = false;
+
+            for (int indexInChain = 0; indexInChain < chain.Count; indexInChain++)
+            {
+                var region = chain[indexInChain];
+
                 switch (region.State)
                 {
                     case ConditionalRegionState.AlwaysDisabled:
@@ -64,90 +108,66 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         // THIS_CONDITION and the preceding region can be removed altogether.
                         //
                         // So, remove the start and end directives as well as the contents of the region.
-
-                        // Assert that all preceding regions are not varying. If there are varying spans preceding this one, then this span is also varying.
-                        for (int i = 0; i < region.IndexInChain; i++)
-                        {
-                            Debug.Assert(region.Chain[i].State != ConditionalRegionState.Varying);
-                        }
-
-                        spans.Add(new SpanToReplace(region.FullSpan, GetReplacementText(region, region.Chain.Count > 3)));
                         break;
                     case ConditionalRegionState.AlwaysEnabled:
-                        // We can only safely remove regions that are always enabled if there are no varying regions
-                        // following in the chain. Otherwise we have to modify the condition for all the following regions,
-                        // and that clutters the code more instead of cleaning it up. 
+                        // We can only safely remove regions that are always enabled if there are no varying regions in the chain.
+                        // There cannot be varying regions preceding this one, because then this region would be implicitly varying.
+                        // If there are varying regions following this one, then it means that we are missing data about another build
+                        // configuration in which this region is not enabled, in which case this region is actually varying.
                         //
-                        // When removing a directive that is always enabled, we are also removing all other directives because the
-                        // other directives in the chain are necessarily always false.
-                        //
-                        // This is great because it also means that we don't have to special case removing the bookend directives.
-
-                        // Assert that all preceding regions are always disabled.
-                        for (int i = 0; i < region.IndexInChain; i++)
-                        {
-                            Debug.Assert(region.Chain[i].State == ConditionalRegionState.AlwaysDisabled);
-                        }
-
-                        // Check if all following regions in the chain are always disabled
-                        // TODO: Could keep track of "canRemoveAlwaysEnabled", just add at end after the scan.
-                        bool safeToRemove = true;
-                        for (int i = region.IndexInChain + 1; i < region.Chain.Count; i++)
-                        {
-                            if (region.Chain[i].State != ConditionalRegionState.AlwaysDisabled)
-                            {
-                                safeToRemove = false;
-                            }
-                        }
-
-                        if (safeToRemove)
-                        {
-                            // Remove only the start and end directives themselves.
-                            spans.Add(new SpanToReplace(new TextSpan(region.SpanStart, region.StartDirective.FullSpan.End - region.SpanStart), string.Empty));
-                            spans.Add(new SpanToReplace(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), string.Empty));
-                        }
+                        // In other words, when removing a directive that is always enabled, we are also removing all other directives
+                        // because the other directives in the chain are necessarily always disabled.
+                        enabledRegion = region;
                         break;
                     case ConditionalRegionState.Varying:
-                        // Do not remove this region
-                        break;
+                        // If there is an always enabled region in this chain, but there is a subsequent region that is
+                        // varying, then then it means that we are missing data about another build configuration in
+                        // which the enabled region is disabled, in which case it is actually varying. Since the
+                        // enabled region depends on the conditions of its preceding regions, we may be missing data
+                        // about any of those conditions. To be safe, do not remove any regions in this chain.
+                        if (enabledRegion != null)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            // All preceding regions are always disabled. Do not remove this region or any that follow.
+                            endRegion = chain[indexInChain - 1];
+                            endRegionNeedsReplacement = true;
+                            goto ScanFinished;
+                        }
                 }
             }
 
-            // Combine overlapping spans
-            var combinedSpans = new List<SpanToReplace>();
-
-            for (int i = 0; i < spans.Count;)
+        ScanFinished:
+            if (startRegion == enabledRegion)
             {
-                var current = spans[i];
-                var previous = current;
-                int j;
-
-                for (j = i + 1; j < spans.Count; j++)
-                {
-                    var end = spans[j];
-
-                    if (previous.Span.End < end.Span.Start)
-                    {
-                        break;
-                    }
-
-                    // TODO:
-                    //current.EndDirective = end.EndDirective;
-                    //if (previous.NeedsReplacement || end.NeedsReplacement)
-                    //{
-                    //    current.NeedsReplacement = true;
-                    //}
-
-                    previous = end;
-                }
-
-                i = j;
-                combinedSpans.Add(current);
+                // Only remove the start directive of the start region
+                results.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
+            }
+            else if (enabledRegion != null)
+            {
+                // Remove all regions from the start region up to the enabled region, but only remove the start
+                // directive of the enabled region.
+                results.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
             }
 
-            return combinedSpans;
-
-            throw new NotImplementedException();
+            if (endRegion == enabledRegion)
+            {
+                // Only remove the end directive of the end region
+                results.Add(new SpanToReplace(endRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
+            }
+            else if (enabledRegion != null)
+            {
+                // Remove all regions from the enabled region up to and including the end region, but only remove
+                // the end directive of the enabled region.
+                results.Add(new SpanToReplace(enabledRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
+            }
+            else if (startRegion.State == ConditionalRegionState.AlwaysDisabled)
+            {
+                // There is no enabled region. Remove all disabled regions up to and including the end region.
+                results.Add(new SpanToReplace(startRegion.SpanStart, endRegion.SpanEnd, GetReplacementText(endRegion, endRegionNeedsReplacement)));
+            }
         }
 
         public static async Task<Document> RemoveInactiveDirectives(Document document, IList<DirectiveTriviaSyntax> directives, CancellationToken cancellationToken)

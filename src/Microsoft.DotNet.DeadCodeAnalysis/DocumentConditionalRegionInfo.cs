@@ -8,43 +8,61 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
 {
+    /// <summary>
+    /// Represents a list of conditional region chains in a given document in prefix document order.
+    /// </summary>
     public class DocumentConditionalRegionInfo : IComparable<DocumentConditionalRegionInfo>, IEquatable<DocumentConditionalRegionInfo>
     {
         public Document Document { get; private set; }
 
-        public List<ConditionalRegion> Regions { get; private set; }
+        // TODO: It might be cleaner if there were a struct for a chain
+        public List<List<ConditionalRegion>> Chains { get; private set; }
 
-        public DocumentConditionalRegionInfo(Document document, List<ConditionalRegion> regions)
+        internal DocumentConditionalRegionInfo(Document document, List<List<ConditionalRegion>> chains)
         {
             if (document == null)
             {
                 throw new ArgumentNullException("document");
             }
 
-            if (regions == null)
+            if (chains == null)
             {
                 throw new ArgumentNullException("chains");
             }
 
             Document = document;
-            Regions = regions;
-
-            // Sort the list of regions to make sure that nested chains of directives are not out of order with respect
-            // to their parents.
-            Regions.Sort();
+            Chains = chains;
         }
 
-        public void Intersect(DocumentConditionalRegionInfo other)
+        internal void Intersect(DocumentConditionalRegionInfo other)
         {
             if (!Equals(other))
             {
                 return;
             }
 
-            Debug.Assert(Regions.Count == other.Regions.Count);
-            for (int i = 0; i < Regions.Count; i++)
+            Debug.Assert(Chains.Count == other.Chains.Count);
+            for (int i = 0; i < Chains.Count; i++)
             {
-                Regions[i].Intersect(other.Regions[i]);
+                var chainA = Chains[i];
+                var chainB = other.Chains[i];
+                Debug.Assert(chainA.Count == chainB.Count);
+
+                bool conditionVaries = false;
+
+                for (int j = 0; j < chainA.Count; i++)
+                {
+                    var region = chainA[j];
+                    region.Intersect(chainB[j]);
+
+                    // If the condition of a region varies, then the conditions of all following regions in the chain
+                    // are implicitly varying.
+                    if (conditionVaries || region.State == ConditionalRegionState.Varying)
+                    {
+                        conditionVaries = true;
+                        region.State = ConditionalRegionState.Varying;
+                    }
+                }
             }
         }
 
