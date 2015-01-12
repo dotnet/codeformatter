@@ -42,8 +42,11 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
 
             Debug.Assert(Chains.Count == other.Chains.Count);
-            for (int i = 0; i < Chains.Count; i++)
+            // TODO: Is this a codegen bug in Roslyn? the for loop never seems to break even though the assert is never hit.
+            int originalChainCount = Chains.Count;
+            for (int i = 0; i < originalChainCount; i++)
             {
+                Debug.Assert(Chains.Count == originalChainCount);
                 var chainA = Chains[i];
                 var chainB = other.Chains[i];
                 Debug.Assert(chainA.Count == chainB.Count);

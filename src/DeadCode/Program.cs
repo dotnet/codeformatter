@@ -102,13 +102,12 @@ namespace DeadCode
                 return 1;
             }
 
-            Console.WriteLine("Done.");
             return 0;
         }
 
         private static void PrintUsage()
         {
-            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/printsummary] [/printenabled] [/printdisabled] [/printvarying] [/ignore <symbol list>] [/define <symbol list>] [/edit] [@<response file>]");
+            Console.WriteLine("DeadRegions <project> [<project> ...] [/file <file>] [/printenabled] [/printdisabled] [/printvarying] [/ignore <symbol list>] [/define <symbol list>] [/edit] [@<response file>]");
         }
     }
 }

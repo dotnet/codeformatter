@@ -96,15 +96,28 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             Console.ForegroundColor = originalForegroundColor;
 
             // Print summary
-            int totalRegionCount = disabledCount + enabledCount + varyingCount;
-
             Console.WriteLine();
+
+            int totalRegionCount = disabledCount + enabledCount + varyingCount;
+            if (totalRegionCount == 0)
+            {
+                Console.WriteLine("Did not find any conditional regions.");
+            }
+
             Console.WriteLine("Found");
             Console.WriteLine("  {0,5} conditional regions total", totalRegionCount);
 
             string alwaysString = m_projects.Count > 1 ? "always " : string.Empty;
-            Console.WriteLine("  {0,5} {1}disabled", disabledCount, alwaysString);
-            Console.WriteLine("  {0,5} {1}enabled", enabledCount, alwaysString);
+
+            if (disabledCount > 0)
+            {
+                Console.WriteLine("  {0,5} {1}disabled", disabledCount, alwaysString);
+            }
+
+            if (enabledCount > 0)
+            {
+                Console.WriteLine("  {0,5} {1}enabled", enabledCount, alwaysString);
+            }
 
             if (varyingCount > 0)
             {
