@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Xunit;
+using System;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 {
@@ -490,8 +491,11 @@ class D {}
 
         private static async Task<Document> RemoveDisabledDirectives(Document document, IEnumerable<int> positions, CancellationToken cancellationToken)
         {
-            var directivesToRemove = await GetDirectivesFromPositions(document, positions, cancellationToken);
-            return await CleanUp.RemoveInactiveDirectives(document, directivesToRemove, cancellationToken);
+            //var directivesToRemove = await GetDirectivesFromPositions(document, positions, cancellationToken);
+            //return await CleanUp.RemoveInactiveDirectives(document, directivesToRemove, cancellationToken);
+
+            // TODO: Fix this and update tests
+            throw new NotImplementedException();
         }
 
         protected void Verify(string markup, string expected, bool runFormatter = true)
