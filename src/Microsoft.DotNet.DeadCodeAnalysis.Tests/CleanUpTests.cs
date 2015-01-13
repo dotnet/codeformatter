@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
         [Fact]
         public void RemoveDisabledIf()
         {
-            var markup = @"
+            var source = @"
 // Test
-$$#if A
+#if false
 class A {}
 #endif
 // B
@@ -27,17 +27,17 @@ class B {}
 // B
 class B {}
 ";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
         [Fact]
         public void RemoveDisabledIfWithWhitespaceTrivia()
         {
-            var markup = @"
+            var source = @"
 class A
 {
     // F
-    $$#if F
+    #if false
     public int F;
     #endif // if F
 
@@ -55,15 +55,15 @@ class A
     public int G;
 }
 ";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
         [Fact]
         public void RemoveDisabledIfWithElse()
         {
-            var markup = @"
+            var source = @"
 // Test
-$$#if A
+#if false
 // A
 class A {}
 #else
@@ -78,18 +78,18 @@ class B {}
 class B {}
 // End Test
 ";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
         [Fact]
         public void RemoveDisabledElse()
         {
-            var markup = @"
+            var source = @"
 // Test
-#if A
+#if true
 // A
 class A {}
-$$#else
+#else
 // B
 class B {}
 #endif // if true
@@ -101,184 +101,58 @@ class B {}
 class A {}
 // End Test
 ";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveDisabledIfWithElifElse()
+        public void RemoveDisabledIfWithVaryingElifElse()
         {
-            var markup = @"
+            var source = @"
 // Test
-$$#if A
+#if false
 // A
 class A {}
-#elif B // !A
+#elif A
 // B
 class B {}
-#else // !A && !B
+#else
 // C
 class C {}
-#endif // if A
+#endif // if false
 // End Test
 ";
             var expected = @"
 // Test
-#if B // !A
+#if A // !A
 // B
 class B {}
-#else // !A && !B
+#else
 // C
 class C {}
-#endif // if A
+#endif // if false
 // End Test
 ";
-            Verify(markup, expected);
-        }
-
-        [Fact]
-        public void RemoveDisabledElifWithIfElse()
-        {
-            var markup = @"
-// Test
-#if A
-// A
-class A {}
-$$#elif B // !A
-// B
-class B {}
-#else // !A && !B
-// C
-class C {}
-#endif // if A
-// End Test
-";
-            var expected = @"
-// Test
-#if A
-// A
-class A {}
-#else // !A && !B
-// C
-class C {}
-#endif // if A
-// End Test
-";
-            Verify(markup, expected);
-        }
-
-        [Fact]
-        public void RemoveDisabledElseWithElif()
-        {
-            var markup = @"
-// Test
-#if A
-// A
-class A {}
-#elif B // !A
-// B
-class B {}
-$$#else // !A && !B
-// C
-class C {}
-#endif // if A
-// End Test
-";
-            var expected = @"
-// Test
-#if A
-// A
-class A {}
-$$#elif B // !A
-// B
-class B {}
-#endif // if A
-// End Test
-";
-        }
-
-        [Fact]
-        public void RemoveDisabledStaggeredElifs()
-        {
-            var markup = @"
-// Test
-#if A
-// A
-class A {}
-$$#elif B // !A
-// B
-class B {}
-#elif C // !A && !B
-// C
-class C {}
-$$#elif D // !A && !B && !C
-// D
-class D {}
-#endif // if A
-// End Test
-";
-            var expected = @"
-// Test
-#if A
-// A
-class A {}
-#elif C // !A && !B
-// C
-class C {}
-#endif // if A
-// End Test
-";
-            Verify(markup, expected);
-        }
-
-        [Fact]
-        public void RemoveDisabledStaggeredIfAndElifs()
-        {
-            var markup = @"
-// Test
-$$#if A
-// A
-class A {}
-$$#elif B // !A
-// B
-class B {}
-#elif C // !A && !B
-// C
-class C {}
-$$#elif D // !A && !B && !C
-// D
-class D {}
-#endif // if A
-// End Test
-";
-            var expected = @"
-// Test
-#if C // !A && !B
-// C
-class C {}
-#endif // if A
-// End Test
-";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
         [Fact]
         public void RemoveDisabledAdjacentUnrelatedRegions()
         {
-            var markup = @"
+            var source = @"
 class C
 {
 // Test
-#if A
+#if true
     int A;
-$$#else B // !A
+else
     int B;
-#endif // if A
+#endif // if true
 
-$$#if D
+#if false
     int D;
-#elif E // !D
+#elif A // !false
     int E;
-#else // !E
+#else // !false && !A
     int F;
 #endif
 // End Test
@@ -298,64 +172,31 @@ class C
 // End Test
 }
 ";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
-        [Fact]
-        public void RemoveDisabledAdjacentUnrelatedRegions2()
+        public void RemoveEnabledIf()
         {
-            var markup = @"
-class C
-{
+            var source = @"
 // Test
-$$#if A
-    int A;
-#endif // if A
-
-$$#if D
-    int D;
-#elif E // !D
-    int E;
-#else // !E
-    int F;
-#endif
+#if true // true
+// A
+class A {}
+#endif // if true
 // End Test
-}
 ";
             var expected = @"
-class C
-{
 // Test
-
-#if E // !D
-    int E;
-#else // !E
-    int F;
-#endif
+// A
+class A {}
 // End Test
-}
 ";
-            Verify(markup, expected);
+            Verify(source, expected);
         }
 
-        
-
-
-        public void RemoveActiveIf()
+        public void RemoveEnabledIfWithChain()
         {
-            var markup = @"
-#if A // A
-class A {}
-#endif // if A
-";
-            var expected = @"
-class A {}
-";
-        }
-
-        public void RemoveComplex()
-        {
-            var markup = @"
+            var source = @"
 #if true
 class A {}
 #elif false
@@ -369,11 +210,12 @@ class D {}
             var expected = @"
 class A {}
 ";
+            Verify(source, expected);
         }
 
-        public void RemoveComplex2()
+        public void RemoveEnabledElifWithChain()
         {
-            var markup = @"
+            var source = @"
 #if false
 class A {}
 #elif true
@@ -387,11 +229,12 @@ class D {}
             var expected = @"
 class B {}
 ";
+            Verify(source, expected);
         }
 
-        public void RemoveComplex3()
+        public void RemoveEnabledElseWithChain()
         {
-            var markup = @"
+            var source = @"
 #if false
 class A {}
 #elif false
@@ -405,59 +248,12 @@ class D {}
             var expected = @"
 class D {}
 ";
+            Verify(source, expected);
         }
 
-        // TODO: Prune these based on knowledge
-        // Note: these keep varying cases are the same thing as the removal cases
-        // What I can't wrap my head around is, can I prove that if I remove something, the remaining regions are valid?
-        // If you remove a region that is always false, the next region in the chain depends on !false && existing_condition.
-        // So that's totally fine.
-        // If you remove a region that is always active, the next region depends on !true && existing_condition.
-        // So the following regions must be inactive...
-        //   BUT, if the following regions are explicitly ignored,
-        public void KeepVarying1()
+        public void RemoveIfAndElifWithVaryingChain()
         {
-            var markup = @"
-#if A // Varying
-class A {}
-#elif false
-class B {}
-#elif false
-class C {}
-#else // false
-class D {}
-#endif
-";
-            var expected = @"
-#if A // Varying
-class A {}
-#endif
-";
-        }
-
-        public void KeepVarying2()
-        {
-            var markup = @"
-#if false
-class A {}
-#elif B // Varying
-class B {}
-#elif false
-class C {}
-#else // false
-class D {}
-#endif
-";
-            var expected = @"
-#if B // Varying
-class B {}
-#endif
-";
-        }
-
-        public void KeepVarying3()
-        {
-            var markup = @"
+            var source = @"
 #if false
 class A {}
 #elif false
@@ -475,40 +271,20 @@ class C {}
 class D {}
 #endif
 ";
+            Verify(source, expected);
         }
 
-        private static async Task<Document> RewriteDocumentAsync(Document document, bool runFormatter)
+        protected void Verify(string source, string expected, bool runFormatter = true)
         {
-            // TODO: Run clean up
-
-            if (runFormatter)
-            {
-                return await Formatter.FormatAsync(document, null, CancellationToken.None);
-            }
-
-            return document;
-        }
-
-        private static async Task<Document> RemoveDisabledDirectives(Document document, IEnumerable<int> positions, CancellationToken cancellationToken)
-        {
-            //var directivesToRemove = await GetDirectivesFromPositions(document, positions, cancellationToken);
-            //return await CleanUp.RemoveInactiveDirectives(document, directivesToRemove, cancellationToken);
-
-            // TODO: Fix this and update tests
-            throw new NotImplementedException();
-        }
-
-        protected void Verify(string markup, string expected, bool runFormatter = true)
-        {
-            string source;
-            var positions = GetPositions(markup, out source);
-
             var inputSolution = CreateSolution(new[] { source });
             var expectedSolution = CreateSolution(new[] { expected });
 
             var inputDocument = inputSolution.Projects.Single().Documents.Single();
-            var actualDocument = RemoveDisabledDirectives(inputDocument, positions, CancellationToken.None).Result;
-            var actualSolution = actualDocument.Project.Solution;
+
+            var analysisEngine = new AnalysisEngine(AnalysisOptions.FromSources(new[] { source }, alwaysIgnoredSymbols: new[] { "A" }));
+            analysisEngine.RunAsync().Wait();
+
+            var actualSolution = analysisEngine.Workspace.CurrentSolution;
 
             AssertSolutionEqual(expectedSolution, actualSolution);
         }

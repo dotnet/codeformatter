@@ -24,6 +24,9 @@ namespace DeadCode
             IEnumerable<string> ignoredSymbols = null;
             IEnumerable<string> definedSymbols = null;
 
+            bool printDisabled = false;
+            bool printEnabled = false;
+            bool printVarying = false;
             bool edit = false;
 
             for (int i = 0; i < args.Length; i++)
@@ -56,6 +59,18 @@ namespace DeadCode
                             return -1;
                         }
                     }
+                    else if (argName.Equals("printdisabled", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        printDisabled = true;
+                    }
+                    else if (argName.Equals("printenabled", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        printEnabled = true;
+                    }
+                    else if (argName.Equals("printvarying", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        printVarying = true;
+                    }
                     else if (argName.Equals("edit", StringComparison.InvariantCultureIgnoreCase))
                     {
                         edit = true;
@@ -79,22 +94,20 @@ namespace DeadCode
 
             Console.WriteLine("Analyzing...");
 
+            var options = AnalysisOptions.FromFilePaths(
+                projectPaths,
+                alwaysDefinedSymbols: definedSymbols,
+                alwaysIgnoredSymbols: ignoredSymbols,
+                printDisabled: printDisabled,
+                printEnabled: printEnabled,
+                printVarying: printVarying,
+                edit: edit);
+
+            var engine = new AnalysisEngine(options);
+
             try
             {
-                // TODO: Clean this up.
-                var createTask = AnalysisEngine.Create(projectPaths, definedSymbols, ignoredSymbols, ct);
-                createTask.Wait(ct);
-
-                var analysisEngine = createTask.Result;
-                
-                if (edit)
-                {
-                    analysisEngine.RemoveUnnecessaryConditionalRegions(ct).Wait(ct);
-                }
-                else
-                {
-                    analysisEngine.PrintConditionalRegionInfoAsync(ct).Wait(ct);
-                }
+                engine.RunAsync(ct).Wait(ct);
             }
             catch (OperationCanceledException)
             {

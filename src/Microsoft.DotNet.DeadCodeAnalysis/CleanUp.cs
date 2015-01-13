@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return spans;
         }
 
-        private static void CalculateSpansToReplace(ConditionalRegionChain chain, List<SpanToReplace> results)
+        private static void CalculateSpansToReplace(ConditionalRegionChain chain, List<SpanToReplace> spans)
         {
             Debug.Assert(chain.Regions.Count > 0);
 
@@ -84,9 +84,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             ConditionalRegion endRegion = chain.Regions[chain.Regions.Count - 1];
             bool endRegionNeedsReplacement = false;
 
-            for (int indexInChain = 0; indexInChain < chain.Regions.Count; indexInChain++)
+            for (int i = 0; i < chain.Regions.Count; i++)
             {
-                var region = chain.Regions[indexInChain];
+                var region = chain.Regions[i];
 
                 switch (region.State)
                 {
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         {
                             return;
                         }
-                        else if (indexInChain == 0)
+                        else if (i == 0)
                         {
                             // All regions in this chain are varying
                             return;
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         else
                         {
                             // All preceding regions are always disabled. Do not remove this region or any that follow.
-                            endRegion = chain.Regions[indexInChain - 1];
+                            endRegion = chain.Regions[i - 1];
                             endRegionNeedsReplacement = true;
                             goto ScanFinished;
                         }
@@ -138,33 +138,30 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             if (startRegion == enabledRegion)
             {
                 // Only remove the start directive of the start region
-                results.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
+                spans.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
             }
             else if (enabledRegion != null)
             {
                 // Remove all regions from the start region up to the enabled region, but only remove the start
                 // directive of the enabled region.
-                Debug.Assert(startRegion != null);
-                Debug.Assert(enabledRegion != null);
-                Debug.Assert(results != null);
-                results.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
+                spans.Add(new SpanToReplace(startRegion.SpanStart, enabledRegion.StartDirective.FullSpan.End, string.Empty));
             }
 
             if (endRegion == enabledRegion)
             {
                 // Only remove the end directive of the end region
-                results.Add(new SpanToReplace(endRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
+                spans.Add(new SpanToReplace(endRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
             }
             else if (enabledRegion != null)
             {
                 // Remove all regions from the enabled region up to and including the end region, but only remove
                 // the end directive of the enabled region.
-                results.Add(new SpanToReplace(enabledRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
+                spans.Add(new SpanToReplace(enabledRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
             }
             else if (startRegion.State == ConditionalRegionState.AlwaysDisabled)
             {
                 // There is no enabled region. Remove all disabled regions up to and including the end region.
-                results.Add(new SpanToReplace(startRegion.SpanStart, endRegion.SpanEnd, GetReplacementText(endRegion, endRegionNeedsReplacement)));
+                spans.Add(new SpanToReplace(startRegion.SpanStart, endRegion.SpanEnd, GetReplacementText(endRegion, endRegionNeedsReplacement)));
             }
         }
 
@@ -172,6 +169,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         {
             if (needsReplacement)
             {
+                // TODO: Fix this
                 if (region.StartDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia)
                 {
                     Debug.Assert(region.EndDirective.CSharpKind() == SyntaxKind.ElifDirectiveTrivia);

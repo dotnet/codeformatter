@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
         [Fact]
         public void IdentifySharedIf()
         {
-            var markup = @"
+            var source = @"
 #if true
 #endif
 
@@ -22,13 +22,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
                 ConditionalRegionState.Varying
             };
 
-            Verify(markup, expectedStates);
+            Verify(source, expectedStates);
         }
 
         [Fact]
         public void IdentifySharedElse()
         {
-            var markup = @"
+            var source = @"
 #if false
 #else
 #endif
@@ -43,13 +43,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
                 ConditionalRegionState.Varying
             };
 
-            Verify(markup, expectedStates);
+            Verify(source, expectedStates);
         }
 
         [Fact]
         public void IdentifySharedElif()
         {
-            var markup = @"
+            var source = @"
 #if false
 #elif A || B
 #endif
@@ -64,13 +64,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
                 ConditionalRegionState.AlwaysDisabled
             };
 
-            Verify(markup, expectedStates);
+            Verify(source, expectedStates);
         }
 
         [Fact]
         public void IdentifySharedNestedIf()
         {
-            var markup = @"
+            var source = @"
 #if true
     #if A || B
     #endif
@@ -89,13 +89,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
                 ConditionalRegionState.AlwaysDisabled
             };
 
-            Verify(markup, expectedStates);
+            Verify(source, expectedStates);
         }
 
         [Fact]
         public void IdentifySharedNestedDisabledIfs()
         {
-            var markup = @"
+            var source = @"
 #if false
     #if false
     #endif
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
                 ConditionalRegionState.AlwaysDisabled
             };
 
-            Verify(markup, expectedStates);
+            Verify(source, expectedStates);
         }
 
         // TODO: Add a test case which would fail if nested regions were AFTER the outer region.  Probably a removal test because it would screw up the spans.
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
         private static readonly string[] s_defaultPreprocessorSymbolsA = new[] { "A" };
         private static readonly string[] s_defaultPreprocessorSymbolsB = new[] { "B" };
 
-        private void Verify(string markup, ConditionalRegionState[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
+        private void Verify(string source, ConditionalRegionState[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
         {
             if (preprocessorSymbolsA == null)
             {
@@ -137,9 +137,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
             {
                 preprocessorSymbolsB = s_defaultPreprocessorSymbolsB;
             }
-
-            string source;
-            var positions = GetPositions(markup, out source);
 
             var projectA = CreateSolution(new[] { source }, preprocessorSymbolsA).Projects.Single();
             var projectB = CreateSolution(new[] { source }, preprocessorSymbolsB).Projects.Single();

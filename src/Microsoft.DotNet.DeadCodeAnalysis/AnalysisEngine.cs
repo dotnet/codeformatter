@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,43 +15,29 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     public class AnalysisEngine
     {
+        private AnalysisOptions m_options;
+
         private IList<Project> m_projects;
 
         private HashSet<string> m_ignoredSymbols;
 
-        public static async Task<AnalysisEngine> Create(IEnumerable<string> projectPaths, IEnumerable<string> enabledSymbols = null, IEnumerable<string> ignoredSymbols = null, CancellationToken cancellationToken = default(CancellationToken))
+        public Workspace Workspace { get { return m_projects[0].Solution.Workspace; } }
+
+        public AnalysisEngine(AnalysisOptions options)
         {
-            if (projectPaths == null || !projectPaths.Any())
-            {
-                throw new ArgumentException("Must specify at least one project", "projectPaths");
-            }
-
-            var projects = await Task.WhenAll(from path in projectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
-
-            return new AnalysisEngine(projects, enabledSymbols, ignoredSymbols);
+            m_options = options;
+            m_ignoredSymbols = new HashSet<string>(m_options.AlwaysIgnoredSymbols);
         }
 
-        internal AnalysisEngine(IList<Project> projects, IEnumerable<string> enabledSymbols = null, IEnumerable<string> ignoredSymbols = null)
-        {
-            Debug.Assert(projects != null);
-            m_projects = projects;
-
-            m_ignoredSymbols = new HashSet<string>();
-            if (ignoredSymbols != null)
-            {
-                foreach (var symbol in ignoredSymbols)
-                {
-                    if (!m_ignoredSymbols.Contains(symbol))
-                    {
-                        m_ignoredSymbols.Add(symbol);
-                    }
-                }
-            }
-        }
-
-        public async Task PrintConditionalRegionInfoAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task RunAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var regionInfo = await GetConditionalRegionInfo(cancellationToken);
+
+            if (m_options.Edit)
+            {
+                await CleanUp.RemoveUnnecessaryRegions(m_projects[0].Solution.Workspace, regionInfo, cancellationToken);
+            }
+
             PrintConditionalRegionInfo(regionInfo);
         }
 
@@ -74,7 +61,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                             case ConditionalRegionState.AlwaysDisabled:
                                 disabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Blue;
-                                if (true)
+                                if (m_options.PrintDisabled)
                                 {
                                     Console.WriteLine(region);
                                 }
@@ -82,7 +69,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                             case ConditionalRegionState.AlwaysEnabled:
                                 enabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Green;
-                                if (true)
+                                if (m_options.PrintEnabled)
                                 {
                                     Console.WriteLine(region);
                                 }
@@ -94,7 +81,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                                     explicitlyVaryingCount++;
                                 }
                                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                                if (false)
+                                if (m_options.PrintVarying)
                                 {
                                     Console.WriteLine(region);
                                 }
@@ -141,18 +128,21 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             // This involves calculating unnecessary regions, converting those to line spans
         }
 
-        public async Task RemoveUnnecessaryConditionalRegions(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var regionInfo = await GetConditionalRegionInfo(cancellationToken);
-            await CleanUp.RemoveUnnecessaryRegions(m_projects[0].Solution.Workspace, regionInfo, cancellationToken);
-        }
-
         /// <summary>
         /// Returns the intersection of <see cref="DocumentConditionalRegionInfo"/> in the given projects.
         /// The contained <see cref="Document"/> objects will all be from the first project.
         /// </summary>
         public async Task<IList<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (m_options.ProjectPaths != null)
+            {
+                m_projects = await Task.WhenAll(from path in m_options.ProjectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
+            }
+            else if (m_options.Sources != null)
+            {
+                m_projects = new[] { CreateProject(m_options.Sources.ToArray()) };
+            }
+
             if (m_projects.Count == 1)
             {
                 return await GetConditionalRegionInfo(m_projects[0], d => true, cancellationToken);
@@ -181,6 +171,38 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
 
             return infoA;
+        }
+
+        private Project CreateProject(string[] sources, string language = LanguageNames.CSharp)
+        {
+            string projectName = "GeneratedProject";
+            string fileExtension = language == LanguageNames.CSharp ? ".cs" : ".vb";
+            var projectId = ProjectId.CreateNewId(projectName);
+
+            var solution = new CustomWorkspace()
+                .CurrentSolution
+                .AddProject(projectId, projectName, projectName, language);
+
+            // TODO: Preprocessor symbols = AlwaysDefined - AlwaysDisabled
+            var disabledSymbols = new HashSet<string>(m_options.AlwaysDisabledSymbols);
+            var preprocessorSymbols = disabledSymbols.Where(s => !disabledSymbols.Contains(s));
+
+            var project = solution.Projects.Single();
+            project = project.WithParseOptions(
+                ((CSharpParseOptions)project.ParseOptions).WithPreprocessorSymbols(preprocessorSymbols));
+
+            solution = project.Solution;
+
+            string fileNamePrefix = "source";
+            int count = 0;
+            foreach (var source in sources)
+            {
+                var fileName = fileNamePrefix + count++ + fileExtension;
+                var documentId = DocumentId.CreateNewId(projectId, fileName);
+                solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
+            }
+
+            return solution.GetProject(projectId);
         }
 
         /// <summary>
