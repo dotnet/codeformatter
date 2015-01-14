@@ -18,17 +18,17 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <solution> [<rule types>] [/file <filename>]");
+                Console.WriteLine("CodeFormatter <project or solution> [<rule types>] [/file <filename>]");
                 Console.WriteLine("    <rule types> - Rule types to use in addition to the default ones.");
                 Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
                 Console.WriteLine("    <filename> - Only apply changes to files with specified name.");
                 return -1;
             }
 
-            var solutionPath = args[0];
-            if (!File.Exists(solutionPath))
+            var projectOrSolutionPath = args[0];
+            if (!File.Exists(projectOrSolutionPath))
             {
-                Console.Error.WriteLine("Solution {0} doesn't exist.", solutionPath);
+                Console.Error.WriteLine("Project or solution {0} doesn't exist.", projectOrSolutionPath);
                 return -1;
             }
 
@@ -59,15 +59,24 @@ namespace CodeFormatter
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-            RunAsync(solutionPath, ruleTypes, filenames, ct).Wait(ct);
+            RunAsync(projectOrSolutionPath, ruleTypes, filenames, ct).Wait(ct);
             Console.WriteLine("Completed formatting.");
             return 0;
         }
 
-        private static async Task RunAsync(string solutionFilePath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, CancellationToken cancellationToken)
+        private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
-            await workspace.OpenSolutionAsync(solutionFilePath, cancellationToken);
+
+            string extension = Path.GetExtension(projectOrSolutionPath);
+            if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+            {
+                await workspace.OpenSolutionAsync(projectOrSolutionPath, cancellationToken);
+            }
+            else
+            {
+                await workspace.OpenProjectAsync(projectOrSolutionPath, cancellationToken);
+            }
 
             var engine = FormattingEngine.Create(ruleTypes, filenames);
             await engine.RunAsync(workspace, cancellationToken);
