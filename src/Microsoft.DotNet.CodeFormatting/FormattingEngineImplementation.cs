@@ -35,10 +35,26 @@ namespace Microsoft.DotNet.CodeFormatting
             var solution = workspace.CurrentSolution;
             var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
             var hasChanges = false;
+            var unformattableDocuments = new List<Document>();
 
             foreach (var id in documentIds)
             {
                 var document = solution.GetDocument(id);
+
+                // Make sure we only format files which actually exist on disk. If we don't do this,
+                // workspace.TryApplyChanges() will create empty files for us, which we don't want.
+                // Also make sure we don't try to write files which are read-only as this will cause
+                // workspace.TryApplyChanges() to fail with an UnauthorizedAccessException.
+                var fileInfo = new FileInfo(document.FilePath);
+                if (!fileInfo.Exists || fileInfo.IsReadOnly)
+                {
+                    string skipReason = !fileInfo.Exists ? "does not exist" : "is read-only";
+                    Console.WriteLine("Warning: skipping '{0}' because it {1}", document.FilePath, skipReason);
+                    unformattableDocuments.Add(document);
+                    solution = solution.RemoveDocument(id);
+                    continue;
+                }
+
                 var shouldBeProcessed = await ShouldBeProcessedAsync(document);
                 if (!shouldBeProcessed)
                     continue;
@@ -48,6 +64,18 @@ namespace Microsoft.DotNet.CodeFormatting
                 hasChanges |= newDocument != document;
 
                 solution = newDocument.Project.Solution;
+            }
+
+            // Add the documents which were deemed to be unformattable back to the solution so that
+            // we don't end up modifying project files.
+            foreach (var document in unformattableDocuments)
+            {
+                solution = solution.AddDocument(
+                    document.Id,
+                    document.Name,
+                    await document.GetTextAsync(cancellationToken),
+                    document.Folders,
+                    document.FilePath);
             }
 
             if (workspace.TryApplyChanges(solution))
