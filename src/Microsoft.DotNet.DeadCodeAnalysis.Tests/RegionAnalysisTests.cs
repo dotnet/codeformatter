@@ -135,10 +135,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 
             var projectA = CreateSolution(new[] { source }, preprocessorSymbolsA).Projects.Single();
             var projectB = CreateSolution(new[] { source }, preprocessorSymbolsB).Projects.Single();
-            var options = AnalysisOptions.FromProjects(new[] { projectA, projectB });
-            var analysisEngine = new AnalysisEngine(options);
+            var engine = AnalysisEngine.FromProjects(new[] { projectA, projectB });
 
-            var regionInfo = analysisEngine.GetConditionalRegionInfo().Result.Single();
+            var regionInfo = engine.GetConditionalRegionInfo().Result.Single();
             var regions = regionInfo.Chains.SelectMany(c => c.Regions).ToArray();
             Array.Sort(regions);
 

@@ -16,15 +16,123 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     public partial class AnalysisEngine
     {
-        private AnalysisOptions m_options;
+        private Options m_options;
 
         private IList<Project> m_projects;
 
         private HashSet<string> m_ignoredSymbols;
 
-        public Workspace Workspace { get { return m_projects[0].Solution.Workspace; } }
+        public static AnalysisEngine FromFilePaths(
+            IEnumerable<string> filePaths,
+            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
+            IEnumerable<string> alwaysIgnoredSymbols = null,
+            IEnumerable<string> alwaysDefinedSymbols = null,
+            IEnumerable<string> alwaysDisabledSymbols = null,
+            bool printEnabled = false,
+            bool printDisabled = false,
+            bool printVarying = false,
+            bool edit = false)
+        {
+            if (filePaths == null || !filePaths.Any())
+            {
+                throw new ArgumentException("Must specify at least one file path");
+            }
 
-        public AnalysisEngine(AnalysisOptions options)
+            IEnumerable<string> projectPaths = null;
+            IEnumerable<string> sourcePaths = null;
+
+            var firstFileExt = Path.GetExtension(filePaths.First());
+            if (firstFileExt.Equals(".csproj", StringComparison.InvariantCultureIgnoreCase))
+            {
+                projectPaths = filePaths;
+            }
+            else
+            {
+                sourcePaths = filePaths;
+            }
+
+            var options = new Options(
+                projectPaths: projectPaths,
+                sourcePaths: sourcePaths,
+                sources: null,
+                symbolConfigurations: symbolConfigurations,
+                alwaysIgnoredSymbols: alwaysIgnoredSymbols,
+                alwaysDefinedSymbols: alwaysDefinedSymbols,
+                alwaysDisabledSymbols: alwaysDisabledSymbols,
+                printEnabled: printEnabled,
+                printDisabled: printDisabled,
+                printVarying: printVarying,
+                edit: edit);
+
+            return new AnalysisEngine(options);
+        }
+
+        public static AnalysisEngine FromSources(
+            IEnumerable<string> sources,
+            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
+            IEnumerable<string> alwaysIgnoredSymbols = null,
+            IEnumerable<string> alwaysDefinedSymbols = null,
+            IEnumerable<string> alwaysDisabledSymbols = null,
+            bool printEnabled = false,
+            bool printDisabled = false,
+            bool printVarying = false,
+            bool edit = false)
+        {
+            if (sources != null && !sources.Any())
+            {
+                throw new ArgumentException("Must specify at least one source text");
+            }
+
+            var options = new Options(
+                projectPaths: null,
+                sourcePaths: null,
+                sources: sources,
+                symbolConfigurations: symbolConfigurations,
+                alwaysIgnoredSymbols: alwaysIgnoredSymbols,
+                alwaysDefinedSymbols: alwaysDefinedSymbols,
+                alwaysDisabledSymbols: alwaysDisabledSymbols,
+                printEnabled: printEnabled,
+                printDisabled: printDisabled,
+                printVarying: printVarying,
+                edit: edit);
+
+            return new AnalysisEngine(options);
+        }
+
+        public static AnalysisEngine FromProjects(
+            IEnumerable<Project> projects,
+            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
+            IEnumerable<string> alwaysIgnoredSymbols = null,
+            IEnumerable<string> alwaysDefinedSymbols = null,
+            IEnumerable<string> alwaysDisabledSymbols = null,
+            bool printEnabled = false,
+            bool printDisabled = false,
+            bool printVarying = false,
+            bool edit = false)
+        {
+            if (projects != null && !projects.Any())
+            {
+                throw new ArgumentException("Must specify at least one project");
+            }
+
+            var options = new Options(
+                projects: projects,
+                projectPaths: null,
+                sourcePaths: null,
+                sources: null,
+                symbolConfigurations: symbolConfigurations,
+                alwaysIgnoredSymbols: alwaysIgnoredSymbols,
+                alwaysDefinedSymbols: alwaysDefinedSymbols,
+                alwaysDisabledSymbols: alwaysDisabledSymbols,
+                printEnabled: printEnabled,
+                printDisabled: printDisabled,
+                printVarying: printVarying,
+                edit: edit);
+
+            return new AnalysisEngine(options);
+        }
+
+        private AnalysisEngine(Options options)
         {
             m_options = options;
             m_ignoredSymbols = new HashSet<string>(m_options.AlwaysIgnoredSymbols);

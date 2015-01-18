@@ -279,9 +279,9 @@ class D {}
             var inputSolution = CreateSolution(new[] { source });
             var expectedSolution = CreateSolution(new[] { expected });
 
-            var analysisEngine = new AnalysisEngine(AnalysisOptions.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "A" }));
-            var regionInfo = analysisEngine.GetConditionalRegionInfo().Result.Single();
-            var actualSolution = analysisEngine.RemoveUnnecessaryRegions(regionInfo).Result.Project.Solution;
+            var engine = AnalysisEngine.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "A" });
+            var regionInfo = engine.GetConditionalRegionInfo().Result.Single();
+            var actualSolution = engine.RemoveUnnecessaryRegions(regionInfo).Result.Project.Solution;
 
             AssertSolutionEqual(expectedSolution, actualSolution);
         }

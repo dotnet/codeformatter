@@ -94,7 +94,7 @@ namespace DeadCode
 
             Console.WriteLine("Analyzing...");
 
-            var options = AnalysisOptions.FromFilePaths(
+            var engine = AnalysisEngine.FromFilePaths(
                 projectPaths,
                 alwaysDefinedSymbols: definedSymbols,
                 alwaysIgnoredSymbols: ignoredSymbols,
@@ -102,8 +102,6 @@ namespace DeadCode
                 printEnabled: printEnabled,
                 printVarying: printVarying,
                 edit: edit);
-
-            var engine = new AnalysisEngine(options);
 
             try
             {
