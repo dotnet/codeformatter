@@ -1,54 +1,31 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
 {
-    public static class CleanUp
+    public partial class AnalysisEngine
     {
-        internal static async Task RemoveUnnecessaryRegions(CodeAnalysis.Workspace workspace, IEnumerable<DocumentConditionalRegionInfo> regionInfo, CancellationToken cancellationToken)
+        internal async Task<Document> RemoveUnnecessaryRegions(DocumentConditionalRegionInfo info, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var solution = workspace.CurrentSolution;
+            Debug.Assert(info != null);
 
-            foreach (var info in regionInfo)
-            {
-                var document = await RemoveUnnecessaryRegions(solution.GetDocument(info.Document.Id), info.Chains, cancellationToken);
-                solution = document.Project.Solution;
-            }
-
-            if (workspace.TryApplyChanges(solution))
-            {
-                Console.WriteLine("Solution changes committed.");
-            }
-        }
-
-        private static async Task<Document> RemoveUnnecessaryRegions(Document document, List<ConditionalRegionChain> chains, CancellationToken cancellationToken)
-        {
-            if (document == null)
-            {
-                throw new ArgumentException("document");
-            }
-
-            if (chains == null)
-            {
-                throw new ArgumentException("chains");
-            }
-
-            var spans = CalculateSpansToReplace(chains);
+            var spans = CalculateSpansToReplace(info.Chains);
             if (spans == null || spans.Count == 0)
             {
-                return document;
+                return info.Document;
             }
 
             // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
-            var newText = await document.GetTextAsync(cancellationToken);
+            var newText = await info.Document.GetTextAsync(cancellationToken);
 
             for (int i = spans.Count - 1; i >= 0; --i)
             {
@@ -56,7 +33,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 newText = newText.Replace(span.Span, span.ReplacementText);
             }
 
-            return document.WithText(newText);
+            return info.Document.WithText(newText);
         }
 
         private static List<SpanToReplace> CalculateSpansToReplace(List<ConditionalRegionChain> chains)
@@ -134,7 +111,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 }
             }
 
-        ScanFinished:
+            ScanFinished:
             if (startRegion == enabledRegion)
             {
                 // Only remove the start directive of the start region

@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
 {
-    public class AnalysisEngine
+    public partial class AnalysisEngine
     {
         private AnalysisOptions m_options;
 
@@ -35,7 +36,17 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
             if (m_options.Edit)
             {
-                await CleanUp.RemoveUnnecessaryRegions(m_projects[0].Solution.Workspace, regionInfo, cancellationToken);
+                foreach (var info in regionInfo)
+                {
+                    var document = await RemoveUnnecessaryRegions(info, cancellationToken);
+
+                    var text = await document.GetTextAsync(cancellationToken);
+                    using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
+                    {
+                        var writer = new StreamWriter(file, text.Encoding);
+                        text.Write(writer, cancellationToken);
+                    }
+                }
             }
 
             PrintConditionalRegionInfo(regionInfo);
@@ -134,7 +145,11 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         /// </summary>
         public async Task<IList<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (m_options.ProjectPaths != null)
+            if (m_options.Projects != null)
+            {
+                m_projects = m_options.Projects.ToArray();
+            }
+            else if (m_options.ProjectPaths != null)
             {
                 m_projects = await Task.WhenAll(from path in m_options.ProjectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
             }

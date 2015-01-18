@@ -279,12 +279,9 @@ class D {}
             var inputSolution = CreateSolution(new[] { source });
             var expectedSolution = CreateSolution(new[] { expected });
 
-            var inputDocument = inputSolution.Projects.Single().Documents.Single();
-
-            var analysisEngine = new AnalysisEngine(AnalysisOptions.FromSources(new[] { source }, alwaysIgnoredSymbols: new[] { "A" }));
-            analysisEngine.RunAsync().Wait();
-
-            var actualSolution = analysisEngine.Workspace.CurrentSolution;
+            var analysisEngine = new AnalysisEngine(AnalysisOptions.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "A" }));
+            var regionInfo = analysisEngine.GetConditionalRegionInfo().Result.Single();
+            var actualSolution = analysisEngine.RemoveUnnecessaryRegions(regionInfo).Result.Project.Solution;
 
             AssertSolutionEqual(expectedSolution, actualSolution);
         }

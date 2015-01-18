@@ -8,8 +8,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
 {
+    // TODO: It might make more sense just to put the static factory methods for this
+    // on AnalysisEngine itself.
     public class AnalysisOptions
     {
+        public IEnumerable<Project> Projects { get; private set; }
+
         public IEnumerable<string> ProjectPaths { get; private set; }
 
         public IEnumerable<string> SourcePaths { get; private set; }
@@ -105,7 +109,39 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 edit: edit);
         }
 
+        public static AnalysisOptions FromProjects(
+            IEnumerable<Project> projects,
+            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
+            IEnumerable<string> alwaysIgnoredSymbols = null,
+            IEnumerable<string> alwaysDefinedSymbols = null,
+            IEnumerable<string> alwaysDisabledSymbols = null,
+            bool printEnabled = false,
+            bool printDisabled = false,
+            bool printVarying = false,
+            bool edit = false)
+        {
+            if (projects != null && !projects.Any())
+            {
+                throw new ArgumentException("Must specify at least one project");
+            }
+
+            return new AnalysisOptions(
+                projects: projects,
+                projectPaths: null,
+                sourcePaths: null,
+                sources: null,
+                symbolConfigurations: symbolConfigurations,
+                alwaysIgnoredSymbols: alwaysIgnoredSymbols,
+                alwaysDefinedSymbols: alwaysDefinedSymbols,
+                alwaysDisabledSymbols: alwaysDisabledSymbols,
+                printEnabled: printEnabled,
+                printDisabled: printDisabled,
+                printVarying: printVarying,
+                edit: edit);
+        }
+
         private AnalysisOptions(
+            IEnumerable<Project> projects = null,
             IEnumerable<string> projectPaths = null,
             IEnumerable<string> sourcePaths = null,
             IEnumerable<string> sources = null,
@@ -118,6 +154,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             bool printVarying = false,
             bool edit = false)
         {
+            Projects = projects;
             ProjectPaths = projectPaths;
             SourcePaths = sourcePaths;
             Sources = sources;
