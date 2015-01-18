@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     public partial class AnalysisEngine
     {
-        internal async Task<Document> RemoveUnnecessaryRegions(DocumentConditionalRegionInfo info, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<Document> RemoveUnnecessaryRegions(DocumentConditionalRegionInfo info, CancellationToken cancellationToken = default(CancellationToken))
         {
             Debug.Assert(info != null);
 

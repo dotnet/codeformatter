@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.DeadCodeAnalysis;
 using System.Threading;
+using System.IO;
 
 namespace DeadCode
 {
@@ -12,6 +13,12 @@ namespace DeadCode
     // to allow for more dead code analysis based on roslyn which is not about proprocessor regions.
     internal class DeadCode
     {
+        private static AnalysisEngine _engine;
+        private static bool s_printDisabled;
+        private static bool s_printEnabled;
+        private static bool s_printVarying;
+        private static bool s_edit;
+
         public static int Main(string[] args)
         {
             if (args.Length < 1)
@@ -23,11 +30,6 @@ namespace DeadCode
             var projectPaths = new List<string>();
             IEnumerable<string> ignoredSymbols = null;
             IEnumerable<string> definedSymbols = null;
-
-            bool printDisabled = false;
-            bool printEnabled = false;
-            bool printVarying = false;
-            bool edit = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -61,19 +63,19 @@ namespace DeadCode
                     }
                     else if (argName.Equals("printdisabled", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        printDisabled = true;
+                        s_printDisabled = true;
                     }
                     else if (argName.Equals("printenabled", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        printEnabled = true;
+                        s_printEnabled = true;
                     }
                     else if (argName.Equals("printvarying", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        printVarying = true;
+                        s_printVarying = true;
                     }
                     else if (argName.Equals("edit", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        edit = true;
+                        s_edit = true;
                     }
                 }
                 else
@@ -94,18 +96,14 @@ namespace DeadCode
 
             Console.WriteLine("Analyzing...");
 
-            var engine = AnalysisEngine.FromFilePaths(
+            _engine = AnalysisEngine.FromFilePaths(
                 projectPaths,
                 alwaysDefinedSymbols: definedSymbols,
-                alwaysIgnoredSymbols: ignoredSymbols,
-                printDisabled: printDisabled,
-                printEnabled: printEnabled,
-                printVarying: printVarying,
-                edit: edit);
+                alwaysIgnoredSymbols: ignoredSymbols);
 
             try
             {
-                engine.RunAsync(ct).Wait(ct);
+                RunAsync(ct).Wait(ct);
             }
             catch (OperationCanceledException)
             {
@@ -114,6 +112,28 @@ namespace DeadCode
             }
 
             return 0;
+        }
+
+        private static async Task RunAsync(CancellationToken cancellationToken)
+        {
+            var regionInfo = await _engine.GetConditionalRegionInfo(cancellationToken);
+
+            if (s_edit)
+            {
+                foreach (var info in regionInfo)
+                {
+                    var document = await _engine.RemoveUnnecessaryRegions(info, cancellationToken);
+
+                    var text = await document.GetTextAsync(cancellationToken);
+                    using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
+                    {
+                        var writer = new StreamWriter(file, text.Encoding);
+                        text.Write(writer, cancellationToken);
+                    }
+                }
+            }
+
+            PrintConditionalRegionInfo(regionInfo);
         }
 
         private static void PrintUsage()
@@ -134,6 +154,91 @@ PARAMETERS
   /printvarying
   /edit
   @<response file>");
+        }
+
+        private static void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfo)
+        {
+            var originalForegroundColor = Console.ForegroundColor;
+
+            int disabledCount = 0;
+            int enabledCount = 0;
+            int varyingCount = 0;
+            int explicitlyVaryingCount = 0;
+
+            foreach (var info in regionInfo)
+            {
+                foreach (var chain in info.Chains)
+                {
+                    foreach (var region in chain.Regions)
+                    {
+                        switch (region.State)
+                        {
+                            case SymbolState.AlwaysDisabled:
+                                disabledCount++;
+                                Console.ForegroundColor = ConsoleColor.Blue;
+                                if (s_printDisabled)
+                                {
+                                    Console.WriteLine(region);
+                                }
+                                break;
+                            case SymbolState.AlwaysEnabled:
+                                enabledCount++;
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                if (s_printEnabled)
+                                {
+                                    Console.WriteLine(region);
+                                }
+                                break;
+                            case SymbolState.Varying:
+                                varyingCount++;
+                                if (region.ExplicitlyVaries)
+                                {
+                                    explicitlyVaryingCount++;
+                                }
+                                Console.ForegroundColor = ConsoleColor.DarkGray;
+                                if (s_printVarying)
+                                {
+                                    Console.WriteLine(region);
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+
+            Console.ForegroundColor = originalForegroundColor;
+
+            // Print summary
+            Console.WriteLine();
+
+            int totalRegionCount = disabledCount + enabledCount + varyingCount;
+            if (totalRegionCount == 0)
+            {
+                Console.WriteLine("Did not find any conditional regions.");
+            }
+
+            Console.WriteLine("Found");
+            Console.WriteLine("  {0,5} conditional regions total", totalRegionCount);
+
+            if (disabledCount > 0)
+            {
+                Console.WriteLine("  {0,5} disabled", disabledCount);
+            }
+
+            if (enabledCount > 0)
+            {
+                Console.WriteLine("  {0,5} enabled", enabledCount);
+            }
+
+            if (varyingCount > 0)
+            {
+                Console.WriteLine("  {0,5} varying", varyingCount);
+                Console.WriteLine("    {0,5} due to real varying symbols", varyingCount - explicitlyVaryingCount);
+                Console.WriteLine("    {0,5} due to ignored symbols", explicitlyVaryingCount);
+            }
+
+            // TODO: Lines of dead code.  A chain struct might be useful because there are many operations on a chain.
+            // This involves calculating unnecessary regions, converting those to line spans
         }
     }
 }
