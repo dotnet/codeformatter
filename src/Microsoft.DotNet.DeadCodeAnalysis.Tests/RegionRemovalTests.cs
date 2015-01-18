@@ -9,7 +9,7 @@ using System;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 {
-    public class CleanUpTests : TestBase
+    public class RegionRemovalTests : TestBase
     {
         [Fact]
         public void RemoveDisabledIf()

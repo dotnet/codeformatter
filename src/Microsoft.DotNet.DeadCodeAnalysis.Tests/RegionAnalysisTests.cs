@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 {
-    public class AnalysisTests : TestBase
+    public class RegionAnalysisTests : TestBase
     {
         [Fact]
         public void IdentifySharedIf()
