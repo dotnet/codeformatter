@@ -112,10 +112,10 @@ class A {}
 #if false
 // A
 class A {}
-#elif A
+#elif A // !false
 // B
 class B {}
-#else
+#else // !false && !A
 // C
 class C {}
 #endif // if false
@@ -123,10 +123,10 @@ class C {}
 ";
             var expected = @"
 // Test
-#if A // !A
+#if A // !false
 // B
 class B {}
-#else
+#else // !false && !A
 // C
 class C {}
 #endif // if false
@@ -144,7 +144,7 @@ class C
 // Test
 #if true
     int A;
-else
+#else
     int B;
 #endif // if true
 
@@ -164,9 +164,9 @@ class C
 // Test
     int A;
 
-#if E // !D
+#if A // !false
     int E;
-#else // !E
+#else // !false && !A
     int F;
 #endif
 // End Test

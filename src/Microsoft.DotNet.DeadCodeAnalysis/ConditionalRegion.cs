@@ -108,6 +108,16 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return CompareTo(other) == 0;
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ConditionalRegion);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public static bool operator== (ConditionalRegion x, ConditionalRegion y)
         {
             if (object.Equals(x, y))
@@ -125,7 +135,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 return false;
             }
 
-            return x.Equals(y);
+            return !x.Equals(y);
         }
 
         public override string ToString()
