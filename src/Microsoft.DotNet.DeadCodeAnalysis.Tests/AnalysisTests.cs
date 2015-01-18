@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Linq;
 using Xunit;
 
@@ -109,11 +110,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysDisabled,
                 ConditionalRegionState.AlwaysDisabled
             };
 
@@ -132,7 +128,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
             {
                 preprocessorSymbolsA = s_defaultPreprocessorSymbolsA;
             }
-
             if (preprocessorSymbolsB == null)
             {
                 preprocessorSymbolsB = s_defaultPreprocessorSymbolsB;
@@ -140,29 +135,29 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 
             var projectA = CreateSolution(new[] { source }, preprocessorSymbolsA).Projects.Single();
             var projectB = CreateSolution(new[] { source }, preprocessorSymbolsB).Projects.Single();
+            var options = AnalysisOptions.FromProjects(new[] { projectA, projectB });
+            var analysisEngine = new AnalysisEngine(options);
 
-            // TODO: Fix this and update tests
-            //var info = Analysis.GetIntersectedConditionalRegionInfo(new[] { projectA, projectB }).Result;
-            //Assert.Equal(1, info.Length);
+            var regionInfo = analysisEngine.GetConditionalRegionInfo().Result.Single();
+            var regions = regionInfo.Chains.SelectMany(c => c.Regions).ToArray();
+            Array.Sort(regions);
 
-            // TODO: Eventually we will just get a flat list of regions, so there will be no need for chains here.
-            //var regions = info[0].Regions.SelectMany(c => c.Regions).ToArray();
-            //Assert.Equal(expectedStates.Length, regions.Length);
+            Assert.Equal(expectedStates.Length, regions.Length);
 
-            //// Make sure the state of each region is what we expect
-            //for (int i = 0; i < expectedStates.Length; i++)
-            //{
-            //    var expectedState = expectedStates[i];
-            //    var region = regions[i];
-            //    if (expectedState != region.State)
-            //    {
-            //        Assert.False(true, string.Format("The state of the region on line {0} is {1}, expected {2}: {3}",
-            //            region.Location.GetLineSpan().StartLinePosition.Line,
-            //            region.State,
-            //            expectedState,
-            //            region.StartDirective.ToFullString()));
-            //    }
-            //}
+            // Make sure the state of each region is what we expect
+            for (int i = 0; i < expectedStates.Length; i++)
+            {
+                var expectedState = expectedStates[i];
+                var region = regions[i];
+                if (expectedState != region.State)
+                {
+                    Assert.False(true, string.Format("The state of the region on line {0} is {1}, expected {2}: {3}",
+                        region.Location.GetLineSpan().StartLinePosition.Line,
+                        region.State,
+                        expectedState,
+                        region.StartDirective.ToFullString()));
+                }
+            }
         }
     }
 }
