@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public Location Location { get; private set; }
 
-        public ConditionalRegionState State { get; set; }
+        public SymbolState State { get; set; }
 
         public bool ExplicitlyVaries { get; private set; }
 
@@ -39,17 +39,17 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             ExplicitlyVaries = explicitlyVaries;
             if (explicitlyVaries)
             {
-                State = ConditionalRegionState.Varying;
+                State = SymbolState.Varying;
             }
             else
             {
-                State = ConditionalRegionState.AlwaysDisabled;
+                State = SymbolState.AlwaysDisabled;
                 var branchingDirective = startDirective as BranchingDirectiveTriviaSyntax;
                 if (branchingDirective != null)
                 {
                     State = branchingDirective.BranchTaken ?
-                        ConditionalRegionState.AlwaysEnabled :
-                        ConditionalRegionState.AlwaysDisabled;
+                        SymbolState.AlwaysEnabled :
+                        SymbolState.AlwaysDisabled;
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             // TODO: If this region becomes varying, then all subsequent regions in the chain must become varying. Fix in intersection op on Chain.
             if (State != other.State)
             {
-                State = ConditionalRegionState.Varying;
+                State = SymbolState.Varying;
             }
         }
 

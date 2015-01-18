@@ -44,10 +44,10 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
                 // If the condition of a region varies, then the conditions of all following regions in the chain
                 // are implicitly varying.
-                if (conditionVaries || region.State == ConditionalRegionState.Varying)
+                if (conditionVaries || region.State == SymbolState.Varying)
                 {
                     conditionVaries = true;
-                    region.State = ConditionalRegionState.Varying;
+                    region.State = SymbolState.Varying;
                 }
             }
         }

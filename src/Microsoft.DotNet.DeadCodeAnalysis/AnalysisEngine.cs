@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     {
                         switch (region.State)
                         {
-                            case ConditionalRegionState.AlwaysDisabled:
+                            case SymbolState.AlwaysDisabled:
                                 disabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Blue;
                                 if (m_options.PrintDisabled)
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                                     Console.WriteLine(region);
                                 }
                                 break;
-                            case ConditionalRegionState.AlwaysEnabled:
+                            case SymbolState.AlwaysEnabled:
                                 enabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Green;
                                 if (m_options.PrintEnabled)
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                                     Console.WriteLine(region);
                                 }
                                 break;
-                            case ConditionalRegionState.Varying:
+                            case SymbolState.Varying:
                                 varyingCount++;
                                 if (region.ExplicitlyVaries)
                                 {

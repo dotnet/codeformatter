@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
                 switch (region.State)
                 {
-                    case ConditionalRegionState.AlwaysDisabled:
+                    case SymbolState.AlwaysDisabled:
                         // We can always safely remove regions that are always false.
                         // In a chain of #if #elif #else directives, each successive condition depends on the preceding
                         // condition being false. So each condition can be written: !PRECEDING_CONDITION && THIS_CONDITION
@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         //
                         // So, remove the start and end directives as well as the contents of the region.
                         break;
-                    case ConditionalRegionState.AlwaysEnabled:
+                    case SymbolState.AlwaysEnabled:
                         // We can only safely remove regions that are always enabled if there are no varying regions in the chain.
                         // There cannot be varying regions preceding this one, because then this region would be implicitly varying.
                         // If there are varying regions following this one, then it means that we are missing data about another build
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         // because the other directives in the chain are necessarily always disabled.
                         enabledRegion = region;
                         break;
-                    case ConditionalRegionState.Varying:
+                    case SymbolState.Varying:
                         // If there is an always enabled region in this chain, but there is a subsequent region that is
                         // varying, then then it means that we are missing data about another build configuration in
                         // which the enabled region is disabled, in which case it is actually varying. Since the
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 // the end directive of the enabled region.
                 spans.Add(new SpanToReplace(enabledRegion.EndDirective.FullSpan.Start, endRegion.SpanEnd, string.Empty));
             }
-            else if (startRegion.State == ConditionalRegionState.AlwaysDisabled)
+            else if (startRegion.State == SymbolState.AlwaysDisabled)
             {
                 // There is no enabled region. Remove all disabled regions up to and including the end region.
                 spans.Add(new SpanToReplace(startRegion.SpanStart, endRegion.SpanEnd, GetReplacementText(endRegion, endRegionNeedsReplacement)));

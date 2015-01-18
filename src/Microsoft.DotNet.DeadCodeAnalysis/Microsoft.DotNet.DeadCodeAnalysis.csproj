@@ -71,10 +71,12 @@
     <Compile Include="AnalysisOptions.cs" />
     <Compile Include="ConditionalRegion.cs" />
     <Compile Include="ConditionalRegionChain.cs" />
-    <Compile Include="ConditionalRegionState.cs" />
+    <Compile Include="SymbolState.cs" />
     <Compile Include="DirectiveTriviaSyntaxExtensions.cs" />
     <Compile Include="DocumentConditionalRegionInfo.cs" />
+    <Compile Include="PreprocessorExpressionEvaluator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tristate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
