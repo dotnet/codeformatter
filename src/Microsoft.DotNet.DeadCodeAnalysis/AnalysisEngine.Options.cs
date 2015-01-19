@@ -104,11 +104,14 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 var configurationStateMaps = new List<Dictionary<string, Tristate>>();
                 foreach (var configuration in symbolConfigurations)
                 {
-                    var stateMap = new Dictionary<string, Tristate>();
+                    var stateMap = new Dictionary<string, Tristate>(explicitStates);
 
                     foreach (var symbol in configuration)
                     {
-                        stateMap.Add(symbol, Tristate.True);
+                        if (!stateMap.ContainsKey(symbol))
+                        {
+                            stateMap.Add(symbol, Tristate.True);
+                        }
                     }
 
                     configurationStateMaps.Add(stateMap);
