@@ -22,16 +22,14 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         private HashSet<string> m_ignoredSymbols;
 
+        private PreprocessorExpressionEvaluator m_expressionEvaluator;
+
         public static AnalysisEngine FromFilePaths(
             IEnumerable<string> filePaths,
             IEnumerable<IEnumerable<string>> symbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
-            IEnumerable<string> alwaysDisabledSymbols = null,
-            bool printEnabled = false,
-            bool printDisabled = false,
-            bool printVarying = false,
-            bool edit = false)
+            IEnumerable<string> alwaysDisabledSymbols = null)
         {
             if (filePaths == null || !filePaths.Any())
             {
@@ -42,7 +40,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             IEnumerable<string> sourcePaths = null;
 
             var firstFileExt = Path.GetExtension(filePaths.First());
-            if (firstFileExt.Equals(".csproj", StringComparison.InvariantCultureIgnoreCase))
+            if (firstFileExt.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
             {
                 projectPaths = filePaths;
             }
@@ -54,80 +52,40 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             var options = new Options(
                 projectPaths: projectPaths,
                 sourcePaths: sourcePaths,
-                sources: null,
                 symbolConfigurations: symbolConfigurations,
                 alwaysIgnoredSymbols: alwaysIgnoredSymbols,
                 alwaysDefinedSymbols: alwaysDefinedSymbols,
-                alwaysDisabledSymbols: alwaysDisabledSymbols,
-                printEnabled: printEnabled,
-                printDisabled: printDisabled,
-                printVarying: printVarying,
-                edit: edit);
+                alwaysDisabledSymbols: alwaysDisabledSymbols);
 
             return new AnalysisEngine(options);
         }
 
-        public static AnalysisEngine FromSources(
-            IEnumerable<string> sources,
-            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
-            IEnumerable<string> alwaysIgnoredSymbols = null,
-            IEnumerable<string> alwaysDefinedSymbols = null,
-            IEnumerable<string> alwaysDisabledSymbols = null,
-            bool printEnabled = false,
-            bool printDisabled = false,
-            bool printVarying = false,
-            bool edit = false)
-        {
-            if (sources != null && !sources.Any())
-            {
-                throw new ArgumentException("Must specify at least one source text");
-            }
-
-            var options = new Options(
-                projectPaths: null,
-                sourcePaths: null,
-                sources: sources,
-                symbolConfigurations: symbolConfigurations,
-                alwaysIgnoredSymbols: alwaysIgnoredSymbols,
-                alwaysDefinedSymbols: alwaysDefinedSymbols,
-                alwaysDisabledSymbols: alwaysDisabledSymbols,
-                printEnabled: printEnabled,
-                printDisabled: printDisabled,
-                printVarying: printVarying,
-                edit: edit);
-
-            return new AnalysisEngine(options);
-        }
-
+        // TODO: This should really be FromDocuments
+        // Take all the documents, doesn't matter which symbols are enabled
         public static AnalysisEngine FromProjects(
             IEnumerable<Project> projects,
-            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
+            IEnumerable<IEnumerable<string>> additionalSymbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
-            IEnumerable<string> alwaysDisabledSymbols = null,
-            bool printEnabled = false,
-            bool printDisabled = false,
-            bool printVarying = false,
-            bool edit = false)
+            IEnumerable<string> alwaysDisabledSymbols = null)
         {
             if (projects != null && !projects.Any())
             {
                 throw new ArgumentException("Must specify at least one project");
             }
 
+            var symbolConfigurations = projects.Select(p => p.ParseOptions.PreprocessorSymbolNames).ToArray();
+            if (additionalSymbolConfigurations != null)
+            {
+                symbolConfigurations = symbolConfigurations.Concat(additionalSymbolConfigurations).ToArray();
+            }
+
             var options = new Options(
                 projects: projects,
-                projectPaths: null,
-                sourcePaths: null,
-                sources: null,
                 symbolConfigurations: symbolConfigurations,
                 alwaysIgnoredSymbols: alwaysIgnoredSymbols,
                 alwaysDefinedSymbols: alwaysDefinedSymbols,
-                alwaysDisabledSymbols: alwaysDisabledSymbols,
-                printEnabled: printEnabled,
-                printDisabled: printDisabled,
-                printVarying: printVarying,
-                edit: edit);
+                alwaysDisabledSymbols: alwaysDisabledSymbols);
 
             return new AnalysisEngine(options);
         }
@@ -135,7 +93,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         private AnalysisEngine(Options options)
         {
             m_options = options;
-            m_ignoredSymbols = new HashSet<string>(m_options.AlwaysIgnoredSymbols);
+            m_ignoredSymbols = new HashSet<string>();
+            m_expressionEvaluator = new PreprocessorExpressionEvaluator(options.SymbolStates);
         }
 
         /// <summary>
@@ -151,10 +110,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             else if (m_options.ProjectPaths != null)
             {
                 m_projects = await Task.WhenAll(from path in m_options.ProjectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
-            }
-            else if (m_options.Sources != null)
-            {
-                m_projects = new[] { CreateProject(m_options.Sources.ToArray()) };
             }
 
             if (m_projects.Count == 1)
@@ -185,38 +140,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
 
             return infoA;
-        }
-
-        private Project CreateProject(string[] sources, string language = LanguageNames.CSharp)
-        {
-            string projectName = "GeneratedProject";
-            string fileExtension = language == LanguageNames.CSharp ? ".cs" : ".vb";
-            var projectId = ProjectId.CreateNewId(projectName);
-
-            var solution = new CustomWorkspace()
-                .CurrentSolution
-                .AddProject(projectId, projectName, projectName, language);
-
-            // TODO: Preprocessor symbols = AlwaysDefined - AlwaysDisabled
-            var disabledSymbols = new HashSet<string>(m_options.AlwaysDisabledSymbols);
-            var preprocessorSymbols = disabledSymbols.Where(s => !disabledSymbols.Contains(s));
-
-            var project = solution.Projects.Single();
-            project = project.WithParseOptions(
-                ((CSharpParseOptions)project.ParseOptions).WithPreprocessorSymbols(preprocessorSymbols));
-
-            solution = project.Solution;
-
-            string fileNamePrefix = "source";
-            int count = 0;
-            foreach (var source in sources)
-            {
-                var fileName = fileNamePrefix + count++ + fileExtension;
-                var documentId = DocumentId.CreateNewId(projectId, fileName);
-                solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
-            }
-
-            return solution.GetProject(projectId);
         }
 
         /// <summary>

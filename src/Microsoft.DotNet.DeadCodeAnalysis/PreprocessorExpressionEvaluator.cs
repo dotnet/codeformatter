@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 {
     internal class PreprocessorExpressionEvaluator : CSharpSyntaxVisitor<Tristate>
     {
-        private Dictionary<string, Tristate> m_symbolStates;
+        private IReadOnlyDictionary<string, Tristate> m_symbolStates;
 
-        public PreprocessorExpressionEvaluator(Dictionary<string, Tristate> symbolStates)
+        public PreprocessorExpressionEvaluator(IReadOnlyDictionary<string, Tristate> symbolStates)
         {
             Debug.Assert(symbolStates != null);
             m_symbolStates = symbolStates;
