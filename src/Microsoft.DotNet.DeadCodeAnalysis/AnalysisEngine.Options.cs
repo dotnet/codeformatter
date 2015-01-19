@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         {
             public IEnumerable<Document> Documents { get; private set; }
 
-            public IReadOnlyDictionary<string, Tristate> SymbolStates { get; private set; }
+            public IEnumerable<IReadOnlyDictionary<string, Tristate>> SymbolStates { get; private set; }
 
             internal Options(
                 IEnumerable<Project> projects = null,
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     Documents = solution.Projects.Single().Documents;
                 }
 
-                SymbolStates = CalculateSymbolStates(
+                SymbolStates = CalculateSymbolConfigurations(
                     alwaysDisabledSymbols,
                     alwaysDefinedSymbols,
                     alwaysIgnoredSymbols,
@@ -84,53 +84,37 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 return projects.First().Documents.Where(d => filePathSet.Contains(d.FilePath));
             }
 
-            internal static Dictionary<string, Tristate> CalculateSymbolStates(
+            internal static IEnumerable<IReadOnlyDictionary<string, Tristate>> CalculateSymbolConfigurations(
                 IEnumerable<string> alwaysDisabledSymbols,
                 IEnumerable<string> alwaysDefinedSymbols,
                 IEnumerable<string> alwaysIgnoredSymbols,
                 IEnumerable<IEnumerable<string>> symbolConfigurations)
             {
-                var symbolStates = new Dictionary<string, Tristate>();
+                var explicitStates = new Dictionary<string, Tristate>();
 
-                AddExplicitSymbolStates(symbolStates, alwaysDisabledSymbols, Tristate.False);
-                AddExplicitSymbolStates(symbolStates, alwaysDefinedSymbols, Tristate.True);
-                AddExplicitSymbolStates(symbolStates, alwaysIgnoredSymbols, Tristate.Varying);
+                AddExplicitSymbolStates(explicitStates, alwaysDisabledSymbols, Tristate.False);
+                AddExplicitSymbolStates(explicitStates, alwaysDefinedSymbols, Tristate.True);
+                AddExplicitSymbolStates(explicitStates, alwaysIgnoredSymbols, Tristate.Varying);
 
                 if (symbolConfigurations == null || !symbolConfigurations.Any())
                 {
-                    return symbolStates;
+                    return new[] { explicitStates };
                 }
 
-                // The symbols which are defined in all configurations and do not have an explicit value are always enabled
-                var configurations = symbolConfigurations.ToArray();
-                var enabledSymbols = configurations[0];
-
-                for (int i = 1; i < configurations.Length; i++)
-                {
-                    enabledSymbols = enabledSymbols.Intersect(configurations[i]);
-                }
-
-                foreach (var symbol in enabledSymbols)
-                {
-                    if (!symbolStates.ContainsKey(symbol))
-                    {
-                        symbolStates[symbol] = Tristate.True;
-                    }
-                }
-
-                // The symbols which only appear in some configurations and do not have an explicit value are varying
+                var configurationStateMaps = new List<Dictionary<string, Tristate>>();
                 foreach (var configuration in symbolConfigurations)
                 {
+                    var stateMap = new Dictionary<string, Tristate>();
+
                     foreach (var symbol in configuration)
                     {
-                        if (!symbolStates.ContainsKey(symbol))
-                        {
-                            symbolStates[symbol] = Tristate.Varying;
-                        }
+                        stateMap.Add(symbol, Tristate.True);
                     }
+
+                    configurationStateMaps.Add(stateMap);
                 }
 
-                return symbolStates;
+                return configurationStateMaps;   
             }
 
             private static void AddExplicitSymbolStates(Dictionary<string, Tristate> symbolStates, IEnumerable<string> symbols, Tristate explicitState)

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
     {
         private Options m_options;
 
-        private PreprocessorExpressionEvaluator m_expressionEvaluator;
+        private IEnumerable<PreprocessorExpressionEvaluator> m_expressionEvaluators;
 
         public static AnalysisEngine FromFilePaths(
             IEnumerable<string> filePaths,
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         private AnalysisEngine(Options options)
         {
             m_options = options;
-            m_expressionEvaluator = new PreprocessorExpressionEvaluator(options.SymbolStates);
+            m_expressionEvaluators = options.SymbolStates.Select(config => new PreprocessorExpressionEvaluator(config));
         }
 
         /// <summary>
@@ -172,9 +172,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             switch (directive.CSharpKind())
             {
                 case SyntaxKind.IfDirectiveTrivia:
-                    return ((IfDirectiveTriviaSyntax)directive).Condition.Accept(m_expressionEvaluator);
+                    return EvaluateExpression(((IfDirectiveTriviaSyntax)directive).Condition);
                 case SyntaxKind.ElifDirectiveTrivia:
-                    Tristate result = ((ElifDirectiveTriviaSyntax)directive).Condition.Accept(m_expressionEvaluator);
+                    Tristate result = EvaluateExpression(((ElifDirectiveTriviaSyntax)directive).Condition);
                     return !previousRegionState & result;
                 case SyntaxKind.ElseDirectiveTrivia:
                     return !previousRegionState;
@@ -182,6 +182,31 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     Debug.Assert(false);
                     return Tristate.Varying;
             }
+        }
+
+        private Tristate EvaluateExpression(ExpressionSyntax expression)
+        {
+            var it = m_expressionEvaluators.GetEnumerator();
+            if (!it.MoveNext())
+            {
+                Debug.Assert(false, "We should have at least one expression evaluator");
+            }
+
+            Tristate result = expression.Accept(it.Current);
+            if (result == Tristate.Varying)
+            {
+                return Tristate.Varying;
+            }
+
+            while (it.MoveNext())
+            {
+                if (expression.Accept(it.Current) != result)
+                {
+                    return Tristate.Varying;
+                }
+            }
+
+            return result;
         }
 
         private static bool IsBranchingDirective(DirectiveTriviaSyntax directive)

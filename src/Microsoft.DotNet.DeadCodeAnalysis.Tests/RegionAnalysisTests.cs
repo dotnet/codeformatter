@@ -110,7 +110,12 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysDisabled
+                ConditionalRegionState.AlwaysDisabled,
+                ConditionalRegionState.AlwaysDisabled,
+                ConditionalRegionState.AlwaysEnabled,
+                ConditionalRegionState.Varying,
+                ConditionalRegionState.Varying,
+                ConditionalRegionState.Varying
             };
 
             Verify(source, expectedStates);
