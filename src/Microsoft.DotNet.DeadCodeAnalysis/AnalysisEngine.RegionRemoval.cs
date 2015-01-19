@@ -84,7 +84,14 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                         //
                         // In other words, when removing a directive that is always enabled, we are also removing all other directives
                         // because the other directives in the chain are necessarily always disabled.
-                        enabledRegion = region;
+                        if (enabledRegion == null)
+                        {
+                            // Only allow the first always enabled region we come across to be enabled because that is how
+                            // the C# compiler works.
+                            // TODO: This could be calculated earlier.  If a given region is always enabled, then none of the following regions can ever be enabled
+                            // as interpreted by the compiler.
+                            enabledRegion = region;
+                        }
                         break;
                     case ConditionalRegionState.Varying:
                         // If there is an always enabled region in this chain, but there is a subsequent region that is

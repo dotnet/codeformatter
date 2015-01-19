@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
             var source = @"
 // Test
 #if false
-class A {}
+class VARYING {}
 #endif
 // B
 class B {}
@@ -112,10 +112,10 @@ class A {}
 #if false
 // A
 class A {}
-#elif A // !false
+#elif VARYING // !false
 // B
 class B {}
-#else // !false && !A
+#else // !false && !VARYING == VARYING
 // C
 class C {}
 #endif // if false
@@ -123,10 +123,10 @@ class C {}
 ";
             var expected = @"
 // Test
-#if A // !false
+#if VARYING // !false
 // B
 class B {}
-#else // !false && !A
+#else // !false && !VARYING == VARYING
 // C
 class C {}
 #endif // if false
@@ -150,9 +150,9 @@ class C
 
 #if false
     int D;
-#elif A // !false
+#elif VARYING // !false
     int E;
-#else // !false && !A
+#else // !false && !VARYING
     int F;
 #endif
 // End Test
@@ -164,9 +164,9 @@ class C
 // Test
     int A;
 
-#if A // !false
+#if VARYING // !false
     int E;
-#else // !false && !A
+#else // !false && !VARYING
     int F;
 #endif
 // End Test
@@ -175,6 +175,7 @@ class C
             Verify(source, expected);
         }
 
+        [Fact]
         public void RemoveEnabledIf()
         {
             var source = @"
@@ -194,6 +195,7 @@ class A {}
             Verify(source, expected);
         }
 
+        [Fact]
         public void RemoveEnabledIfWithChain()
         {
             var source = @"
@@ -213,6 +215,7 @@ class A {}
             Verify(source, expected);
         }
 
+        [Fact]
         public void RemoveEnabledElifWithChain()
         {
             var source = @"
@@ -222,7 +225,7 @@ class A {}
 class B {}
 #elif false
 class C {}
-#else // false
+#else // !false
 class D {}
 #endif
 ";
@@ -231,7 +234,8 @@ class B {}
 ";
             Verify(source, expected);
         }
-
+        
+        [Fact]
         public void RemoveEnabledElseWithChain()
         {
             var source = @"
@@ -251,6 +255,7 @@ class D {}
             Verify(source, expected);
         }
 
+        [Fact]
         public void RemoveIfAndElifWithVaryingChain()
         {
             var source = @"
@@ -258,16 +263,42 @@ class D {}
 class A {}
 #elif false
 class B {}
-#elif C // Varying
+#elif VARYING
 class C {}
-#else // Varying
+#else // !VARYING
 class D {}
 #endif
 ";
             var expected = @"
-#if C // Varying
+#if VARYING
 class C {}
-#else // Varying
+#else // !VARYING
+class D {}
+#endif
+";
+            Verify(source, expected);
+        }
+
+        [Fact]
+        public void RemoveStaggeredElifs()
+        {
+            var source = @"
+#if false
+class A {}
+#elif VARYING
+class B {}
+#elif false // !VARYING && false == false
+class C {}
+#elif VARYING // !false && VARYING == VARYING
+class D {}
+#elif false // !VARYING && false == false
+class E {}
+#endif
+";
+            var expected = @"
+#if VARYING
+class B {}
+#elif VARYING // !false && VARYING == VARYING
 class D {}
 #endif
 ";
@@ -279,7 +310,7 @@ class D {}
             var inputSolution = CreateSolution(new[] { source });
             var expectedSolution = CreateSolution(new[] { expected });
 
-            var engine = AnalysisEngine.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "A" });
+            var engine = AnalysisEngine.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "VARYING" });
             var regionInfo = engine.GetConditionalRegionInfo().Result.Single();
             var actualSolution = engine.RemoveUnnecessaryRegions(regionInfo).Result.Project.Solution;
 
