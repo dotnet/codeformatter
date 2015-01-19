@@ -1,8 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
@@ -11,11 +15,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
     {
         public class Options
         {
-            public IEnumerable<Project> Projects { get; private set; }
-
-            public IEnumerable<string> ProjectPaths { get; private set; }
-
-            public IEnumerable<string> SourcePaths { get; private set; }
+            public IEnumerable<Document> Documents { get; private set; }
 
             public IReadOnlyDictionary<string, Tristate> SymbolStates { get; private set; }
 
@@ -28,15 +28,60 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 IEnumerable<string> alwaysDefinedSymbols = null,
                 IEnumerable<string> alwaysDisabledSymbols = null)
             {
-                Projects = projects;
-                ProjectPaths = projectPaths;
-                SourcePaths = sourcePaths;
+                if (projectPaths != null)
+                {
+                    projects = Task.WhenAll(from path in projectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, CancellationToken.None)).Result;
+                }
+                if (projects != null)
+                {
+                    Documents = GetSharedDocuments(projects);
+                }
+
+                if (sourcePaths != null)
+                {
+                    var projectId = ProjectId.CreateNewId("AnalysisProject");
+                    var solution = new CustomWorkspace()
+                        .CurrentSolution
+                        .AddProject(projectId, "AnalysisProject", "AnalysisProject", LanguageNames.CSharp);
+
+                    foreach (var path in sourcePaths)
+                    {
+                        var documentId = DocumentId.CreateNewId(projectId);
+                        solution = solution.AddDocument(
+                            documentId,
+                            Path.GetFileName(path),
+                            new FileTextLoader(path, Encoding.UTF8));
+                    }
+
+                    Documents = solution.Projects.Single().Documents;
+                }
 
                 SymbolStates = CalculateSymbolStates(
                     alwaysDisabledSymbols,
                     alwaysDefinedSymbols,
                     alwaysIgnoredSymbols,
                     symbolConfigurations);
+            }
+
+            private static IEnumerable<Document> GetSharedDocuments(IEnumerable<Project> projects)
+            {
+                var it = projects.GetEnumerator();
+                if (!it.MoveNext())
+                {
+                    return Enumerable.Empty<Document>();
+                }
+
+                var filePaths = it.Current.Documents.Select(d => d.FilePath);
+
+                while (it.MoveNext())
+                {
+                    filePaths = filePaths.Intersect(
+                        it.Current.Documents.Select(d => d.FilePath),
+                        StringComparer.InvariantCultureIgnoreCase);
+                }
+
+                var filePathSet = new HashSet<string>(filePaths);
+                return projects.First().Documents.Where(d => filePathSet.Contains(d.FilePath));
             }
 
             internal static Dictionary<string, Tristate> CalculateSymbolStates(

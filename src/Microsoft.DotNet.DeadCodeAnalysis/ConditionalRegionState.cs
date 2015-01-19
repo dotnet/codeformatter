@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadCodeAnalysis
 {
-    public enum SymbolState
+    public enum ConditionalRegionState
     {
         AlwaysDisabled = 0,
         AlwaysEnabled = 1,

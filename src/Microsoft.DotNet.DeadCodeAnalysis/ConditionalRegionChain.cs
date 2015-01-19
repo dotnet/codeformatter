@@ -28,30 +28,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             m_regions = regions;
         }
 
-        internal void Intersect(ConditionalRegionChain other)
-        {
-            if (!Equals(other))
-            {
-                return;
-            }
-
-            bool conditionVaries = false;
-
-            for (int i = 0; i < Regions.Count; i++)
-            {
-                var region = Regions[i];
-                region.Intersect(other.Regions[i]);
-
-                // If the condition of a region varies, then the conditions of all following regions in the chain
-                // are implicitly varying.
-                if (conditionVaries || region.State == SymbolState.Varying)
-                {
-                    conditionVaries = true;
-                    region.State = SymbolState.Varying;
-                }
-            }
-        }
-
         public int CompareTo(ConditionalRegionChain other)
         {
             int result = IsDefault.CompareTo(other.IsDefault);

@@ -33,19 +33,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             Chains = chains;
         }
 
-        internal void Intersect(DocumentConditionalRegionInfo other)
-        {
-            if (!Equals(other))
-            {
-                return;
-            }
-
-            for (int i = 0; i < Chains.Count; i++)
-            {
-                Chains[i].Intersect(other.Chains[i]);
-            }
-        }
-
         public int CompareTo(DocumentConditionalRegionInfo other)
         {
             if (other == null)

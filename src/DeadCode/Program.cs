@@ -163,7 +163,6 @@ PARAMETERS
             int disabledCount = 0;
             int enabledCount = 0;
             int varyingCount = 0;
-            int explicitlyVaryingCount = 0;
 
             foreach (var info in regionInfo)
             {
@@ -173,7 +172,7 @@ PARAMETERS
                     {
                         switch (region.State)
                         {
-                            case SymbolState.AlwaysDisabled:
+                            case ConditionalRegionState.AlwaysDisabled:
                                 disabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Blue;
                                 if (s_printDisabled)
@@ -181,7 +180,7 @@ PARAMETERS
                                     Console.WriteLine(region);
                                 }
                                 break;
-                            case SymbolState.AlwaysEnabled:
+                            case ConditionalRegionState.AlwaysEnabled:
                                 enabledCount++;
                                 Console.ForegroundColor = ConsoleColor.Green;
                                 if (s_printEnabled)
@@ -189,12 +188,8 @@ PARAMETERS
                                     Console.WriteLine(region);
                                 }
                                 break;
-                            case SymbolState.Varying:
+                            case ConditionalRegionState.Varying:
                                 varyingCount++;
-                                if (region.ExplicitlyVaries)
-                                {
-                                    explicitlyVaryingCount++;
-                                }
                                 Console.ForegroundColor = ConsoleColor.DarkGray;
                                 if (s_printVarying)
                                 {
@@ -233,8 +228,6 @@ PARAMETERS
             if (varyingCount > 0)
             {
                 Console.WriteLine("  {0,5} varying", varyingCount);
-                Console.WriteLine("    {0,5} due to real varying symbols", varyingCount - explicitlyVaryingCount);
-                Console.WriteLine("    {0,5} due to ignored symbols", explicitlyVaryingCount);
             }
 
             // TODO: Lines of dead code.  A chain struct might be useful because there are many operations on a chain.

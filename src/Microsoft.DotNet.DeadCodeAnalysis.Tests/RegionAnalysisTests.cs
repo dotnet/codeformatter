@@ -19,8 +19,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                SymbolState.AlwaysEnabled,
-                SymbolState.Varying
+                ConditionalRegionState.AlwaysEnabled,
+                ConditionalRegionState.Varying
             };
 
             Verify(source, expectedStates);
@@ -39,9 +39,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                SymbolState.AlwaysDisabled,
-                SymbolState.AlwaysEnabled,
-                SymbolState.Varying
+                ConditionalRegionState.AlwaysDisabled,
+                ConditionalRegionState.AlwaysEnabled,
+                ConditionalRegionState.Varying
             };
 
             Verify(source, expectedStates);
@@ -60,9 +60,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                SymbolState.AlwaysDisabled,
-                SymbolState.AlwaysEnabled,
-                SymbolState.AlwaysDisabled
+                ConditionalRegionState.AlwaysDisabled,
+                ConditionalRegionState.AlwaysEnabled,
+                ConditionalRegionState.AlwaysDisabled
             };
 
             Verify(source, expectedStates);
@@ -84,10 +84,10 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                SymbolState.AlwaysEnabled,
-                SymbolState.AlwaysEnabled,
-                SymbolState.AlwaysDisabled,
-                SymbolState.AlwaysDisabled
+                ConditionalRegionState.AlwaysEnabled,
+                ConditionalRegionState.AlwaysEnabled,
+                ConditionalRegionState.AlwaysDisabled,
+                ConditionalRegionState.AlwaysDisabled
             };
 
             Verify(source, expectedStates);
@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                SymbolState.AlwaysDisabled
+                ConditionalRegionState.AlwaysDisabled
             };
 
             Verify(source, expectedStates);
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
         private static readonly string[] s_defaultPreprocessorSymbolsA = new[] { "A" };
         private static readonly string[] s_defaultPreprocessorSymbolsB = new[] { "B" };
 
-        private void Verify(string source, SymbolState[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
+        private void Verify(string source, ConditionalRegionState[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
         {
             if (preprocessorSymbolsA == null)
             {

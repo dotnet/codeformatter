@@ -21,11 +21,9 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public Location Location { get; private set; }
 
-        public SymbolState State { get; set; }
+        public ConditionalRegionState State { get; set; }
 
-        public bool ExplicitlyVaries { get; private set; }
-
-        public ConditionalRegion(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective, IReadOnlyList<ConditionalRegion> chain, int indexInChain, bool explicitlyVaries)
+        public ConditionalRegion(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective, IReadOnlyList<ConditionalRegion> chain, int indexInChain, Tristate state)
         {
             Debug.Assert(startDirective.SyntaxTree.FilePath == endDirective.SyntaxTree.FilePath);
 
@@ -36,21 +34,17 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             SpanEnd = endDirective.FullSpan.End;
             Location = Location.Create(startDirective.SyntaxTree, new TextSpan(SpanStart, SpanEnd - SpanStart));
 
-            ExplicitlyVaries = explicitlyVaries;
-            if (explicitlyVaries)
+            if (state == Tristate.False)
             {
-                State = SymbolState.Varying;
+                State = ConditionalRegionState.AlwaysDisabled;
+            }
+            else if (state == Tristate.True)
+            {
+                State = ConditionalRegionState.AlwaysEnabled;
             }
             else
             {
-                State = SymbolState.AlwaysDisabled;
-                var branchingDirective = startDirective as BranchingDirectiveTriviaSyntax;
-                if (branchingDirective != null)
-                {
-                    State = branchingDirective.BranchTaken ?
-                        SymbolState.AlwaysEnabled :
-                        SymbolState.AlwaysDisabled;
-                }
+                State = ConditionalRegionState.Varying;
             }
         }
 
@@ -71,20 +65,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
 
             return start;
-        }
-
-        public void Intersect(ConditionalRegion other)
-        {
-            if (!Equals(other))
-            {
-                return;
-            }
-
-            // TODO: If this region becomes varying, then all subsequent regions in the chain must become varying. Fix in intersection op on Chain.
-            if (State != other.State)
-            {
-                State = SymbolState.Varying;
-            }
         }
 
         public int CompareTo(ConditionalRegion other)

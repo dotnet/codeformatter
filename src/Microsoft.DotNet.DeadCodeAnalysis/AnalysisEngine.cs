@@ -18,10 +18,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
     {
         private Options m_options;
 
-        private IList<Project> m_projects;
-
-        private HashSet<string> m_ignoredSymbols;
-
         private PreprocessorExpressionEvaluator m_expressionEvaluator;
 
         public static AnalysisEngine FromFilePaths(
@@ -60,8 +56,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return new AnalysisEngine(options);
         }
 
-        // TODO: This should really be FromDocuments
-        // Take all the documents, doesn't matter which symbols are enabled
         public static AnalysisEngine FromProjects(
             IEnumerable<Project> projects,
             IEnumerable<IEnumerable<string>> additionalSymbolConfigurations = null,
@@ -93,63 +87,16 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         private AnalysisEngine(Options options)
         {
             m_options = options;
-            m_ignoredSymbols = new HashSet<string>();
             m_expressionEvaluator = new PreprocessorExpressionEvaluator(options.SymbolStates);
         }
 
         /// <summary>
-        /// Returns the intersection of <see cref="DocumentConditionalRegionInfo"/> in the given projects.
-        /// The contained <see cref="Document"/> objects will all be from the first project.
+        /// Returns a sorted collection of <see cref="DocumentConditionalRegionInfo"/>
         /// </summary>
-        public async Task<IList<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            if (m_options.Projects != null)
-            {
-                m_projects = m_options.Projects.ToArray();
-            }
-            else if (m_options.ProjectPaths != null)
-            {
-                m_projects = await Task.WhenAll(from path in m_options.ProjectPaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
-            }
-
-            if (m_projects.Count == 1)
-            {
-                return await GetConditionalRegionInfo(m_projects[0], d => true, cancellationToken);
-            }
-
-            // Intersect the set of files in the projects so that we only analyze the set of files shared between all projects
-            var filePaths = m_projects[0].Documents.Select(d => d.FilePath);
-
-            for (int i = 1; i < m_projects.Count; i++)
-            {
-                filePaths = filePaths.Intersect(
-                    m_projects[i].Documents.Select(d => d.FilePath),
-                    StringComparer.InvariantCultureIgnoreCase);
-            }
-
-            var filePathSet = new HashSet<string>(filePaths);
-            Predicate<Document> shouldAnalyzeDocument = doc => filePathSet.Contains(doc.FilePath);
-
-            // Intersect the conditional regions of each document shared between all the projects
-            IList<DocumentConditionalRegionInfo> infoA = await GetConditionalRegionInfo(m_projects[0], shouldAnalyzeDocument, cancellationToken);
-
-            for (int i = 1; i < m_projects.Count; i++)
-            {
-                var infoB = await GetConditionalRegionInfo(m_projects[i], shouldAnalyzeDocument, cancellationToken);
-                infoA = IntersectConditionalRegionInfo(infoA, infoB);
-            }
-
-            return infoA;
-        }
-
-        /// <summary>
-        /// Returns a sorted array of <see cref="DocumentConditionalRegionInfo"/> for the specified project, filtered by the given predicate.
-        /// </summary>
-        private async Task<DocumentConditionalRegionInfo[]> GetConditionalRegionInfo(Project project, Predicate<Document> predicate, CancellationToken cancellationToken)
+        public async Task<IEnumerable<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
             var documentInfos = await Task.WhenAll(
-                from document in project.Documents
-                where predicate(document)
+                from document in m_options.Documents
                 select GetConditionalRegionInfo(document, cancellationToken));
 
             Array.Sort(documentInfos);
@@ -191,8 +138,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         private List<ConditionalRegion> ParseConditionalRegionChain(List<DirectiveTriviaSyntax> directives, HashSet<DirectiveTriviaSyntax> visitedDirectives)
         {
             DirectiveTriviaSyntax previousDirective = null;
+            Tristate previousRegionState = Tristate.False;
             var chain = new List<ConditionalRegion>();
-            bool explicitlyVaries = false;
 
             for (int i = 0; i < directives.Count; i++)
             {
@@ -206,21 +153,10 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
                 if (previousDirective != null)
                 {
-                    // Ignore chains with inactive directives because their conditions are not evaluated by the parser.
-                    if (!previousDirective.IsActive)
-                    {
-                        return null;
-                    }
+                    var regionState = EvaluateDirectiveExpression(previousDirective, previousRegionState);
+                    previousRegionState = regionState;
 
-                    // If a condition has been specified as explicitly varying, then all following conditions
-                    // are implicitly varying because each successive directive depends on the condition of
-                    // the preceding directive.
-                    if (!explicitlyVaries && DependsOnIgnoredSymbols(previousDirective))
-                    {
-                        explicitlyVaries = true;
-                    }
-
-                    var region = new ConditionalRegion(previousDirective, directive, chain, chain.Count, explicitlyVaries);
+                    var region = new ConditionalRegion(previousDirective, directive, chain, chain.Count, regionState);
                     chain.Add(region);
                 }
 
@@ -231,42 +167,21 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             return chain;
         }
 
-        private bool DependsOnIgnoredSymbols(DirectiveTriviaSyntax directive)
+        private Tristate EvaluateDirectiveExpression(DirectiveTriviaSyntax directive, Tristate previousRegionState)
         {
-            ExpressionSyntax condition = null;
-
             switch (directive.CSharpKind())
             {
                 case SyntaxKind.IfDirectiveTrivia:
-                    condition = ((IfDirectiveTriviaSyntax)directive).Condition;
-                    break;
+                    return ((IfDirectiveTriviaSyntax)directive).Condition.Accept(m_expressionEvaluator);
                 case SyntaxKind.ElifDirectiveTrivia:
-                    condition = ((ElifDirectiveTriviaSyntax)directive).Condition;
-                    break;
+                    Tristate result = ((ElifDirectiveTriviaSyntax)directive).Condition.Accept(m_expressionEvaluator);
+                    return !previousRegionState & result;
                 case SyntaxKind.ElseDirectiveTrivia:
-                case SyntaxKind.EndIfDirectiveTrivia:
-                    // #endif directives don't have expressions, so they can't depend on ignored symbols.
-                    // If an #else directive depends on an ignored symbol, we will have caught that earlier
-                    // when looking at the corresponding #if directive.
-                    return false;
+                    return !previousRegionState;
                 default:
                     Debug.Assert(false);
-                    return false;
+                    return Tristate.Varying;
             }
-
-            foreach (var child in condition.DescendantNodesAndSelf())
-            {
-                var identifier = child as IdentifierNameSyntax;
-                if (identifier != null)
-                {
-                    if (m_ignoredSymbols.Contains(identifier.Identifier.ValueText))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         private static bool IsBranchingDirective(DirectiveTriviaSyntax directive)
@@ -280,42 +195,6 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 default:
                     return false;
             }
-        }
-
-        /// <summary>
-        /// Intersects two arrays of <see cref="DocumentConditionalRegionInfo"/> for the same document.
-        /// The data contained in <param name="x"/> will be modified.
-        /// Note that both <param name="x"/> and <param name="y"/> are assumed to be sorted.
-        /// </summary>
-        private static IList<DocumentConditionalRegionInfo> IntersectConditionalRegionInfo(IList<DocumentConditionalRegionInfo> x, IList<DocumentConditionalRegionInfo> y)
-        {
-            var info = new List<DocumentConditionalRegionInfo>();
-            int i = 0;
-            int j = 0;
-
-            while (i < x.Count && j < y.Count)
-            {
-                var result = x[i].CompareTo(y[j]);
-
-                if (result == 0)
-                {
-                    x[i].Intersect(y[j]);
-                    info.Add(x[i]);
-
-                    i++;
-                    j++;
-                }
-                else if (result < 0)
-                {
-                    i++;
-                }
-                else
-                {
-                    j++;
-                }
-            }
-
-            return info;
         }
     }
 }
