@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class HasUnderScoreInPrivateFieldNamesFormattingRuleTests : CodeFormattingTestBase
+    public class PrivateFieldNamingRuleTests : CodeFormattingTestBase
     {
         [Fact]
         public void TestUnderScoreInPrivateFields()
@@ -45,7 +45,7 @@ class T
 
         internal override IFormattingRule GetFormattingRule()
         {
-            return new Rules.HasUnderScoreInPrivateFieldNamesFormattingRule();
+            return new Rules.PrivateFieldNamingRule();
         }
     }
 }

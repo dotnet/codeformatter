@@ -17,12 +17,23 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasUnderScoreInPrivateFieldNamesFormattingRule)]
+    [RuleOrder(RuleOrder.PrivateFieldNamingRule)]
     // TODO Bug 1086632: Deactivated due to active bug in Roslyn.
     // There is a hack to run this rule, but it's slow. 
     // If needed, enable the rule and enable the hack at the code below in RenameFields.
-    internal sealed class HasUnderScoreInPrivateFieldNamesFormattingRule : IFormattingRule
+    internal sealed class PrivateFieldNamingRule : IFormattingRule
     {
+        /// <summary>
+        /// This rewriter exists to work around DevDiv 1086632 in Roslyn.  The Rename action is 
+        /// leaving a set of annotations in the tree.  These annotations slow down further processing
+        /// and eventually make the rename operation unusable.  As a temporary work around we manually
+        /// remove these from the tree.
+        /// </summary>
+        private sealed class RemoveRenameAnnotationsRewriter : CSharpSyntaxRewriter
+        {
+
+        }
+
         private static string[] s_keywordsToIgnore = { "public", "internal", "protected", "const" };
         private static readonly SyntaxAnnotation s_annotationMarker = new SyntaxAnnotation();
         private static readonly Regex s_regex = new Regex("^._");
