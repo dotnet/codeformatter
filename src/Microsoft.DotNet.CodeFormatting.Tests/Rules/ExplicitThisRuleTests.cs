@@ -97,5 +97,65 @@ class C1
 ";
             Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void TestFieldAssignmentWithTrivia()
+        {
+            var text = @"
+class C1
+{
+    int _field;
+
+    void M()
+    {
+        this. /* comment1 */ _field /* comment 2 */ = 0;
+    }
+}
+";
+
+            var expected = @"
+class C1
+{
+    int _field;
+
+    void M()
+    {
+         /* comment1 */ _field /* comment 2 */ = 0;
+    }
+}
+";
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestFieldBadName()
+        {
+            var text = @"
+class C1
+{
+    int _field;
+
+    void M()
+    {
+        // Not a valid field access, can't reliably remove this.
+        this.field1 = 0;
+    }
+}
+";
+
+            var expected = @"
+class C1
+{
+    int _field;
+
+    void M()
+    {
+        // Not a valid field access, can't reliably remove this.
+        this.field1 = 0;
+    }
+}
+";
+            Verify(text, expected, runFormatter: false);
+        }
     }
 }

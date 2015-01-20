@@ -37,9 +37,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         var field = (IFieldSymbol)symbolInfo.Symbol;
                         if (field.DeclaredAccessibility == Accessibility.Private)
                         {
-                            return node.Name
-                                .WithLeadingTrivia(node.GetLeadingTrivia())
-                                .WithTrailingTrivia(node.GetTrailingTrivia());
+                            return RemoveQualification(node);
                         }
                     }
                 }
@@ -47,9 +45,16 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return node;
             }
 
-            public override SyntaxNode VisitAssignmentExpression(AssignmentExpressionSyntax node)
+            private static NameSyntax RemoveQualification(MemberAccessExpressionSyntax memberSyntax)
             {
-                return base.VisitAssignmentExpression(node);
+                var thisSyntax = memberSyntax.Expression;
+                var nameSyntax = memberSyntax.Name;
+                var triviaList = thisSyntax
+                    .GetLeadingTrivia()
+                    .AddRange(thisSyntax.GetTrailingTrivia())
+                    .AddRange(memberSyntax.OperatorToken.GetAllTrivia())
+                    .AddRange(nameSyntax.GetLeadingTrivia());
+                return nameSyntax.WithLeadingTrivia(triviaList);
             }
         }
 
