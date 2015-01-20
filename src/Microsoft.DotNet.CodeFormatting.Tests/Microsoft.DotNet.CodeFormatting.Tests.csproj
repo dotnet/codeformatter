@@ -105,6 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
+    <Compile Include="Rules\ExplicitThisRuleTests.cs" />
     <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
