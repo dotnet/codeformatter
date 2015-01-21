@@ -89,11 +89,12 @@
     <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRule.cs" />
     <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRule.cs" />
     <Compile Include="Rules\HasNoCustomCopyrightHeaderFormattingRule.cs" />
-    <Compile Include="Rules\HasUnderScoreInPrivateFieldNamesFormattingRule.cs" />
+    <Compile Include="Rules\PrivateFieldNamingRule.cs" />
     <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />
     <Compile Include="Rules\IsFormattedFormattingRule.cs" />
     <Compile Include="Rules\IsSimplifiedFormattingRule.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
+    <Compile Include="Rules\ExplicitThisRule.cs" />
     <Compile Include="Rules\RuleExtensions.cs" />
     <Compile Include="Rules\RuleOrder.cs" />
     <Compile Include="Rules\UsesXunitForTestsFormattingRule.cs" />

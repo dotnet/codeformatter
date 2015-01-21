@@ -21,9 +21,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int HasNoNewLineBeforeEndBraceFormattingRule = 7;
         public const int HasNoNewLineAfterOpenBraceFormattingRule = 8;
         public const int ExplicitVisibilityRule = 9;
-        public const int HasUnderScoreInPrivateFieldNamesFormattingRule = 10;
+        public const int PrivateFieldNamingRule = 10;
         public const int IsFormattedFormattingRule = 11;
         public const int UsesXunitForTestsFormattingRule = 12;
         public const int NonAsciiChractersAreEscapedInLiterals = 13;
+        public const int RemoveExplicitThisRule = 14;
     }
 }
