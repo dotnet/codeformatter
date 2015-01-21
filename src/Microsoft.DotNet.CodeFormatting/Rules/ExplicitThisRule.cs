@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             internal ExplicitThisRewriter(SemanticModel semanticModel, CancellationToken cancellationToken)
             {
                 _semanticModel = semanticModel;
+                _cancellationToken = cancellationToken;
             }
 
             public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)

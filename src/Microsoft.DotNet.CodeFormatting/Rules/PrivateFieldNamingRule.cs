@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         /// <summary>
         /// This will add an annotation to any private field that needs to be renamed.
         /// </summary>
-        private sealed class PrivateFieldAnnotationsRewriter : CSharpSyntaxRewriter
+        internal sealed class PrivateFieldAnnotationsRewriter : CSharpSyntaxRewriter
         {
             internal readonly static SyntaxAnnotation Marker = new SyntaxAnnotation("PrivateFieldToRename");
 
@@ -47,19 +47,20 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
             {
-                if (NeedsRewrite(node))
+                bool isInstance;
+                if (NeedsRewrite(node, out isInstance))
                 {
                     var list = new List<VariableDeclaratorSyntax>(node.Declaration.Variables.Count);
                     foreach (var v in node.Declaration.Variables)
                     {
-                        if (IsBadName(v))
+                        if (IsGoodName(v, isInstance))
                         {
-                            list.Add(v.WithAdditionalAnnotations(Marker));
-                            _count++;
+                            list.Add(v);
                         }
                         else
                         {
-                            list.Add(v);
+                            list.Add(v.WithAdditionalAnnotations(Marker));
+                            _count++;
                         }
                     }
 
@@ -72,16 +73,16 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return node;
             }
 
-            private static bool NeedsRewrite(FieldDeclarationSyntax fieldSyntax)
+            private static bool NeedsRewrite(FieldDeclarationSyntax fieldSyntax, out bool isInstance)
             {
-                if (!IsPrivateField(fieldSyntax))
+                if (!IsPrivateField(fieldSyntax, out isInstance))
                 {
                     return false;
                 }
 
                 foreach (var v in fieldSyntax.Declaration.Variables)
                 {
-                    if (IsBadName(v))
+                    if (!IsGoodName(v, isInstance))
                     {
                         return true;
                     }
@@ -90,14 +91,22 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return false;
             }
 
-            private static bool IsBadName(VariableDeclaratorSyntax node)
+            private static bool IsGoodName(VariableDeclaratorSyntax node, bool isInstance)
             {
                 var name = node.Identifier.ValueText;
-                return name.Length > 0 && name[0] != '_';
+                if (isInstance)
+                {
+                    return name.Length > 0 && name[0] == '_';
+                }
+                else
+                {
+                    return name.Length > 1 && (name[0] == 's' || name[0] == 't') && name[1] == '_';
+                }
             }
 
-            private static bool IsPrivateField(FieldDeclarationSyntax fieldSyntax)
+            private static bool IsPrivateField(FieldDeclarationSyntax fieldSyntax, out bool isInstance)
             {
+                isInstance = true;
                 foreach (var modifier in fieldSyntax.Modifiers)
                 {
                     switch (modifier.CSharpKind())
@@ -107,6 +116,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         case SyntaxKind.InternalKeyword:
                         case SyntaxKind.ProtectedKeyword:
                             return false;
+                        case SyntaxKind.StaticKeyword:
+                            isInstance = false;
+                            break;
                     }
                 }
 
@@ -189,6 +201,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var declaration = root.GetAnnotatedNodes(PrivateFieldAnnotationsRewriter.Marker).ElementAt(i);
                 var fieldSymbol = (IFieldSymbol)semanticModel.GetDeclaredSymbol(declaration, cancellationToken);
                 var newName = GetNewFieldName(fieldSymbol);
+
+                // Can happen with pathologically bad field names like _
+                if (newName == fieldSymbol.Name)
+                {
+                    continue;
+                }
+
                 solution = await Renamer.RenameSymbolAsync(solution, fieldSymbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
             }
 
@@ -197,17 +216,15 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         private static string GetNewFieldName(IFieldSymbol fieldSymbol)
         {
-            var name = fieldSymbol.Name;
-            if (name.Length > 1)
+            var name = fieldSymbol.Name.Trim('_');
+            if (name.Length > 2 && char.IsLetter(name[0]) && name[1] == '_')
             {
-                if (name[0] == '_')
-                {
-                    name = name.TrimStart('_');
-                }
-                else if (char.IsLetter(name[0]) && name[1] == '_')
-                {
-                    name = name.Substring(2);
-                }
+                name = name.Substring(2);
+            }
+
+            if (name.Length == 0)
+            {
+                return fieldSymbol.Name;
             }
 
             if (fieldSymbol.IsStatic)
