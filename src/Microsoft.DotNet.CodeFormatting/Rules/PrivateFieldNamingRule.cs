@@ -137,6 +137,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxToken VisitToken(SyntaxToken token)
             {
+                token = base.VisitToken(token);
                 if (token.ContainsAnnotations && token.GetAnnotations(RenameAnnotationName).Any())
                 {
                     token = token.WithoutAnnotations(RenameAnnotationName);
