@@ -18,11 +18,102 @@ using Microsoft.CodeAnalysis.Rename;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.PrivateFieldNamingRule)]
-    // TODO Bug 1086632: Deactivated due to active bug in Roslyn.
-    // There is a hack to run this rule, but it's slow. 
-    // If needed, enable the rule and enable the hack at the code below in RenameFields.
     internal sealed class PrivateFieldNamingRule : IFormattingRule
     {
+        /// <summary>
+        /// This will add an annotation to any private field that needs to be renamed.
+        /// </summary>
+        private sealed class PrivateFieldAnnotationsRewriter : CSharpSyntaxRewriter
+        {
+            internal readonly static SyntaxAnnotation Marker = new SyntaxAnnotation("PrivateFieldToRename");
+
+            // Used to avoid the array allocation on calls to WithAdditionalAnnotations
+            private readonly static SyntaxAnnotation[] s_markerArray;
+
+            static PrivateFieldAnnotationsRewriter()
+            {
+                s_markerArray = new SyntaxAnnotation[] { Marker };
+            }
+
+            private int _count;
+
+            internal static SyntaxNode AddAnnotations(SyntaxNode node, out int count)
+            {
+                var rewriter = new PrivateFieldAnnotationsRewriter();
+                var newNode = rewriter.Visit(node);
+                count = rewriter._count;
+                return newNode;
+            }
+
+            public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
+            {
+                if (NeedsRewrite(node))
+                {
+                    var list = new List<VariableDeclaratorSyntax>(node.Declaration.Variables.Count);
+                    foreach (var v in node.Declaration.Variables)
+                    {
+                        if (IsBadName(v))
+                        {
+                            list.Add(v.WithAdditionalAnnotations(Marker));
+                            _count++;
+                        }
+                        else
+                        {
+                            list.Add(v);
+                        }
+                    }
+
+                    var declaration = node.Declaration.WithVariables(SyntaxFactory.SeparatedList(list));
+                    node = node.WithDeclaration(declaration);
+
+                    return node;
+                }
+
+                return node;
+            }
+
+            private static bool NeedsRewrite(FieldDeclarationSyntax fieldSyntax)
+            {
+                if (!IsPrivateField(fieldSyntax))
+                {
+                    return false;
+                }
+
+                foreach (var v in fieldSyntax.Declaration.Variables)
+                {
+                    if (IsBadName(v))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            private static bool IsBadName(VariableDeclaratorSyntax node)
+            {
+                var name = node.Identifier.ValueText;
+                return name.Length > 0 && name[0] != '_';
+            }
+
+            private static bool IsPrivateField(FieldDeclarationSyntax fieldSyntax)
+            {
+                foreach (var modifier in fieldSyntax.Modifiers)
+                {
+                    switch (modifier.CSharpKind())
+                    {
+                        case SyntaxKind.PublicKeyword:
+                        case SyntaxKind.ConstKeyword:
+                        case SyntaxKind.InternalKeyword:
+                        case SyntaxKind.ProtectedKeyword:
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
         /// <summary>
         /// This rewriter exists to work around DevDiv 1086632 in Roslyn.  The Rename action is 
         /// leaving a set of annotations in the tree.  These annotations slow down further processing
@@ -31,126 +122,136 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         /// </summary>
         private sealed class RemoveRenameAnnotationsRewriter : CSharpSyntaxRewriter
         {
+            private const string RenameAnnotationName = "Rename";
 
+            public override SyntaxNode Visit(SyntaxNode node)
+            {
+                node = base.Visit(node);
+                if (node != null && node.ContainsAnnotations && node.GetAnnotations(RenameAnnotationName).Any())
+                {
+                    node = node.WithoutAnnotations(RenameAnnotationName);
+                }
+
+                return node;
+            }
+
+            public override SyntaxToken VisitToken(SyntaxToken token)
+            {
+                if (token.ContainsAnnotations && token.GetAnnotations(RenameAnnotationName).Any())
+                {
+                    token = token.WithoutAnnotations(RenameAnnotationName);
+                }
+
+                return token;
+            }
         }
-
-        private static string[] s_keywordsToIgnore = { "public", "internal", "protected", "const" };
-        private static readonly SyntaxAnnotation s_annotationMarker = new SyntaxAnnotation();
-        private static readonly Regex s_regex = new Regex("^._");
 
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
             if (syntaxRoot == null)
+            {
                 return document;
-
-            var typeNodes = syntaxRoot.DescendantNodes().Where(type => type.CSharpKind() == SyntaxKind.ClassDeclaration || type.CSharpKind() == SyntaxKind.StructDeclaration);
-            IEnumerable<SyntaxNode> privateFields = GetPrivateFields(typeNodes);
-            if (privateFields.Any())
-            {
-                var solutionWithAnnotation = GetSolutionWithRenameAnnotation(document, syntaxRoot, privateFields, cancellationToken);
-                var solution = await RenameFields(solutionWithAnnotation, document.Id, privateFields, cancellationToken);
-                return solution.GetDocument(document.Id);
             }
 
-            return document;
-        }
+            int count;
+            var newSyntaxRoot = PrivateFieldAnnotationsRewriter.AddAnnotations(syntaxRoot, out count);
 
-        private IEnumerable<SyntaxNode> GetPrivateFields(IEnumerable<SyntaxNode> typeNodes)
-        {
-            IEnumerable<SyntaxNode> privateFields = Enumerable.Empty<SyntaxNode>();
-            foreach (var type in typeNodes)
+            if (count == 0)
             {
-                privateFields = privateFields.Concat(type.ChildNodes().OfType<FieldDeclarationSyntax>()
-                    .Where(f => !s_keywordsToIgnore.Any(f.Modifiers.ToString().Contains)).SelectMany(f => f.Declaration.Variables))
-                    .Where(v => !(v as VariableDeclaratorSyntax).Identifier.Text.StartsWith("_"));
+                return document;
             }
 
-            return privateFields;
+            var documentId = document.Id;
+            var solution = document.Project.Solution;
+            solution = solution.WithDocumentSyntaxRoot(documentId, newSyntaxRoot);
+            solution = await RenameFields(solution, documentId, count, cancellationToken);
+            return solution.GetDocument(documentId);
         }
 
-        private Solution GetSolutionWithRenameAnnotation(Document document, SyntaxNode syntaxRoot, IEnumerable<SyntaxNode> privateFields, CancellationToken cancellationToken)
+        private static async Task<Solution> RenameFields(Solution solution, DocumentId documentId, int count, CancellationToken cancellationToken)
         {
-            Func<SyntaxNode, SyntaxNode, SyntaxNode> addAnnotation = (variable, dummy) =>
-            {
-                return variable.WithAdditionalAnnotations(s_annotationMarker);
-            };
-
-            return document.WithSyntaxRoot(syntaxRoot.ReplaceNodes(privateFields, addAnnotation)).Project.Solution;
-        }
-
-        private async Task<Solution> RenameFields(Solution solution, DocumentId documentId, IEnumerable<SyntaxNode> privateFields, CancellationToken cancellationToken)
-        {
-            int count = privateFields.Count();
+            Solution oldSolution = null;
             for (int i = 0; i < count; i++)
             {
-                // This is a hack to till the roslyn bug is fixed. Very slow, enable this statement only if the rule is enabled.
-                solution = await CleanSolutionAsync(solution, cancellationToken);
-                var model = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
-                var root = await model.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
-                var symbol = model.GetDeclaredSymbol(root.GetAnnotatedNodes(s_annotationMarker).ElementAt(i), cancellationToken);
-                var newName = GetNewSymbolName(symbol);
-                solution = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
+                // If this is not the first field then clean up the Rename annotations left
+                // in the tree.
+                if (i > 0)
+                {
+                    solution = await CleanSolutionAsync(solution, oldSolution, cancellationToken);
+                }
+
+                oldSolution = solution;
+
+                var semanticModel = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
+                var root = await semanticModel.SyntaxTree.GetRootAsync(cancellationToken) as CSharpSyntaxNode;
+                var declaration = root.GetAnnotatedNodes(PrivateFieldAnnotationsRewriter.Marker).ElementAt(i);
+                var fieldSymbol = (IFieldSymbol)semanticModel.GetDeclaredSymbol(declaration, cancellationToken);
+                var newName = GetNewFieldName(fieldSymbol);
+                solution = await Renamer.RenameSymbolAsync(solution, fieldSymbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
             }
 
             return solution;
         }
 
-        private static string GetNewSymbolName(ISymbol symbol)
+        private static string GetNewFieldName(IFieldSymbol fieldSymbol)
         {
-            var symbolName = symbol.Name.TrimStart('_');
-            if (s_regex.IsMatch(symbolName)) symbolName = symbolName.Remove(0, 2);
-            if (symbol.IsStatic)
+            var name = fieldSymbol.Name;
+            if (name.Length > 1)
+            {
+                if (name[0] == '_')
+                {
+                    name = name.TrimStart('_');
+                }
+                else if (char.IsLetter(name[0]) && name[1] == '_')
+                {
+                    name = name.Substring(2);
+                }
+            }
+
+            if (fieldSymbol.IsStatic)
             {
                 // Check for ThreadStatic private fields.
-                if (symbol.GetAttributes().Any(a => a.AttributeClass.Name.Equals("ThreadStaticAttribute")))
+                if (fieldSymbol.GetAttributes().Any(a => a.AttributeClass.Name.Equals("ThreadStaticAttribute", StringComparison.Ordinal)))
                 {
-                    if (!symbolName.StartsWith("t_", StringComparison.OrdinalIgnoreCase))
-                        return "t_" + symbolName;
+                    return "t_" + name;
                 }
-                else if (!symbolName.StartsWith("s_", StringComparison.OrdinalIgnoreCase))
-                    return "s_" + symbolName;
-
-                return symbolName;
+                else
+                {
+                    return "s_" + name;
+                }
             }
 
-            return "_" + symbolName;
+            return "_" + name;
         }
 
-        private async Task<Solution> CleanSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        private static async Task<Solution> CleanSolutionAsync(Solution newSolution, Solution oldSolution, CancellationToken cancellationToken)
         {
-            var documentIdsToProcess = solution.Projects.SelectMany(p => p.DocumentIds).ToList();
-            const string rename = "Rename";
-            foreach (var documentId in documentIdsToProcess)
+            var rewriter = new RemoveRenameAnnotationsRewriter();
+            var solution = newSolution;
+
+            foreach (var projectChange in newSolution.GetChanges(oldSolution).GetProjectChanges())
             {
-                var root = await solution.GetDocument(documentId).GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-
-                while (true)
+                foreach (var documentId in projectChange.GetChangedDocuments())
                 {
-                    var renameNodes = root.DescendantNodes(descendIntoTrivia: true).Where(s => s.GetAnnotations(rename).Any());
-                    if (!renameNodes.Any())
-                    {
-                        break;
-                    }
-
-                    root = root.ReplaceNode(renameNodes.First(), renameNodes.First().WithoutAnnotations(rename));
+                    solution = await CleanSolutionDocument(rewriter, solution, documentId, cancellationToken);
                 }
-
-                while (true)
-                {
-                    var renameTokens = root.DescendantTokens(descendIntoTrivia: true).Where(s => s.GetAnnotations(rename).Any());
-                    if (!renameTokens.Any())
-                    {
-                        break;
-                    }
-
-                    root = root.ReplaceToken(renameTokens.First(), renameTokens.First().WithoutAnnotations(rename));
-                }
-
-                solution = solution.WithDocumentSyntaxRoot(documentId, root);
             }
 
             return solution;
+        }
+
+        private static async Task<Solution> CleanSolutionDocument(RemoveRenameAnnotationsRewriter rewriter, Solution solution, DocumentId documentId, CancellationToken cancellationToken)
+        {
+            var document = solution.GetDocument(documentId);
+            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
+            if (syntaxNode == null)
+            {
+                return solution;
+            }
+
+            var newNode = rewriter.Visit(syntaxNode);
+            return solution.WithDocumentSyntaxRoot(documentId, newNode);
         }
     }
 }
