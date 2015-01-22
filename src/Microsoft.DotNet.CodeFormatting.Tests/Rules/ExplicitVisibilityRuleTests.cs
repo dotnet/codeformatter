@@ -340,5 +340,29 @@ public partial class C { }
 
             Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false);
         }
+
+        [Fact]
+        public void PartialTypesWithNestedClasses()
+        {
+            var text = @"
+partial class C {
+    class N1 { }
+    class N2 { }
+}
+
+public partial class C { }
+";
+
+            var expected = @"
+public partial class C {
+    private class N1 { }
+    private class N2 { }
+}
+
+public partial class C { }
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
     }
 }

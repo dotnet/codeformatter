@@ -29,10 +29,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 _cancellationToken = cancellationToken;
             }
 
-            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax originalNode)
             {
-                node = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
+                var node = (ClassDeclarationSyntax)base.VisitClassDeclaration(originalNode);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
             }
 
             public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
@@ -40,10 +40,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
             }
 
-            public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax node)
+            public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax originalNode)
             {
-                node = (StructDeclarationSyntax)base.VisitStructDeclaration(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
+                var node = (StructDeclarationSyntax)base.VisitStructDeclaration(originalNode);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
             }
 
             public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
@@ -106,19 +106,19 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
-            private SyntaxKind GetTypeDefaultVisibility(BaseTypeDeclarationSyntax node)
+            private SyntaxKind GetTypeDefaultVisibility(BaseTypeDeclarationSyntax originalDeclarationSyntax)
             {
                 // In the case of partial types we need to use the existing visibility if it exists
-                if (node.Modifiers.Any(x => x.CSharpContextualKind() == SyntaxKind.PartialKeyword))
+                if (originalDeclarationSyntax.Modifiers.Any(x => x.CSharpContextualKind() == SyntaxKind.PartialKeyword))
                 {
-                    SyntaxKind? kind = GetExistingPartialVisibility(node);
+                    SyntaxKind? kind = GetExistingPartialVisibility(originalDeclarationSyntax);
                     if (kind.HasValue)
                     {
                         return kind.Value;
                     }
                 }
 
-                return GetDelegateTypeDefaultVisibility(node);
+                return GetDelegateTypeDefaultVisibility(originalDeclarationSyntax);
             }
 
             private SyntaxKind GetDelegateTypeDefaultVisibility(SyntaxNode node)
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return IsNestedDeclaration(node) ? SyntaxKind.PrivateKeyword : SyntaxKind.InternalKeyword;
             }
 
-            private SyntaxKind? GetExistingPartialVisibility(BaseTypeDeclarationSyntax declarationSyntax)
+            private SyntaxKind? GetExistingPartialVisibility(BaseTypeDeclarationSyntax originalDeclarationSyntax)
             {
                 // Getting the SemanticModel is a relatively expensive operation.  Can take a few seconds in 
                 // projects of significant size.  It is delay created to avoid this in files which already
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     _semanticModel = _document.GetSemanticModelAsync(_cancellationToken).Result;
                 }
 
-                var symbol = _semanticModel.GetDeclaredSymbol(declarationSyntax, _cancellationToken);
+                var symbol = _semanticModel.GetDeclaredSymbol(originalDeclarationSyntax, _cancellationToken);
                 if (symbol == null)
                 {
                     return null;
