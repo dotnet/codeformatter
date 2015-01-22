@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class NonAsciiChractersAreEscapedInLiteralsTests : CodeFormattingTestBase
+    public class NonAsciiCharactersAreEscapedInLiteralsTests : CodeFormattingTestBase
     {
         [Fact]
         public void CanUseNonAsciiCharactersInComments()
@@ -65,7 +65,7 @@ class Test
 
         internal override IFormattingRule GetFormattingRule()
         {
-            return new Rules.NonAsciiChractersAreEscapedInLiterals();
+            return new Rules.NonAsciiCharactersAreEscapedInLiterals();
         }
     }
 }

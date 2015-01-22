@@ -109,6 +109,9 @@ class C1
     void M()
     {
         this. /* comment1 */ _field /* comment 2 */ = 0;
+        // before comment
+        this._field = 42;
+        // after comment
     }
 }
 ";
@@ -120,7 +123,10 @@ class C1
 
     void M()
     {
-         /* comment1 */ _field /* comment 2 */ = 0;
+        _field /* comment 2 */ = 0;
+        // before comment
+        _field = 42;
+        // after comment
     }
 }
 ";

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
@@ -17,6 +18,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             private readonly SemanticModel _semanticModel;
             private readonly CancellationToken _cancellationToken;
+            private bool _addedAnnotations;
+
+            internal bool AddedAnnotations
+            {
+                get { return _addedAnnotations; }
+            }
 
             internal ExplicitThisRewriter(SemanticModel semanticModel, CancellationToken cancellationToken)
             {
@@ -38,24 +45,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                         var field = (IFieldSymbol)symbolInfo.Symbol;
                         if (field.DeclaredAccessibility == Accessibility.Private)
                         {
-                            return RemoveQualification(node);
+                            _addedAnnotations = true;
+                            return node.WithAdditionalAnnotations(Simplifier.Annotation);
                         }
                     }
                 }
 
                 return node;
-            }
-
-            private static NameSyntax RemoveQualification(MemberAccessExpressionSyntax memberSyntax)
-            {
-                var thisSyntax = memberSyntax.Expression;
-                var nameSyntax = memberSyntax.Name;
-                var triviaList = thisSyntax
-                    .GetLeadingTrivia()
-                    .AddRange(thisSyntax.GetTrailingTrivia())
-                    .AddRange(memberSyntax.OperatorToken.GetAllTrivia())
-                    .AddRange(nameSyntax.GetLeadingTrivia());
-                return nameSyntax.WithLeadingTrivia(triviaList);
             }
         }
 
@@ -70,7 +66,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
             var rewriter = new ExplicitThisRewriter(semanticModel, cancellationToken);
             var newNode = rewriter.Visit(syntaxNode);
-            return document.WithSyntaxRoot(newNode);
+            if (!rewriter.AddedAnnotations)
+            {
+                return document;
+            }
+
+            return await Simplifier.ReduceAsync(document.WithSyntaxRoot(newNode), cancellationToken: cancellationToken);
         }
     }
 }
