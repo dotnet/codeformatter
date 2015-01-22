@@ -81,13 +81,12 @@
     <Compile Include="RuleOrderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IOrderMetadata.cs" />
+    <Compile Include="Rules\BraceNewLineRule.cs" />
     <Compile Include="Rules\ExplicitVisibilityRule.cs" />
     <Compile Include="Rules\HasCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRule.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRule.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRule.cs" />
-    <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRule.cs" />
-    <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRule.cs" />
     <Compile Include="Rules\HasNoCustomCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.cs" />
     <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />

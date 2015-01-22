@@ -1,28 +1,62 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasNoNewLineBeforeEndBraceFormattingRule)]
-    internal sealed class HasNoNewLineBeforeEndBraceFormattingRule : IFormattingRule
+    [RuleOrder(RuleOrder.BraceNewLineRule)]
+    internal sealed class BraceNewLineRule : IFormattingRule
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {
-            var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxRoot == null)
+            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken);
+            if (syntaxNode == null)
+            {
                 return document;
+            }
 
-            var closeBraceTokens = syntaxRoot.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.CloseBraceToken);
+            syntaxNode = FixOpenBraces(syntaxNode);
+            syntaxNode = FixCloseBraces(syntaxNode);
+            return document.WithSyntaxRoot(syntaxNode);
+        }
+
+        private static SyntaxNode FixOpenBraces(SyntaxNode syntaxNode)
+        {
+            var openBraceTokens = syntaxNode.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.OpenBraceToken);
+            Func<SyntaxToken, SyntaxToken, SyntaxToken> replacementForTokens = (token, dummy) =>
+            {
+                int elementsToRemove = 1;
+                if (token.LeadingTrivia.Count > 1)
+                {
+                    while (elementsToRemove < token.LeadingTrivia.Count &&
+                            token.LeadingTrivia.ElementAt(elementsToRemove).CSharpKind() == SyntaxKind.EndOfLineTrivia)
+                        elementsToRemove++;
+                }
+
+                var newToken = token.WithLeadingTrivia(token.LeadingTrivia.Skip(elementsToRemove));
+                return newToken;
+            };
+
+            var tokensToReplace = openBraceTokens.Where((token) =>
+            {
+                var nextToken = token.GetNextToken();
+                return (nextToken.HasLeadingTrivia && nextToken.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);
+            }).Select((token) => token.GetNextToken());
+
+            return syntaxNode.ReplaceTokens(tokensToReplace, replacementForTokens);
+        }
+
+        private static SyntaxNode FixCloseBraces(SyntaxNode syntaxNode)
+        {
+            var closeBraceTokens = syntaxNode.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.CloseBraceToken);
             Func<SyntaxToken, SyntaxToken, SyntaxToken> replaceTriviaInTokens = (token, dummy) =>
             {
                 var newTrivia = RemoveNewLinesFromTop(token.LeadingTrivia);
@@ -35,7 +69,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                                     token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
                                     token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia));
 
-            return document.WithSyntaxRoot(syntaxRoot.ReplaceTokens(tokensToReplace, replaceTriviaInTokens));
+            return syntaxNode.ReplaceTokens(tokensToReplace, replaceTriviaInTokens);
         }
 
         private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromTop(IEnumerable<SyntaxTrivia> trivia)

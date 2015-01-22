@@ -18,13 +18,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int HasUsingsOutsideOfNamespaceFormattingRule = 4;
         public const int HasNewLineBeforeFirstUsingFormattingRule = 5;
         public const int HasNewLineBeforeFirstNamespaceFormattingRule = 6;
-        public const int HasNoNewLineBeforeEndBraceFormattingRule = 7;
-        public const int HasNoNewLineAfterOpenBraceFormattingRule = 8;
-        public const int ExplicitVisibilityRule = 9;
-        public const int PrivateFieldNamingRule = 10;
-        public const int IsFormattedFormattingRule = 11;
-        public const int UsesXunitForTestsFormattingRule = 12;
-        public const int NonAsciiChractersAreEscapedInLiterals = 13;
-        public const int RemoveExplicitThisRule = 14;
+        public const int BraceNewLineRule = 7;
+        public const int ExplicitVisibilityRule = 8;
+        public const int PrivateFieldNamingRule = 9;
+        public const int IsFormattedFormattingRule = 10;
+        public const int UsesXunitForTestsFormattingRule = 11;
+        public const int NonAsciiChractersAreEscapedInLiterals = 12;
+        public const int RemoveExplicitThisRule = 13;
     }
 }
