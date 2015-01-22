@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -39,20 +40,40 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var id in documentIds)
             {
                 var document = solution.GetDocument(id);
+
+                var fileInfo = new FileInfo(document.FilePath);
+                if (!fileInfo.Exists || fileInfo.IsReadOnly)
+                {
+                    Console.WriteLine("warning: skipping document '{0}' because it {1}.",
+                        document.FilePath,
+                        fileInfo.IsReadOnly ? "is read-only" : "does not exist");
+                    continue;
+                }
+
                 var shouldBeProcessed = await ShouldBeProcessedAsync(document);
                 if (!shouldBeProcessed)
                     continue;
 
                 Console.WriteLine("Processing document: " + document.Name);
                 var newDocument = await RewriteDocumentAsync(document, cancellationToken);
-                hasChanges |= newDocument != document;
+
+                if (newDocument != document)
+                {
+                    Debug.Assert(newDocument.FilePath == document.FilePath, "Formatting rules should not change a document's file path");
+
+                    hasChanges = true;
+                    var sourceText = await newDocument.GetTextAsync(cancellationToken);
+
+                    using (var file = File.Open(newDocument.FilePath, FileMode.Truncate, FileAccess.Write))
+                    {
+                        using (var writer = new StreamWriter(file, sourceText.Encoding))
+                        {
+                            sourceText.Write(writer, cancellationToken);
+                        }
+                    }
+                }
 
                 solution = newDocument.Project.Solution;
-            }
-
-            if (workspace.TryApplyChanges(solution))
-            {
-                Console.WriteLine("Solution changes committed");
             }
 
             return hasChanges;
