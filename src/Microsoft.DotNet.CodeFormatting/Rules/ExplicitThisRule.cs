@@ -16,8 +16,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     {
         private sealed class ExplicitThisRewriter : CSharpSyntaxRewriter
         {
-            private readonly SemanticModel _semanticModel;
+            private readonly Document _document;
             private readonly CancellationToken _cancellationToken;
+            private SemanticModel _semanticModel;
             private bool _addedAnnotations;
 
             internal bool AddedAnnotations
@@ -25,9 +26,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 get { return _addedAnnotations; }
             }
 
-            internal ExplicitThisRewriter(SemanticModel semanticModel, CancellationToken cancellationToken)
+            internal ExplicitThisRewriter(Document document, CancellationToken cancellationToken)
             {
-                _semanticModel = semanticModel;
+                _document = document;
                 _cancellationToken = cancellationToken;
             }
 
@@ -37,21 +38,31 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var name = node.Name.Identifier.ValueText;
                 if (node.Expression != null &&
                     node.Expression.CSharpKind() == SyntaxKind.ThisExpression &&
-                    name.StartsWith("_", StringComparison.Ordinal))
+                    name.StartsWith("_", StringComparison.Ordinal) &&
+                    IsPrivateField(node))
                 {
-                    var symbolInfo = _semanticModel.GetSymbolInfo(node, _cancellationToken);
-                    if (symbolInfo.Symbol != null && symbolInfo.Symbol.Kind == SymbolKind.Field)
-                    {
-                        var field = (IFieldSymbol)symbolInfo.Symbol;
-                        if (field.DeclaredAccessibility == Accessibility.Private)
-                        {
-                            _addedAnnotations = true;
-                            return node.WithAdditionalAnnotations(Simplifier.Annotation);
-                        }
-                    }
+                    _addedAnnotations = true;
+                    return node.WithAdditionalAnnotations(Simplifier.Annotation);
                 }
 
                 return node;
+            }
+
+            private bool IsPrivateField(MemberAccessExpressionSyntax memberSyntax)
+            {
+                if (_semanticModel == null)
+                {
+                    _semanticModel = _document.GetSemanticModelAsync(_cancellationToken).Result;
+                }
+
+                var symbolInfo = _semanticModel.GetSymbolInfo(memberSyntax, _cancellationToken);
+                if (symbolInfo.Symbol != null && symbolInfo.Symbol.Kind == SymbolKind.Field)
+                {
+                    var field = (IFieldSymbol)symbolInfo.Symbol;
+                    return field.DeclaredAccessibility == Accessibility.Private;
+                }
+
+                return false;
             }
         }
 
@@ -63,8 +74,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return document;
             }
 
-            var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
-            var rewriter = new ExplicitThisRewriter(semanticModel, cancellationToken);
+            var rewriter = new ExplicitThisRewriter(document, cancellationToken);
             var newNode = rewriter.Visit(syntaxNode);
             if (!rewriter.AddedAnnotations)
             {
