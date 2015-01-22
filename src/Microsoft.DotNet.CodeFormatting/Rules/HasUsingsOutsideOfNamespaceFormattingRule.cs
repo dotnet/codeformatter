@@ -31,6 +31,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 if (namespaceWithUsings == null)
                     break;
 
+                // Moving a using with an alias out of a namespace is an operation which requires
+                // semantic knowledge to get correct.
+                if (namespaceWithUsings.Usings.Any(x => x.Alias != null))
+                    return document;
+
                 // Remove nested usings
 
                 var emptyUsingList = SyntaxFactory.List<UsingDirectiveSyntax>();
