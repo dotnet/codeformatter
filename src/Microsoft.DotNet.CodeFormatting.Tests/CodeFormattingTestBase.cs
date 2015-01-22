@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 var fileName = FileNamePrefix + count + fileExtension;
                 var documentId = DocumentId.CreateNewId(projectId, fileName);
                 solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
+                count++;
             }
 
             return solution;

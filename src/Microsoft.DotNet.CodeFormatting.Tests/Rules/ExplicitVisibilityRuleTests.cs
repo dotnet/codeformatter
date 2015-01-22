@@ -318,5 +318,27 @@ public partial class C { }
 
             Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void PartialAcrossFiles()
+        {
+            var text1 = @"
+public partial class C { }
+";
+
+            var text2 = @"
+partial class C { }
+";
+
+            var expected1 = @"
+public partial class C { }
+";
+
+            var expected2 = @"
+public partial class C { }
+";
+
+            Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false);
+        }
     }
 }
