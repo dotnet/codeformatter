@@ -77,6 +77,7 @@ namespace CodeFormatter
             }
             else
             {
+                workspace.LoadMetadataForReferencedProjects = true;
                 var project = await workspace.OpenProjectAsync(projectOrSolutionPath, cancellationToken);
                 await engine.FormatProjectAsync(project, cancellationToken);
             }
