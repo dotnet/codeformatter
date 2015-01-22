@@ -287,5 +287,36 @@ internal class T
 }";
             Verify(text, expected);
         }
+
+        [Fact]
+        public void LonePartialType()
+        {
+            var text = @"
+partial class C { }
+";
+
+            var expected = @"
+internal partial class C { }
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+
+        [Fact]
+        public void CorrectPartialType()
+        {
+            var text = @"
+partial class C { }
+public partial class C { }
+";
+
+            var expected = @"
+public partial class C { }
+public partial class C { }
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
     }
 }

@@ -19,36 +19,41 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     {
         private sealed class VisibilityRewriter : CSharpSyntaxRewriter
         {
+            private readonly Document _document;
+            private readonly CancellationToken _cancellationToken;
+            private SemanticModel _semanticModel;
+
+            internal VisibilityRewriter(Document document, CancellationToken cancellationToken)
+            {
+                _document = document;
+                _cancellationToken = cancellationToken;
+            }
+
             public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
             {
                 node = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
-                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
             {
-                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax node)
             {
                 node = (StructDeclarationSyntax)base.VisitStructDeclaration(node);
-                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
             {
-                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetDelegateTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node)
             {
-                SyntaxKind visibilityKind = GetTypeDefaultVisibility(node);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), visibilityKind);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
@@ -58,7 +63,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return node;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
             public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -68,7 +73,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return node;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
             public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
@@ -78,7 +83,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return node;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
             public override SyntaxNode VisitEventDeclaration(EventDeclarationSyntax node)
@@ -88,22 +93,80 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return node;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
             public override SyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
             public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), SyntaxKind.PrivateKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
             }
 
-            private static SyntaxKind GetTypeDefaultVisibility(SyntaxNode node)
+            private SyntaxKind GetTypeDefaultVisibility(BaseTypeDeclarationSyntax node)
+            {
+                // In the case of partial types we need to use the existing visibility if it exists
+                if (node.Modifiers.Any(x => x.CSharpContextualKind() == SyntaxKind.PartialKeyword))
+                {
+                    SyntaxKind? kind = GetExistingPartialVisibility(node);
+                    if (kind.HasValue)
+                    {
+                        return kind.Value;
+                    }
+                }
+
+                return GetDelegateTypeDefaultVisibility(node);
+            }
+
+            private SyntaxKind GetDelegateTypeDefaultVisibility(SyntaxNode node)
             {
                 return IsNestedDeclaration(node) ? SyntaxKind.PrivateKeyword : SyntaxKind.InternalKeyword;
+            }
+
+            private SyntaxKind? GetExistingPartialVisibility(BaseTypeDeclarationSyntax declarationSyntax)
+            {
+                // Getting the SemanticModel is a relatively expensive operation.  Can take a few seconds in 
+                // projects of significant size.  It is delay created to avoid this in files which already
+                // conform to the standards.
+                if (_semanticModel == null)
+                {
+                    _semanticModel = _document.GetSemanticModelAsync(_cancellationToken).Result;
+                }
+
+                var symbol = _semanticModel.GetDeclaredSymbol(declarationSyntax, _cancellationToken);
+                if (symbol == null)
+                {
+                    return null;
+                }
+
+                switch (symbol.DeclaredAccessibility)
+                {
+                    case Accessibility.Friend:
+                        return SyntaxKind.InternalKeyword;
+                    case Accessibility.Public:
+                        return SyntaxKind.PublicKeyword;
+                    case Accessibility.Private:
+                        return SyntaxKind.PrivateKeyword;
+                    case Accessibility.Protected:
+                        return SyntaxKind.ProtectedKeyword;
+                    default: return null;
+                }
+            }
+
+            private static SyntaxKind? GetVisibilityModifier(SyntaxTokenList list)
+            {
+                foreach (var token in list)
+                {
+                    if (SyntaxFacts.IsAccessibilityModifier(token.CSharpKind()))
+                    {
+                        return token.CSharpKind();
+                    }
+                }
+
+                return null;
             }
 
             private static bool IsNestedDeclaration(SyntaxNode node)
@@ -126,14 +189,15 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             /// Return a node declaration that has a visibility modifier.  If one isn't present it will be added as the 
             /// first modifier.  Any trivia before the node will be added as leading trivia to the added <see cref="SyntaxToken"/>.
             /// </summary>
-            private static MemberDeclarationSyntax EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, SyntaxKind visibilityKind) where T : MemberDeclarationSyntax
+            private static MemberDeclarationSyntax EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : MemberDeclarationSyntax
             {
-                Debug.Assert(SyntaxFacts.IsAccessibilityModifier(visibilityKind));
-
                 if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.CSharpKind())))
                 {
                     return node;
                 }
+
+                SyntaxKind visibilityKind = getDefaultVisibility();
+                Debug.Assert(SyntaxFacts.IsAccessibilityModifier(visibilityKind));
 
                 SyntaxTokenList modifierList;
                 if (originalModifiers.Count == 0)
@@ -179,7 +243,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return document;
             }
 
-            var rewriter = new VisibilityRewriter();
+            var rewriter = new VisibilityRewriter(document, cancellationToken);
             var newNode = rewriter.Visit(syntaxNode);
             return document.WithSyntaxRoot(newNode);
         }
