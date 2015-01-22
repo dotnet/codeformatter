@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,7 +23,6 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<IFormattingRule> _rules;
 
-
         [ImportingConstructor]
         public FormattingEngineImplementation([ImportMany] IEnumerable<IFormattingFilter> filters,
                                               [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules)
@@ -30,22 +31,44 @@ namespace Microsoft.DotNet.CodeFormatting
             _rules = rules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
         }
 
-        public async Task<bool> RunAsync(Workspace workspace, CancellationToken cancellationToken)
+        public Task<bool> FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        {
+            var documentIds = solution.Projects.SelectMany(x => x.DocumentIds).ToList();
+            return FormatAsync(solution.Workspace, documentIds, cancellationToken);
+        }
+
+        public Task<bool> FormatProjectAsync(Project project, CancellationToken cancellationToken)
+        {
+            return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
+        }
+
+        private async Task<bool> FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             var solution = workspace.CurrentSolution;
-            var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
             var hasChanges = false;
+            var longRuleList = new List<Tuple<string, TimeSpan>>();
 
             foreach (var id in documentIds)
             {
                 var document = solution.GetDocument(id);
                 var shouldBeProcessed = await ShouldBeProcessedAsync(document);
                 if (!shouldBeProcessed)
+                {
                     continue;
+                }
 
-                Console.WriteLine("Processing document: " + document.Name);
-                var newDocument = await RewriteDocumentAsync(document, cancellationToken);
+                longRuleList.Clear();
+                var watch = new Stopwatch();
+                watch.Start();
+                Console.Write("Processing document: " + document.Name);
+                var newDocument = await RewriteDocumentAsync(document, longRuleList, cancellationToken);
                 hasChanges |= newDocument != document;
+                watch.Stop();
+                Console.WriteLine(" {0} seconds", watch.Elapsed.TotalSeconds);
+                foreach (var tuple in longRuleList)
+                {
+                    Console.WriteLine("\t{0} {1} seconds", tuple.Item1, tuple.Item2.TotalSeconds);
+                }
 
                 solution = newDocument.Project.Solution;
             }
@@ -70,12 +93,24 @@ namespace Microsoft.DotNet.CodeFormatting
             return true;
         }
 
-        private async Task<Document> RewriteDocumentAsync(Document document, CancellationToken cancellationToken)
+        private async Task<Document> RewriteDocumentAsync(Document document, List<Tuple<string, TimeSpan>> longRuleList, CancellationToken cancellationToken)
         {
             var docText = await document.GetTextAsync();
             var originalEncoding = docText.Encoding;
+            var watch = new Stopwatch();
             foreach (var rule in _rules)
+            {
+                watch.Start();
                 document = await rule.ProcessAsync(document, cancellationToken);
+                watch.Stop();
+                var timeSpan = watch.Elapsed;
+                if (timeSpan.TotalSeconds > 1.0)
+                {
+                    longRuleList.Add(Tuple.Create(rule.GetType().Name, timeSpan));
+                }
+
+                watch.Reset();
+            }
 
             return await ChangeEncoding(document, originalEncoding);
         }

@@ -67,19 +67,19 @@ namespace CodeFormatter
         private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
+            var engine = FormattingEngine.Create(ruleTypes, filenames);
 
             string extension = Path.GetExtension(projectOrSolutionPath);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
             {
-                await workspace.OpenSolutionAsync(projectOrSolutionPath, cancellationToken);
+                var solution = await workspace.OpenSolutionAsync(projectOrSolutionPath, cancellationToken);
+                await engine.FormatSolutionAsync(solution, cancellationToken);
             }
             else
             {
-                await workspace.OpenProjectAsync(projectOrSolutionPath, cancellationToken);
+                var project = await workspace.OpenProjectAsync(projectOrSolutionPath, cancellationToken);
+                await engine.FormatProjectAsync(project, cancellationToken);
             }
-
-            var engine = FormattingEngine.Create(ruleTypes, filenames);
-            await engine.RunAsync(workspace, cancellationToken);
         }
     }
 }
