@@ -52,6 +52,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
+            var watch = new Stopwatch();
+            watch.Start();
+
             var originalSolution = workspace.CurrentSolution;
             var solution = originalSolution;
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
@@ -73,6 +76,9 @@ namespace Microsoft.DotNet.CodeFormatting
                     }
                 }
             }
+
+            watch.Stop();
+            Console.WriteLine("Total time {0}", watch.Elapsed);
         }
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
@@ -101,7 +107,7 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             for (int i = 0; i < depth; i++)
             {
-                Console.Write("\t");
+                Console.Write("  ");
             }
 
             Console.Write("Processing {0}", document.Name);
@@ -175,7 +181,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, ILocalSemanticFormattingRule localSemanticRule, CancellationToken cancellationToken)
         {
-            Console.WriteLine("\t{0}", localSemanticRule.GetType().Name);
+            Console.WriteLine("  {0}", localSemanticRule.GetType().Name);
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
             {
@@ -212,7 +218,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, IGlobalSemanticFormattingRule globalSemanticRule, CancellationToken cancellationToken)
         {
-            Console.WriteLine("\t{0}", globalSemanticRule.GetType().Name);
+            Console.WriteLine("  {0}", globalSemanticRule.GetType().Name);
             foreach (var documentId in documentIds)
             {
                 var document = solution.GetDocument(documentId);
