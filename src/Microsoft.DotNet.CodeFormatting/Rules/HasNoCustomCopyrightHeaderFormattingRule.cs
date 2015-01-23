@@ -22,9 +22,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private static string StartMarker { get; set; }
         private static string EndMarker { get; set; }
 
-        private const string FileNotFoundError = "The specified CopyrightHeader.md file was not found.";
+        private readonly Options _options;
 
-        private const string FileSyntaxError = "There should be exactly 3 lines in CopyrightHeader.md.";
+        [ImportingConstructor]
+        internal HasNoCustomCopyrightHeaderFormattingRule(Options options)
+        {
+            _options = options;
+        }
 
         public SyntaxNode Process(SyntaxNode syntaxNode)
         {
@@ -114,7 +118,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                          .FirstOrDefault();
         }
 
-        private static bool SetHeaders()
+        private bool SetHeaders()
         {
             var filePath = Path.Combine(
                 Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
@@ -122,14 +126,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (!File.Exists(filePath))
             {
-                FileNotFoundError.WriteConsoleError(1, "CopyrightHeader.md");
+                _options.FormatLogger.WriteErrorLine("The specified CopyrightHeader.md file was not found.");
                 return false;
             }
 
             var lines = File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")).ToArray();
             if (lines.Count() != 3)
             {
-                FileSyntaxError.WriteConsoleError(1, "CopyrightHeader.md");
+                _options.FormatLogger.WriteErrorLine("There should be exactly 3 lines in CopyrightHeader.md.");
                 return false;
             }
 

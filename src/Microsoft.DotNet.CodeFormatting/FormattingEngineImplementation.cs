@@ -34,6 +34,12 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _options.CopyrightHeader = value; }
         }
 
+        public IFormatLogger FormatLogger
+        {
+            get { return _options.FormatLogger; }
+            set { _options.FormatLogger = value; }
+        }
+
         public bool Verbose
         {
             get { return _verbose; }
@@ -77,7 +83,7 @@ namespace Microsoft.DotNet.CodeFormatting
             watch.Stop();
 
             await SaveChanges(solution, originalSolution, cancellationToken);
-            Console.WriteLine("Total time {0}", watch.Elapsed);
+            FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
         }
 
         internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
@@ -126,7 +132,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 var fileInfo = new FileInfo(document.FilePath);
                 if (!fileInfo.Exists || fileInfo.IsReadOnly)
                 {
-                    Console.WriteLine("warning: skipping document '{0}' because it {1}.",
+                    FormatLogger.WriteLine("warning: skipping document '{0}' because it {1}.",
                         document.FilePath,
                         fileInfo.IsReadOnly ? "is read-only" : "does not exist");
                     return false;
@@ -163,12 +169,12 @@ namespace Microsoft.DotNet.CodeFormatting
             _watch.Stop();
             if (_verbose && _watch.Elapsed.TotalSeconds > 1)
             {
-                Console.WriteLine();
-                Console.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
+                FormatLogger.WriteLine();
+                FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
             }
             else
             {
-                Console.Write(".");
+                FormatLogger.Write(".");
             }
         }
 
@@ -180,7 +186,7 @@ namespace Microsoft.DotNet.CodeFormatting
         /// </summary>
         private async Task<Solution> RunSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            Console.WriteLine("Syntax Pass");
+            FormatLogger.WriteLine("Syntax Pass");
 
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
@@ -202,7 +208,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
-            Console.WriteLine();
+            FormatLogger.WriteLine();
             return currentSolution;
         }
 
@@ -218,19 +224,19 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunLocalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            Console.WriteLine("Local Semantic Pass");
+            FormatLogger.WriteLine("Local Semantic Pass");
             foreach (var localSemanticRule in _localSemanticRules)
             {
                 solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
             }
 
-            Console.WriteLine();
+            FormatLogger.WriteLine();
             return solution;
         }
 
         private async Task<Solution> RunLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, ILocalSemanticFormattingRule localSemanticRule, CancellationToken cancellationToken)
         {
-            Console.WriteLine("  {0}", localSemanticRule.GetType().Name);
+            FormatLogger.WriteLine("  {0}", localSemanticRule.GetType().Name);
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
             {
@@ -251,25 +257,25 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
-            Console.WriteLine();
+            FormatLogger.WriteLine();
             return currentSolution;
         }
 
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            Console.WriteLine("Global Semantic Pass");
+            FormatLogger.WriteLine("Global Semantic Pass");
             foreach (var globalSemanticRule in _globalSemanticRules)
             {
                 solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
             }
 
-            Console.WriteLine();
+            FormatLogger.WriteLine();
             return solution;
         }
 
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, IGlobalSemanticFormattingRule globalSemanticRule, CancellationToken cancellationToken)
         {
-            Console.WriteLine("  {0}", globalSemanticRule.GetType().Name);
+            FormatLogger.WriteLine("  {0}", globalSemanticRule.GetType().Name);
             foreach (var documentId in documentIds)
             {
                 var document = solution.GetDocument(documentId);
@@ -284,7 +290,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 EndDocument(document);
             }
 
-            Console.WriteLine();
+            FormatLogger.WriteLine();
             return solution;
         }
     }

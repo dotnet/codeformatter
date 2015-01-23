@@ -24,8 +24,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     {
         private static object _lockObject = new object();
         private static HashSet<string> _mstestNamespaces;
+        private readonly Options _options;
 
-        private const string FileNotFoundError = "The MSTestNamespaces.txt file was not found.";
+        [ImportingConstructor]
+        internal UsesXunitForTestsFormattingRule(Options options)
+        {
+            _options = options;
+        }
 
         public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
@@ -285,7 +290,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return _mstestNamespaces.Contains(namespaceDocID);
         }
 
-        private static bool LoadMSTestNamespaces()
+        private bool LoadMSTestNamespaces()
         {
             lock (_lockObject)
             {
@@ -300,7 +305,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
                 if (!File.Exists(filePath))
                 {
-                    FileNotFoundError.WriteConsoleError(1, "MSTestNamespaces.txt");
+                    _options.FormatLogger.WriteErrorLine("The MSTestNamespaces.txt file was not found.");
                     return false;
                 }
 

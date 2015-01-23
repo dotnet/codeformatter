@@ -74,6 +74,7 @@
     <Compile Include="Filters\FilenameFilter.cs" />
     <Compile Include="FormattingEngine.cs" />
     <Compile Include="FormattingEngineImplementation.cs" />
+    <Compile Include="IFormatLogger.cs" />
     <Compile Include="IFormattingEngine.cs" />
     <Compile Include="IFormattingFilter.cs" />
     <Compile Include="IFormattingRule.cs" />

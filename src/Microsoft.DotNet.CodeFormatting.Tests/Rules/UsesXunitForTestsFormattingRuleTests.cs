@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     {
         internal override IGlobalSemanticFormattingRule Rule
         {
-            get { return new Rules.UsesXunitForTestsFormattingRule(); }
+            get { return new Rules.UsesXunitForTestsFormattingRule(new Options()); }
         }
 
         [Fact]

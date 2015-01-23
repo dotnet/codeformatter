@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         public CombinationTest()
         {
             s_formattingEngine.CopyrightHeader = ImmutableArray.Create("", "// header");
+            s_formattingEngine.FormatLogger = new EmptyFormatLogger();
         }
 
         protected override async Task<Document> RewriteDocumentAsync(Document document)
