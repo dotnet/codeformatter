@@ -63,15 +63,21 @@ namespace Microsoft.DotNet.CodeFormatting
             watch.Start();
 
             var originalSolution = workspace.CurrentSolution;
+            var solution = await FormatCoreAsync(originalSolution, documentIds, cancellationToken);
+
+            watch.Stop();
+
+            await SaveChanges(solution, originalSolution, cancellationToken);
+            Console.WriteLine("Total time {0}", watch.Elapsed);
+        }
+
+        internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
             var solution = originalSolution;
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
-
-            await SaveChanges(solution, originalSolution, cancellationToken);
-
-            watch.Stop();
-            Console.WriteLine("Total time {0}", watch.Elapsed);
+            return solution;
         }
 
         private async Task SaveChanges(Solution solution, Solution originalSolution, CancellationToken cancellationToken)

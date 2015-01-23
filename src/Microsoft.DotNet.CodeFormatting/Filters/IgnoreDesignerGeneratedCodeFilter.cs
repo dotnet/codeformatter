@@ -14,6 +14,11 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
     {
         public Task<bool> ShouldBeProcessedAsync(Document document)
         {
+            if (document.FilePath == null)
+            {
+                return Task.FromResult(true);
+            }
+
             var isDesignerGenerated = document.FilePath.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase);
             return Task.FromResult(!isDesignerGenerated);
         }
