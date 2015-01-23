@@ -22,13 +22,25 @@ namespace Microsoft.DotNet.CodeFormatting
     {
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<IFormattingRule> _rules;
+        private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
+        private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
+        private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
+        private readonly bool _verbose;
+        private readonly Stopwatch _watch = new Stopwatch();
 
         [ImportingConstructor]
-        public FormattingEngineImplementation([ImportMany] IEnumerable<IFormattingFilter> filters,
-                                              [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules)
+        public FormattingEngineImplementation(
+            [ImportMany] IEnumerable<IFormattingFilter> filters,
+            [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules,
+            [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IOrderMetadata>> syntaxRules,
+            [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IOrderMetadata>> localSemanticRules,
+            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IOrderMetadata>> globalSemanticRules)
         {
             _filters = filters;
             _rules = rules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
+            _syntaxRules = syntaxRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
+            _localSemanticRules = localSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
+            _globalSemanticRules = globalSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
         }
 
         public Task<bool> FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
@@ -113,6 +125,97 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             return await ChangeEncoding(document, originalEncoding);
+        }
+
+        private void StartDocument(Document document)
+        {
+            Console.Write("\tProcessing {0}", document.Name);
+            _watch.Restart();
+        }
+
+        private void EndDocument()
+        {
+            _watch.Stop();
+            if (_verbose && _watch.Elapsed.TotalSeconds > 1)
+            {
+
+            }
+        }
+
+        private Task<Solution> FormatDocumentsSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            Console.WriteLine("Syntax Pass");
+
+            var currentSolution = originalSolution;
+            foreach (var documentId in documentIds)
+            {
+                var document = originalSolution.GetDocument(documentId);
+
+                Console.Write("\tProcessing {0}", document.Name);
+
+                watch.Restart();
+                var newRoot = await documentFunc(document);
+                watch.Stop();
+
+                if (_verbose && watch.Elapsed.TotalSeconds > 1)
+                {
+                    Console.Write(" {0} seconds", watch.Elapsed.TotalSeconds);
+                }
+                Console.WriteLine();
+
+                if (newRoot != null)
+                {
+                    currentSolution = currentSolution.WithDocumentSyntaxRoot(documentId, newRoot);
+                }
+            }
+
+            return currentSolution;
+        }
+
+        private async Task<Solution> FormatDocumentsLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            Console.WriteLine("Local Semantic Pass");
+            Func<Document, Task<SyntaxTree> documentFunc = async(documentFunc) =>
+                {
+                    var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken);
+                    if (syntaxRoot == null)
+                    {
+                        return null;
+                    }
+
+                    return FormatLocalSemantic(document, syntaxRoot);
+                };
+
+            return FormatDocumentsCore(originalSolution, documentIds, documentFunc, cancellationToken);
+        }
+
+        private async Task<Solution> FormatDocumentsCore(
+            Solution originalSolution, 
+            IReadOnlyList<DocumentId> documentIds, 
+            Func<Document, Task<SyntaxTree> documentFunc,
+            CancellationToken cancellationToken)
+        {
+        }
+
+        private Task<SyntaxTree> FormatSyntaxTree(Document document, SyntaxNode syntaxRoot)
+        {
+            foreach (var syntaxRule in _syntaxRules)
+            {
+                syntaxRoot = syntaxRule.Process(syntaxRoot);
+            }
+
+            return Task.FromResult(root);
+        }
+
+        private async Task<SyntaxTree> FormatLocalSemantic(Document originalDocument, SyntaxNode originalSyntaxRoot)
+        {
+            var currentSyntaxRoot = originalSyntaxRoot;
+            foreach (var localSemanticRule in _localSemanticRules)
+            {
+                currentSyntaxRoot = await localSemanticRule.ProcessAsync(originalDocument, originalSyntaxRoot, currentSyntaxRoot)
+            }
+
+            return currentSyntaxRoot;
         }
 
         private async Task<Document> ChangeEncoding(Document document, Encoding encoding)

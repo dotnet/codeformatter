@@ -9,8 +9,36 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
+    // TODO: delete
     internal interface IFormattingRule
     {
         Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken);
+    }
+
+    /// <summary>
+    /// Rules which need no semantic information and operate on parse trees only 
+    /// </summary>
+    internal interface ISyntaxFormattingRule
+    {
+        SyntaxNode Process(SyntaxNode syntaxRoot);
+    }
+
+    /// <summary>
+    /// Rules which possibly need semantic information but only operate on a 
+    /// specific document.  
+    /// </summary>
+    internal interface ILocalSemanticFormattingRule
+    {
+        Task Record(Document document, SyntaxRoot  )
+
+        Task<SyntaxNode> ProcessAsync(Document originalDocument, SyntaxNode originalSyntaxRoot, SyntaxNode currentSyntaxRoot, CancellationToken cancellationToken);
+    }
+
+    /// <summary>
+    /// Rules which can affect more than the local document
+    /// </summary>
+    internal interface IGlobalSemanticFormattingRule
+    {
+        Task<Solution> ProcessAsync(Solution solution, CancellationToken cancellationToken);
     }
 }
