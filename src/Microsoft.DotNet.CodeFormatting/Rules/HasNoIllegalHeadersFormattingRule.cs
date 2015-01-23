@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         // We are going to remove any multiline comments that *only* contain these characters
         private const string CommentFormattingCharacters = "*/=-";
 
-        public async Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
+        public Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
             var leadingTrivia = syntaxNode.GetLeadingTrivia();
             SyntaxTriviaList newTrivia = leadingTrivia;
@@ -71,9 +71,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             if (leadingTrivia.Equals(newTrivia))
-                return syntaxNode;
+                return Task.FromResult(syntaxNode);
 
-            return syntaxNode.WithLeadingTrivia(newTrivia);
+            return Task.FromResult(syntaxNode.WithLeadingTrivia(newTrivia));
         }
 
         private string[] GetIllegalHeaders(Document document)
