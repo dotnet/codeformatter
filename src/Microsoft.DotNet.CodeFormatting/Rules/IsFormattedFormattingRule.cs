@@ -14,10 +14,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.IsFormattedFormattingRule)]
-    internal sealed class IsFormattedFormattingRule : IFormattingRule
+    [LocalSemanticRuleOrder(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
+    internal sealed class IsFormattedFormattingRule : ILocalSemanticFormattingRule
     {
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public async Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
             var newDocument = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
             // TODO Bug 1076609: Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             newDocument = await newDocument.GetNewDocumentWithPreprocessorSymbols(preprocessorNames, cancellationToken);
             newDocument = await Formatter.FormatAsync(newDocument, cancellationToken: cancellationToken);
 
-            return newDocument.GetOriginalDocumentWithPreprocessorSymbols(preprocessorNames);
+            return await newDocument.GetOriginalDocumentWithPreprocessorSymbols(preprocessorNames).GetSyntaxRootAsync(cancellationToken);
         }
     }
 }

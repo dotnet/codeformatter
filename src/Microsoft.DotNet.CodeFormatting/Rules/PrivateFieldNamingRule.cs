@@ -17,8 +17,8 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.PrivateFieldNamingRule)]
-    internal sealed class PrivateFieldNamingRule : IFormattingRule
+    [GlobalSemanticRuleOrder(GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
+    internal sealed class PrivateFieldNamingRule : IGlobalSemanticFormattingRule
     {
         /// <summary>
         /// This will add an annotation to any private field that needs to be renamed.
@@ -159,27 +159,21 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
         }
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken)
         {
-            var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxRoot == null)
-            {
-                return document;
-            }
-
             int count;
             var newSyntaxRoot = PrivateFieldAnnotationsRewriter.AddAnnotations(syntaxRoot, out count);
 
             if (count == 0)
             {
-                return document;
+                return document.Project.Solution;
             }
 
             var documentId = document.Id;
             var solution = document.Project.Solution;
             solution = solution.WithDocumentSyntaxRoot(documentId, newSyntaxRoot);
             solution = await RenameFields(solution, documentId, count, cancellationToken);
-            return solution.GetDocument(documentId);
+            return solution;
         }
 
         private static async Task<Solution> RenameFields(Solution solution, DocumentId documentId, int count, CancellationToken cancellationToken)
@@ -187,13 +181,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             Solution oldSolution = null;
             for (int i = 0; i < count; i++)
             {
-                // If this is not the first field then clean up the Rename annotations left
-                // in the tree.
-                if (i > 0)
-                {
-                    solution = await CleanSolutionAsync(solution, oldSolution, cancellationToken);
-                }
-
                 oldSolution = solution;
 
                 var semanticModel = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
@@ -209,6 +196,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
 
                 solution = await Renamer.RenameSymbolAsync(solution, fieldSymbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
+                solution = await CleanSolutionAsync(solution, oldSolution, cancellationToken);
             }
 
             return solution;

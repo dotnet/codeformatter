@@ -13,8 +13,6 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingEngine
     {
-        private const string RuleTypeNotFoundError = "The specified rule type was not found: ";
-
         public static IFormattingEngine Create(IEnumerable<string> ruleTypes, IEnumerable<string> filenames)
         {
             var catalog = new AssemblyCatalog(typeof(FormattingEngine).Assembly);
@@ -25,7 +23,9 @@ namespace Microsoft.DotNet.CodeFormatting
             var filteredCatalog = new FilteredCatalog(catalog, cpd =>
             {
                 if (cpd.ExportDefinitions.Any(em =>
-                    em.ContractName == AttributedModelServices.GetContractName(typeof(IFormattingRule)) ||
+                    em.ContractName == AttributedModelServices.GetContractName(typeof(ISyntaxFormattingRule)) ||
+                    em.ContractName == AttributedModelServices.GetContractName(typeof(ILocalSemanticFormattingRule)) ||
+                    em.ContractName == AttributedModelServices.GetContractName(typeof(IGlobalSemanticFormattingRule)) ||
                     em.ContractName == AttributedModelServices.GetContractName(typeof(IFormattingFilter))))
                 {
                     object ruleType;
@@ -53,11 +53,12 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             var engine = container.GetExportedValue<IFormattingEngine>();
+            var consoleFormatLogger = new ConsoleFormatLogger();
 
             //  Need to do this after the catalog is queried, otherwise the lambda won't have been run
             foreach (var notFoundRuleType in notFoundRuleTypes)
             {
-                (RuleTypeNotFoundError + notFoundRuleType).WriteConsoleError(1, "");
+                consoleFormatLogger.WriteErrorLine("The specified rule type was not found: {0}", notFoundRuleType);
             }
 
             return engine;

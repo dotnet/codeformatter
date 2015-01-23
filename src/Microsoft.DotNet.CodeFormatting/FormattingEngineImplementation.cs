@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
@@ -19,68 +20,125 @@ namespace Microsoft.DotNet.CodeFormatting
     [Export(typeof(IFormattingEngine))]
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
+        private readonly Options _options;
         private readonly IEnumerable<IFormattingFilter> _filters;
-        private readonly IEnumerable<IFormattingRule> _rules;
+        private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
+        private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
+        private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
+        private readonly Stopwatch _watch = new Stopwatch();
+        private bool _verbose;
 
-
-        [ImportingConstructor]
-        public FormattingEngineImplementation([ImportMany] IEnumerable<IFormattingFilter> filters,
-                                              [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules)
+        public ImmutableArray<string> CopyrightHeader
         {
-            _filters = filters;
-            _rules = rules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
+            get { return _options.CopyrightHeader; }
+            set { _options.CopyrightHeader = value; }
         }
 
-        public async Task<bool> RunAsync(Workspace workspace, CancellationToken cancellationToken)
+        public IFormatLogger FormatLogger
         {
-            var solution = workspace.CurrentSolution;
-            var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
-            var hasChanges = false;
+            get { return _options.FormatLogger; }
+            set { _options.FormatLogger = value; }
+        }
 
-            foreach (var id in documentIds)
+        public bool Verbose
+        {
+            get { return _verbose; }
+            set { _verbose = value; }
+        }
+
+        [ImportingConstructor]
+        internal FormattingEngineImplementation(
+            Options options,
+            [ImportMany] IEnumerable<IFormattingFilter> filters,
+            [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IOrderMetadata>> syntaxRules,
+            [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IOrderMetadata>> localSemanticRules,
+            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IOrderMetadata>> globalSemanticRules)
+        {
+            _options = options;
+            _filters = filters;
+            _syntaxRules = syntaxRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
+            _localSemanticRules = localSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
+            _globalSemanticRules = globalSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
+        }
+
+        public Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        {
+            var documentIds = solution.Projects.SelectMany(x => x.DocumentIds).ToList();
+            return FormatAsync(solution.Workspace, documentIds, cancellationToken);
+        }
+
+        public Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
+        {
+            return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
+        }
+
+        private async Task FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+
+            var originalSolution = workspace.CurrentSolution;
+            var solution = await FormatCoreAsync(originalSolution, documentIds, cancellationToken);
+
+            watch.Stop();
+
+            await SaveChanges(solution, originalSolution, cancellationToken);
+            FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
+        }
+
+        internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            var solution = originalSolution;
+            solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
+            solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
+            solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
+            return solution;
+        }
+
+        private async Task SaveChanges(Solution solution, Solution originalSolution, CancellationToken cancellationToken)
+        {
+            foreach (var projectChange in solution.GetChanges(originalSolution).GetProjectChanges())
             {
-                var document = solution.GetDocument(id);
-
-                var fileInfo = new FileInfo(document.FilePath);
-                if (!fileInfo.Exists || fileInfo.IsReadOnly)
+                foreach (var documentId in projectChange.GetChangedDocuments())
                 {
-                    Console.WriteLine("warning: skipping document '{0}' because it {1}.",
-                        document.FilePath,
-                        fileInfo.IsReadOnly ? "is read-only" : "does not exist");
-                    continue;
-                }
-
-                var shouldBeProcessed = await ShouldBeProcessedAsync(document);
-                if (!shouldBeProcessed)
-                    continue;
-
-                Console.WriteLine("Processing document: " + document.Name);
-                var newDocument = await RewriteDocumentAsync(document, cancellationToken);
-
-                if (newDocument != document)
-                {
-                    Debug.Assert(newDocument.FilePath == document.FilePath, "Formatting rules should not change a document's file path");
-
-                    hasChanges = true;
-                    var sourceText = await newDocument.GetTextAsync(cancellationToken);
-
-                    using (var file = File.Open(newDocument.FilePath, FileMode.Truncate, FileAccess.Write))
+                    var document = solution.GetDocument(documentId);
+                    var sourceText = await document.GetTextAsync(cancellationToken);
+                    using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
                     {
-                        using (var writer = new StreamWriter(file, sourceText.Encoding))
+                        var encoding = sourceText.Encoding;
+
+                        // TODO: It seems like a bug that Encoding could change but it is definitely
+                        // happening.  Ex: ArrayBuilder.Enumerator.cs
+                        if (encoding == null)
+                        {
+                            var originalDocument = originalSolution.GetDocument(documentId);
+                            var originalSourceText = await originalDocument.GetTextAsync(cancellationToken);
+                            encoding = originalSourceText.Encoding;
+                        }
+
+                        using (var writer = new StreamWriter(file, encoding))
                         {
                             sourceText.Write(writer, cancellationToken);
                         }
                     }
                 }
-
-                solution = newDocument.Project.Solution;
             }
-
-            return hasChanges;
         }
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
         {
+            if (document.FilePath != null)
+            {
+                var fileInfo = new FileInfo(document.FilePath);
+                if (!fileInfo.Exists || fileInfo.IsReadOnly)
+                {
+                    FormatLogger.WriteLine("warning: skipping document '{0}' because it {1}.",
+                        document.FilePath,
+                        fileInfo.IsReadOnly ? "is read-only" : "does not exist");
+                    return false;
+                }
+            }
+
             foreach (var filter in _filters)
             {
                 var shouldBeProcessed = await filter.ShouldBeProcessedAsync(document);
@@ -91,21 +149,149 @@ namespace Microsoft.DotNet.CodeFormatting
             return true;
         }
 
-        private async Task<Document> RewriteDocumentAsync(Document document, CancellationToken cancellationToken)
+        private async Task<SyntaxNode> GetSyntaxRootAndFilter(Document document, CancellationToken cancellationToken)
         {
-            var docText = await document.GetTextAsync();
-            var originalEncoding = docText.Encoding;
-            foreach (var rule in _rules)
-                document = await rule.ProcessAsync(document, cancellationToken);
+            if (!await ShouldBeProcessedAsync(document))
+            {
+                return null;
+            }
 
-            return await ChangeEncoding(document, originalEncoding);
+            return await document.GetSyntaxRootAsync(cancellationToken);
         }
 
-        private async Task<Document> ChangeEncoding(Document document, Encoding encoding)
+        private void StartDocument()
         {
-            var text = await document.GetTextAsync();
-            var newText = SourceText.From(text.ToString(), encoding);
-            return document.WithText(newText);
+            _watch.Restart();
+        }
+
+        private void EndDocument(Document document)
+        {
+            _watch.Stop();
+            if (_verbose && _watch.Elapsed.TotalSeconds > 1)
+            {
+                FormatLogger.WriteLine();
+                FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
+            }
+            else
+            {
+                FormatLogger.Write(".");
+            }
+        }
+
+        /// <summary>
+        /// Semantics is not involved in this pass at all.  It is just a straight modification of the 
+        /// parse tree so there are no issues about ensuring the version of <see cref="SemanticModel"/> and
+        /// the <see cref="SyntaxNode"/> line up.  Hence we do this by iteraning every <see cref="Document"/> 
+        /// and processing all rules against them at once 
+        /// </summary>
+        private async Task<Solution> RunSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            FormatLogger.WriteLine("Syntax Pass");
+
+            var currentSolution = originalSolution;
+            foreach (var documentId in documentIds)
+            {
+                var document = originalSolution.GetDocument(documentId);
+                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                if (syntaxRoot == null)
+                {
+                    continue;
+                }
+
+                StartDocument();
+                var newRoot = RunSyntaxPass(syntaxRoot);
+                EndDocument(document);
+
+                if (newRoot != syntaxRoot)
+                {
+                    currentSolution = currentSolution.WithDocumentSyntaxRoot(document.Id, newRoot);
+                }
+            }
+
+            FormatLogger.WriteLine();
+            return currentSolution;
+        }
+
+        private SyntaxNode RunSyntaxPass(SyntaxNode root)
+        {
+            foreach (var rule in _syntaxRules)
+            {
+                root = rule.Process(root);
+            }
+
+            return root;
+        }
+
+        private async Task<Solution> RunLocalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            FormatLogger.WriteLine("Local Semantic Pass");
+            foreach (var localSemanticRule in _localSemanticRules)
+            {
+                solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
+            }
+
+            FormatLogger.WriteLine();
+            return solution;
+        }
+
+        private async Task<Solution> RunLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, ILocalSemanticFormattingRule localSemanticRule, CancellationToken cancellationToken)
+        {
+            FormatLogger.WriteLine("  {0}", localSemanticRule.GetType().Name);
+            var currentSolution = originalSolution;
+            foreach (var documentId in documentIds)
+            {
+                var document = originalSolution.GetDocument(documentId);
+                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                if (syntaxRoot == null)
+                {
+                    continue;
+                }
+
+                StartDocument();
+                var newRoot = await localSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
+                EndDocument(document);
+
+                if (syntaxRoot != newRoot)
+                {
+                    currentSolution = currentSolution.WithDocumentSyntaxRoot(documentId, newRoot);
+                }
+            }
+
+            FormatLogger.WriteLine();
+            return currentSolution;
+        }
+
+        private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            FormatLogger.WriteLine("Global Semantic Pass");
+            foreach (var globalSemanticRule in _globalSemanticRules)
+            {
+                solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
+            }
+
+            FormatLogger.WriteLine();
+            return solution;
+        }
+
+        private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, IGlobalSemanticFormattingRule globalSemanticRule, CancellationToken cancellationToken)
+        {
+            FormatLogger.WriteLine("  {0}", globalSemanticRule.GetType().Name);
+            foreach (var documentId in documentIds)
+            {
+                var document = solution.GetDocument(documentId);
+                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                if (syntaxRoot == null)
+                {
+                    continue;
+                }
+
+                StartDocument();
+                solution = await globalSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
+                EndDocument(document);
+            }
+
+            FormatLogger.WriteLine();
+            return solution;
         }
     }
 }

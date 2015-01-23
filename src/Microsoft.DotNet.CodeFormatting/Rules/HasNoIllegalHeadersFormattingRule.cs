@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasNoIllegalHeadersFormattingRule)]
-    internal sealed class HasNoIllegalHeadersFormattingRule : IFormattingRule
+    [LocalSemanticRuleOrder(LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
+    internal sealed class HasNoIllegalHeadersFormattingRule : ILocalSemanticFormattingRule
     {
         // We are going to replace this header with the actual filename of the document being processed
         private const string FileNameIllegalHeader = "<<<filename>>>";
@@ -24,12 +24,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         // We are going to remove any multiline comments that *only* contain these characters
         private const string CommentFormattingCharacters = "*/=-";
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public async Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-                return document;
-
             var leadingTrivia = syntaxNode.GetLeadingTrivia();
             SyntaxTriviaList newTrivia = leadingTrivia;
             var illegalHeaders = GetIllegalHeaders(document);
@@ -75,9 +71,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             if (leadingTrivia.Equals(newTrivia))
-                return document;
+                return syntaxNode;
 
-            return document.WithSyntaxRoot(syntaxNode.WithLeadingTrivia(newTrivia));
+            return syntaxNode.WithLeadingTrivia(newTrivia);
         }
 
         private string[] GetIllegalHeaders(Document document)

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.DotNet.CodeFormatting;
 using Xunit;
@@ -24,13 +25,6 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         private const string CSharpFileExtension = ".cs";
         private const string VBFileExtension = ".vb";
         private const string TestProjectName = "TestProject";
-
-        internal abstract IFormattingRule GetFormattingRule();
-
-        internal static IFormattingRule GetDefaultVSFormatter()
-        {
-            return new Rules.IsFormattedFormattingRule();
-        }
 
         protected virtual IEnumerable<MetadataReference> GetSolutionMetadataReferences()
         {
@@ -55,34 +49,32 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 var fileName = FileNamePrefix + count + fileExtension;
                 var documentId = DocumentId.CreateNewId(projectId, fileName);
                 solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
+                count++;
             }
 
             return solution;
         }
 
-        private static async Task<Solution> Format(Solution solution, IFormattingRule rule, bool runFormatter)
+        private async Task<Solution> Format(Solution solution, bool runFormatter)
         {
             var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
 
             foreach (var id in documentIds)
             {
                 var document = solution.GetDocument(id);
-                var newDocument = await RewriteDocumentAsync(document, rule, runFormatter);
-                solution = newDocument.Project.Solution;
+                document = await RewriteDocumentAsync(document);
+                if (runFormatter)
+                {
+                    document = await Formatter.FormatAsync(document);
+                }
+
+                solution = document.Project.Solution;
             }
 
             return solution;
         }
 
-        private static async Task<Document> RewriteDocumentAsync(Document document, IFormattingRule rule, bool runFormatter)
-        {
-            document = await rule.ProcessAsync(document, CancellationToken.None);
-            if (runFormatter)
-                return await GetDefaultVSFormatter().ProcessAsync(document, CancellationToken.None);
-            return document;
-        }
-
-        private static void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
+        private void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
         {
             var expectedDocuments = expectedSolution.Projects.SelectMany(p => p.Documents);
             var actualDocuments = actualSolution.Projects.SelectMany(p => p.Documents);
@@ -99,11 +91,13 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             }
         }
 
-        private void Verify(string[] sources, string[] expected, IFormattingRule rule, bool runFormatter)
+        protected abstract Task<Document> RewriteDocumentAsync(Document document);
+
+        protected void Verify(string[] sources, string[] expected, bool runFormatter)
         {
             var inputSolution = CreateSolution(sources);
             var expectedSolution = CreateSolution(expected);
-            var actualSolution = Format(inputSolution, rule, runFormatter).Result;
+            var actualSolution = Format(inputSolution, runFormatter).Result;
 
             if (actualSolution == null)
                 Assert.False(true, "Solution is null. Test Failed.");
@@ -111,14 +105,53 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             AssertSolutionEqual(expectedSolution, actualSolution);
         }
 
-        protected void Verify(string[] source, string[] expected, bool runFormatter)
-        {
-            Verify(source, expected, GetFormattingRule(), runFormatter);
-        }
-
         protected void Verify(string source, string expected, bool runFormatter = true)
         {
             Verify(new string[] { source }, new string[] { expected }, runFormatter);
+        }
+    }
+
+    public abstract class SyntaxRuleTestBase : CodeFormattingTestBase
+    {
+        internal abstract ISyntaxFormattingRule Rule
+        {
+            get;
+        }
+
+        protected override async Task<Document> RewriteDocumentAsync(Document document)
+        {
+            var syntaxRoot = await document.GetSyntaxRootAsync();
+            syntaxRoot = Rule.Process(syntaxRoot);
+            return document.WithSyntaxRoot(syntaxRoot);
+        }
+    }
+
+    public abstract class LocalSemanticRuleTestBase : CodeFormattingTestBase
+    {
+        internal abstract ILocalSemanticFormattingRule Rule
+        {
+            get;
+        }
+
+        protected override async Task<Document> RewriteDocumentAsync(Document document)
+        {
+            var syntaxRoot = await document.GetSyntaxRootAsync();
+            syntaxRoot = await Rule.ProcessAsync(document, syntaxRoot, CancellationToken.None);
+            return document.WithSyntaxRoot(syntaxRoot);
+        }
+    }
+
+    public abstract class GlobalSemanticRuleTestBase : CodeFormattingTestBase
+    {
+        internal abstract IGlobalSemanticFormattingRule Rule
+        {
+            get;
+        }
+
+        protected override async Task<Document> RewriteDocumentAsync(Document document)
+        {
+            var solution = await Rule.ProcessAsync(document, await document.GetSyntaxRootAsync(), CancellationToken.None);
+            return solution.GetDocument(document.Id);
         }
     }
 }

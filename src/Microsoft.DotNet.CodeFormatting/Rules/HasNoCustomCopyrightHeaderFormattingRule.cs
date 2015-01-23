@@ -15,37 +15,36 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
-    internal sealed class HasNoCustomCopyrightHeaderFormattingRule : IFormattingRule
+    [SyntaxRuleOrder(SyntaxRuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
+    internal sealed class HasNoCustomCopyrightHeaderFormattingRule : ISyntaxFormattingRule
     {
         private static string RulerMarker { get; set; }
         private static string StartMarker { get; set; }
         private static string EndMarker { get; set; }
 
-        private const string FileNotFoundError = "The specified CopyrightHeader.md file was not found.";
+        private readonly Options _options;
 
-        private const string FileSyntaxError = "There should be exactly 3 lines in CopyrightHeader.md.";
-
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        [ImportingConstructor]
+        internal HasNoCustomCopyrightHeaderFormattingRule(Options options)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-                return document;
+            _options = options;
+        }
 
+        public SyntaxNode Process(SyntaxNode syntaxNode)
+        {
             // SetHeaders
             if (!SetHeaders())
-                return document;
+                return syntaxNode;
 
             var triviaList = syntaxNode.GetLeadingTrivia();
 
             SyntaxTrivia start;
             SyntaxTrivia end;
             if (!TryGetStartAndEndOfXmlHeader(triviaList, out start, out end))
-                return document;
+                return syntaxNode;
 
             var filteredList = Filter(triviaList, start, end);
-            var newSyntaxNode = syntaxNode.WithLeadingTrivia(filteredList);
-            return document.WithSyntaxRoot(newSyntaxNode);
+            return syntaxNode.WithLeadingTrivia(filteredList);
         }
 
         private static IEnumerable<SyntaxTrivia> Filter(SyntaxTriviaList triviaList, SyntaxTrivia start, SyntaxTrivia end)
@@ -119,7 +118,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                          .FirstOrDefault();
         }
 
-        private static bool SetHeaders()
+        private bool SetHeaders()
         {
             var filePath = Path.Combine(
                 Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path)),
@@ -127,14 +126,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (!File.Exists(filePath))
             {
-                FileNotFoundError.WriteConsoleError(1, "CopyrightHeader.md");
+                _options.FormatLogger.WriteErrorLine("The specified CopyrightHeader.md file was not found.");
                 return false;
             }
 
             var lines = File.ReadAllLines(filePath).Where(l => !l.StartsWith("##") && !l.Equals("")).ToArray();
             if (lines.Count() != 3)
             {
-                FileSyntaxError.WriteConsoleError(1, "CopyrightHeader.md");
+                _options.FormatLogger.WriteErrorLine("There should be exactly 3 lines in CopyrightHeader.md.");
                 return false;
             }
 

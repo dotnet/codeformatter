@@ -105,13 +105,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
+    <Compile Include="Rules\BracesRuleTests.cs" />
+    <Compile Include="Rules\CombinationTest.cs" />
     <Compile Include="Rules\ExplicitThisRuleTests.cs" />
     <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
-    <Compile Include="Rules\HasNoNewLineAfterOpenBraceFormattingRuleTests.cs" />
-    <Compile Include="Rules\HasNoNewLineBeforeEndBraceFormattingRuleTests.cs" />
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\UsesXunitForTestsFormattingRuleTests.cs" />

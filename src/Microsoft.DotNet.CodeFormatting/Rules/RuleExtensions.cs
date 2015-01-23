@@ -51,12 +51,5 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             return document.Project.WithParseOptions(new CSharpParseOptions().WithPreprocessorSymbols(preprocessorNamesDefined)).GetDocument(document.Id);
         }
-
-        public static void WriteConsoleError(this string msg, int lineNo, string documentName)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Error (Line: " + lineNo + ", " + documentName + ") " + msg);
-            Console.ResetColor();
-        }
     }
 }

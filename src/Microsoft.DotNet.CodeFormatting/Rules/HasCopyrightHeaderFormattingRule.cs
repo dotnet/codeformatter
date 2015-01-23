@@ -13,48 +13,46 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasCopyrightHeaderFormattingRule)]
-    internal sealed class HasCopyrightHeaderFormattingRule : IFormattingRule
+    [SyntaxRuleOrder(SyntaxRuleOrder.HasCopyrightHeaderFormattingRule)]
+    internal sealed class HasCopyrightHeaderFormattingRule : ISyntaxFormattingRule
     {
-        private static readonly string[] s_copyrightHeader =
+        private readonly Options _options;
+
+        [ImportingConstructor]
+        internal HasCopyrightHeaderFormattingRule(Options options)
         {
-            "// Copyright (c) Microsoft. All rights reserved.",
-            "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
-        };
-
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
-        {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-                return document;
-
-            if (HasCopyrightHeader(syntaxNode))
-                return document;
-
-            var newNode = AddCopyrightHeader(syntaxNode);
-            return document.WithSyntaxRoot(newNode);
+            _options = options;
         }
 
-        private static bool HasCopyrightHeader(SyntaxNode syntaxNode)
+        public SyntaxNode Process(SyntaxNode syntaxNode)
+        {
+            if (HasCopyrightHeader(syntaxNode))
+                return syntaxNode;
+
+            return AddCopyrightHeader(syntaxNode);
+        }
+
+        private bool HasCopyrightHeader(SyntaxNode syntaxNode)
         {
             var leadingComments = syntaxNode.GetLeadingTrivia().Where(t => t.CSharpKind() == SyntaxKind.SingleLineCommentTrivia).ToArray();
-            if (leadingComments.Length < s_copyrightHeader.Length)
+            var header = _options.CopyrightHeader;
+            if (leadingComments.Length < header.Length)
                 return false;
 
-            return leadingComments.Take(s_copyrightHeader.Length)
+            return leadingComments.Take(header.Length)
                                   .Select(t => t.ToFullString())
-                                  .SequenceEqual(s_copyrightHeader);
+                                  .SequenceEqual(header);
         }
 
-        private static SyntaxNode AddCopyrightHeader(CSharpSyntaxNode syntaxNode)
+        private SyntaxNode AddCopyrightHeader(SyntaxNode syntaxNode)
         {
             var newTrivia = GetCopyrightHeader().Concat(syntaxNode.GetLeadingTrivia());
             return syntaxNode.WithLeadingTrivia(newTrivia);
         }
 
-        private static IEnumerable<SyntaxTrivia> GetCopyrightHeader()
+        private IEnumerable<SyntaxTrivia> GetCopyrightHeader()
         {
-            foreach (var headerLine in s_copyrightHeader)
+            foreach (var headerLine in _options.CopyrightHeader)
             {
                 yield return SyntaxFactory.Comment(headerLine);
                 yield return SyntaxFactory.CarriageReturnLineFeed;

@@ -13,10 +13,38 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public sealed class RuleOrderAttribute : ExportAttribute
+    public sealed class SyntaxRuleOrderAttribute : ExportAttribute
     {
-        public RuleOrderAttribute(int order)
-            : base(typeof(IFormattingRule))
+        public SyntaxRuleOrderAttribute(int order)
+            : base(typeof(ISyntaxFormattingRule))
+        {
+            Order = order;
+        }
+
+        [DefaultValue(int.MaxValue)]
+        public int Order { get; private set; }
+    }
+
+    [MetadataAttribute]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class LocalSemanticRuleOrderAttribute : ExportAttribute
+    {
+        public LocalSemanticRuleOrderAttribute(int order)
+            : base(typeof(ILocalSemanticFormattingRule))
+        {
+            Order = order;
+        }
+
+        [DefaultValue(int.MaxValue)]
+        public int Order { get; private set; }
+    }
+
+    [MetadataAttribute]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class GlobalSemanticRuleOrderAttribute : ExportAttribute
+    {
+        public GlobalSemanticRuleOrderAttribute(int order)
+            : base(typeof(IGlobalSemanticFormattingRule))
         {
             Order = order;
         }

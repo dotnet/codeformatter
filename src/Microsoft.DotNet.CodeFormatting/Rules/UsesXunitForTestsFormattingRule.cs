@@ -18,25 +18,29 @@ using System.IO;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.UsesXunitForTestsFormattingRule)]
+    [GlobalSemanticRuleOrder(GlobalSemanticRuleOrder.UsesXunitForTestsFormattingRule)]
     [PartMetadata(RuleTypeConstants.PartMetadataKey, RuleTypeConstants.ConvertTestsRuleType)]
-    internal sealed class UsesXunitForTestsFormattingRule : IFormattingRule
+    internal sealed class UsesXunitForTestsFormattingRule : IGlobalSemanticFormattingRule
     {
         private static object _lockObject = new object();
         private static HashSet<string> _mstestNamespaces;
+        private readonly Options _options;
 
-        private const string FileNotFoundError = "The MSTestNamespaces.txt file was not found.";
-
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        [ImportingConstructor]
+        internal UsesXunitForTestsFormattingRule(Options options)
         {
-            var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
+            _options = options;
+        }
 
+        public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
+        {
+            var root = syntaxNode as CompilationUnitSyntax;
             if (root == null)
-                return document;
+                return document.Project.Solution;
 
             if (!LoadMSTestNamespaces())
             {
-                return document;
+                return document.Project.Solution;
             }
 
             var originalRoot = root;
@@ -77,7 +81,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             if (!needsChanges)
             {
-                return document;
+                return document.Project.Solution;
             }
 
             TransformationTracker transformationTracker = new TransformationTracker();
@@ -108,7 +112,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             root = root.WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>(newUsings));
 
 
-            return document.WithSyntaxRoot(root);
+            return document.WithSyntaxRoot(root).Project.Solution;
         }
 
         private void RemoveTestClassAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
@@ -286,7 +290,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return _mstestNamespaces.Contains(namespaceDocID);
         }
 
-        private static bool LoadMSTestNamespaces()
+        private bool LoadMSTestNamespaces()
         {
             lock (_lockObject)
             {
@@ -301,7 +305,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
                 if (!File.Exists(filePath))
                 {
-                    FileNotFoundError.WriteConsoleError(1, "MSTestNamespaces.txt");
+                    _options.FormatLogger.WriteErrorLine("The MSTestNamespaces.txt file was not found.");
                     return false;
                 }
 

@@ -10,11 +10,11 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public sealed class ExplicitVisibilityRuleTests : CodeFormattingTestBase
+    public sealed class ExplicitVisibilityRuleTests : LocalSemanticRuleTestBase
     {
-        internal override IFormattingRule GetFormattingRule()
+        internal override ILocalSemanticFormattingRule Rule
         {
-            return new Rules.ExplicitVisibilityRule();
+            get { return new Rules.ExplicitVisibilityRule(); }
         }
 
         [Fact]
@@ -286,6 +286,83 @@ internal class T
     // some trivia
 }";
             Verify(text, expected);
+        }
+
+        [Fact]
+        public void LonePartialType()
+        {
+            var text = @"
+partial class C { }
+";
+
+            var expected = @"
+internal partial class C { }
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+
+        [Fact]
+        public void CorrectPartialType()
+        {
+            var text = @"
+partial class C { }
+public partial class C { }
+";
+
+            var expected = @"
+public partial class C { }
+public partial class C { }
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void PartialAcrossFiles()
+        {
+            var text1 = @"
+public partial class C { }
+";
+
+            var text2 = @"
+partial class C { }
+";
+
+            var expected1 = @"
+public partial class C { }
+";
+
+            var expected2 = @"
+public partial class C { }
+";
+
+            Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false);
+        }
+
+        [Fact]
+        public void PartialTypesWithNestedClasses()
+        {
+            var text = @"
+partial class C {
+    class N1 { }
+    class N2 { }
+}
+
+public partial class C { }
+";
+
+            var expected = @"
+public partial class C {
+    private class N1 { }
+    private class N2 { }
+}
+
+public partial class C { }
+";
+
+            Verify(text, expected, runFormatter: false);
         }
     }
 }

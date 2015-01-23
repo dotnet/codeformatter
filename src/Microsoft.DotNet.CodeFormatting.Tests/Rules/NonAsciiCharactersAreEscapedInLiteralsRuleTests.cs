@@ -1,12 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class NonAsciiCharactersAreEscapedInLiteralsTests : CodeFormattingTestBase
+    public class NonAsciiCharactersAreEscapedInLiteralsTests : SyntaxRuleTestBase
     {
+        internal override ISyntaxFormattingRule Rule
+        {
+            get { return new Rules.NonAsciiCharactersAreEscapedInLiterals(); }
+        }
+
         [Fact]
         public void CanUseNonAsciiCharactersInComments()
         {
@@ -61,11 +67,6 @@ class Test
 ";
 
             Verify(text, text);
-        }
-
-        internal override IFormattingRule GetFormattingRule()
-        {
-            return new Rules.NonAsciiCharactersAreEscapedInLiterals();
         }
     }
 }

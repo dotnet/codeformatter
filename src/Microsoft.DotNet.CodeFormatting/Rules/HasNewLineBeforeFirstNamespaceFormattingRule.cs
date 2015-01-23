@@ -14,20 +14,16 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasNewLineBeforeFirstNamespaceFormattingRule)]
-    internal sealed class HasNewLineBeforeFirstNamespaceFormattingRule : IFormattingRule
+    [SyntaxRuleOrder(SyntaxRuleOrder.HasNewLineBeforeFirstNamespaceFormattingRule)]
+    internal sealed class HasNewLineBeforeFirstNamespaceFormattingRule : ISyntaxFormattingRule
     {
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode syntaxRoot)
         {
-            var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxRoot == null)
-                return document;
-
             var firstNamespace = syntaxRoot.DescendantNodesAndSelf().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
             IEnumerable<SyntaxTrivia> newTrivia = Enumerable.Empty<SyntaxTrivia>();
 
             if (firstNamespace == null)
-                return document;
+                return syntaxRoot;
 
             if (firstNamespace.HasLeadingTrivia)
             {
@@ -52,7 +48,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 newTrivia = newTrivia.AddNewLine();
             }
 
-            return document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstNamespace, firstNamespace.WithLeadingTrivia(newTrivia)));
+            return syntaxRoot.ReplaceNode(firstNamespace, firstNamespace.WithLeadingTrivia(newTrivia));
         }
 
         private IEnumerable<SyntaxTrivia> GetLeadingTriviaWithEndNewLines(IEnumerable<SyntaxTrivia> trivia)
