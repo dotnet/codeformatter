@@ -24,10 +24,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         public SyntaxNode Process(SyntaxNode syntaxNode)
         {
+            /*
             if (HasCopyrightHeader(syntaxNode))
                 return syntaxNode;
 
             return AddCopyrightHeader(syntaxNode);
+            */
+            return syntaxNode;
         }
 
         private static bool HasCopyrightHeader(SyntaxNode syntaxNode)

@@ -181,13 +181,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             Solution oldSolution = null;
             for (int i = 0; i < count; i++)
             {
-                // If this is not the first field then clean up the Rename annotations left
-                // in the tree.
-                if (i > 0)
-                {
-                    solution = await CleanSolutionAsync(solution, oldSolution, cancellationToken);
-                }
-
                 oldSolution = solution;
 
                 var semanticModel = await solution.GetDocument(documentId).GetSemanticModelAsync(cancellationToken);
@@ -203,6 +196,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
 
                 solution = await Renamer.RenameSymbolAsync(solution, fieldSymbol, newName, solution.Workspace.Options, cancellationToken).ConfigureAwait(false);
+                solution = await CleanSolutionAsync(solution, oldSolution, cancellationToken);
             }
 
             return solution;

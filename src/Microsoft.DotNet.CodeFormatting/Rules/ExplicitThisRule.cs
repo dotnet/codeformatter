@@ -38,7 +38,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var name = node.Name.Identifier.ValueText;
                 if (node.Expression != null &&
                     node.Expression.CSharpKind() == SyntaxKind.ThisExpression &&
-                    name.StartsWith("_", StringComparison.Ordinal) &&
                     IsPrivateField(node))
                 {
                     _addedAnnotations = true;

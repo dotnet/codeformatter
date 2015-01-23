@@ -67,7 +67,15 @@ namespace Microsoft.DotNet.CodeFormatting
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
-            
+
+            await SaveChanges(solution, originalSolution, cancellationToken);
+
+            watch.Stop();
+            Console.WriteLine("Total time {0}", watch.Elapsed);
+        }
+
+        private async Task SaveChanges(Solution solution, Solution originalSolution, CancellationToken cancellationToken)
+        {
             foreach (var projectChange in solution.GetChanges(originalSolution).GetProjectChanges())
             {
                 foreach (var documentId in projectChange.GetChangedDocuments())
@@ -76,6 +84,17 @@ namespace Microsoft.DotNet.CodeFormatting
                     var sourceText = await document.GetTextAsync(cancellationToken);
                     using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
                     {
+                        var encoding = sourceText.Encoding;
+
+                        // TODO: It seems like a bug that Encoding could change but it is definitely
+                        // happening.  Ex: ArrayBuilder.Enumerator.cs
+                        if (encoding == null)
+                        {
+                            var originalDocument = originalSolution.GetDocument(documentId);
+                            var originalSourceText = await originalDocument.GetTextAsync(cancellationToken);
+                            encoding = originalSourceText.Encoding;
+                        }
+
                         using (var writer = new StreamWriter(file, sourceText.Encoding))
                         {
                             sourceText.Write(writer, cancellationToken);
@@ -84,8 +103,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
-            watch.Stop();
-            Console.WriteLine("Total time {0}", watch.Elapsed);
         }
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
