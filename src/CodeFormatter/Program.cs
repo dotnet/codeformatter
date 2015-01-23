@@ -68,6 +68,7 @@ namespace CodeFormatter
         {
             var workspace = MSBuildWorkspace.Create();
             var engine = FormattingEngine.Create(ruleTypes, filenames);
+            engine.Verbose = true;
 
             string extension = Path.GetExtension(projectOrSolutionPath);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))

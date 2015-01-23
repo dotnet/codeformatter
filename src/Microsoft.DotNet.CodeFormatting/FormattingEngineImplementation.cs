@@ -25,6 +25,13 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
+        private bool _verbose;
+
+        public bool Verbose
+        {
+            get { return _verbose; }
+            set { _verbose = value; }
+        }
 
         [ImportingConstructor]
         public FormattingEngineImplementation(
@@ -103,26 +110,23 @@ namespace Microsoft.DotNet.CodeFormatting
             return await document.GetSyntaxRootAsync(cancellationToken);
         }
 
-        private void StartDocument(Document document, int depth = 1)
+        private void StartDocument()
         {
-            for (int i = 0; i < depth; i++)
-            {
-                Console.Write("  ");
-            }
-
-            Console.Write("Processing {0}", document.Name);
             _watch.Restart();
         }
 
-        private void EndDocument()
+        private void EndDocument(Document document)
         {
             _watch.Stop();
-            if (_watch.Elapsed.TotalSeconds > 1)
+            if (_verbose && _watch.Elapsed.TotalSeconds > 1)
             {
-                Console.WriteLine(" {0} seconds", _watch.Elapsed.TotalSeconds);
+                Console.WriteLine();
+                Console.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
             }
-
-            Console.WriteLine();
+            else
+            {
+                Console.Write(".");
+            }
         }
 
         /// <summary>
@@ -145,9 +149,9 @@ namespace Microsoft.DotNet.CodeFormatting
                     continue;
                 }
 
-                StartDocument(document);
+                StartDocument();
                 var newRoot = RunSyntaxPass(syntaxRoot);
-                EndDocument();
+                EndDocument(document);
 
                 if (newRoot != syntaxRoot)
                 {
@@ -155,6 +159,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
+            Console.WriteLine();
             return currentSolution;
         }
 
@@ -176,6 +181,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
             }
 
+            Console.WriteLine();
             return solution;
         }
 
@@ -192,9 +198,9 @@ namespace Microsoft.DotNet.CodeFormatting
                     continue;
                 }
 
-                StartDocument(document, depth: 2);
+                StartDocument();
                 var newRoot = await localSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
-                EndDocument();
+                EndDocument(document);
 
                 if (syntaxRoot != newRoot)
                 {
@@ -202,6 +208,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
+            Console.WriteLine();
             return currentSolution;
         }
 
@@ -213,6 +220,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
             }
 
+            Console.WriteLine();
             return solution;
         }
 
@@ -228,11 +236,12 @@ namespace Microsoft.DotNet.CodeFormatting
                     continue;
                 }
 
-                StartDocument(document, depth: 2);
+                StartDocument();
                 solution = await globalSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
-                EndDocument();
+                EndDocument(document);
             }
 
+            Console.WriteLine();
             return solution;
         }
     }
