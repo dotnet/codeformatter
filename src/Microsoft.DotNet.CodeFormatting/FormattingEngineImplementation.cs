@@ -108,7 +108,6 @@ namespace Microsoft.DotNet.CodeFormatting
                     }
                 }
             }
-
         }
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
