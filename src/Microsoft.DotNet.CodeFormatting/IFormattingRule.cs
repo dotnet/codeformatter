@@ -9,10 +9,10 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
-    // TODO: delete
+    // TODO: this is a hack.  Need to delete it 
     internal interface IFormattingRule
     {
-        Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken);
+
     }
 
     /// <summary>

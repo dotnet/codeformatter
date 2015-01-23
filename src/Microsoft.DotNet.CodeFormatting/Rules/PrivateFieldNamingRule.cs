@@ -18,7 +18,7 @@ using Microsoft.CodeAnalysis.Rename;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.PrivateFieldNamingRule)]
-    internal sealed class PrivateFieldNamingRule : IFormattingRule
+    internal sealed class PrivateFieldNamingRule : IGlobalSemanticFormattingRule
     {
         /// <summary>
         /// This will add an annotation to any private field that needs to be renamed.
@@ -159,27 +159,21 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
         }
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken)
         {
-            var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxRoot == null)
-            {
-                return document;
-            }
-
             int count;
             var newSyntaxRoot = PrivateFieldAnnotationsRewriter.AddAnnotations(syntaxRoot, out count);
 
             if (count == 0)
             {
-                return document;
+                return document.Project.Solution;
             }
 
             var documentId = document.Id;
             var solution = document.Project.Solution;
             solution = solution.WithDocumentSyntaxRoot(documentId, newSyntaxRoot);
             solution = await RenameFields(solution, documentId, count, cancellationToken);
-            return solution.GetDocument(documentId);
+            return solution;
         }
 
         private static async Task<Solution> RenameFields(Solution solution, DocumentId documentId, int count, CancellationToken cancellationToken)

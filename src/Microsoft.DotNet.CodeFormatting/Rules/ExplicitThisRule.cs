@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.Simplification;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.RemoveExplicitThisRule)]
-    public sealed class ExplicitThisRule : IFormattingRule
+    public sealed class ExplicitThisRule : ILocalSemanticFormattingRule
     {
         private sealed class ExplicitThisRewriter : CSharpSyntaxRewriter
         {
@@ -66,22 +66,17 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
         }
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public async Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-            {
-                return document;
-            }
-
             var rewriter = new ExplicitThisRewriter(document, cancellationToken);
             var newNode = rewriter.Visit(syntaxNode);
             if (!rewriter.AddedAnnotations)
             {
-                return document;
+                return syntaxNode;
             }
 
-            return await Simplifier.ReduceAsync(document.WithSyntaxRoot(newNode), cancellationToken: cancellationToken);
+            document = await Simplifier.ReduceAsync(document.WithSyntaxRoot(newNode), cancellationToken: cancellationToken);
+            return await document.GetSyntaxRootAsync(cancellationToken);
         }
     }
 }
