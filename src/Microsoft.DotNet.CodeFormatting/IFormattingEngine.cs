@@ -6,11 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     public interface IFormattingEngine
     {
+        ImmutableArray<string> CopyrightHeader { get; set; }
         bool Verbose { get; set; }
         Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project porject, CancellationToken cancellationToken);

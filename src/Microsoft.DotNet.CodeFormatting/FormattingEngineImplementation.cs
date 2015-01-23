@@ -20,12 +20,19 @@ namespace Microsoft.DotNet.CodeFormatting
     [Export(typeof(IFormattingEngine))]
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
+        private readonly Options _options;
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
         private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
         private bool _verbose;
+
+        public ImmutableArray<string> CopyrightHeader
+        {
+            get { return _options.CopyrightHeader; }
+            set { _options.CopyrightHeader = value; }
+        }
 
         public bool Verbose
         {
@@ -34,12 +41,14 @@ namespace Microsoft.DotNet.CodeFormatting
         }
 
         [ImportingConstructor]
-        public FormattingEngineImplementation(
+        internal FormattingEngineImplementation(
+            Options options,
             [ImportMany] IEnumerable<IFormattingFilter> filters,
             [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IOrderMetadata>> syntaxRules,
             [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IOrderMetadata>> localSemanticRules,
             [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IOrderMetadata>> globalSemanticRules)
         {
+            _options = options;
             _filters = filters;
             _syntaxRules = syntaxRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
             _localSemanticRules = localSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();

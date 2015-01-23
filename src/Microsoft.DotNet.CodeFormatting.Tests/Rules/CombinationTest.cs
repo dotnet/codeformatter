@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Xunit;
+using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
@@ -19,6 +20,11 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         static CombinationTest()
         {
             s_formattingEngine = (FormattingEngineImplementation)FormattingEngine.Create(Enumerable.Empty<string>(), Enumerable.Empty<string>());
+        }
+
+        public CombinationTest()
+        {
+            s_formattingEngine.CopyrightHeader = ImmutableArray.Create("", "// header");
         }
 
         protected override async Task<Document> RewriteDocumentAsync(Document document)
@@ -43,6 +49,8 @@ class C {
 }";
 
             var expected = @"
+// header
+
 internal class C
 {
     private int _field;
@@ -59,6 +67,7 @@ internal class C
         [Fact]
         public void FieldAssignment()
         {
+
             var text = @"
 class C {
     int field;
@@ -69,6 +78,8 @@ class C {
 }";
 
             var expected = @"
+// header
+
 internal class C
 {
     private int _field;
