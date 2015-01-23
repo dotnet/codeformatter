@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     public interface IFormattingEngine
     {
-        Task<bool> FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
-        Task<bool> FormatProjectAsync(Project porject, CancellationToken cancellationToken);
+        Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
+        Task FormatProjectAsync(Project porject, CancellationToken cancellationToken);
     }
 }

@@ -43,54 +43,40 @@ namespace Microsoft.DotNet.CodeFormatting
             _globalSemanticRules = globalSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
         }
 
-        public Task<bool> FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        public Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
         {
             var documentIds = solution.Projects.SelectMany(x => x.DocumentIds).ToList();
             return FormatAsync(solution.Workspace, documentIds, cancellationToken);
         }
 
-        public Task<bool> FormatProjectAsync(Project project, CancellationToken cancellationToken)
+        public Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
         {
             return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
         }
 
-        private async Task<bool> FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        private async Task FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            var solution = workspace.CurrentSolution;
-            var hasChanges = false;
-            var longRuleList = new List<Tuple<string, TimeSpan>>();
-
-            foreach (var id in documentIds)
+            var originalSolution = workspace.CurrentSolution;
+            var solution = originalSolution;
+            solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
+            solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
+            solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
+            
+            foreach (var projectChange in solution.GetChanges(originalSolution).GetProjectChanges())
             {
-                var document = solution.GetDocument(id);
-                var shouldBeProcessed = await ShouldBeProcessedAsync(document);
-                if (!shouldBeProcessed)
+                foreach (var documentId in projectChange.GetChangedDocuments())
                 {
-                    continue;
+                    var document = solution.GetDocument(documentId);
+                    var sourceText = await document.GetTextAsync(cancellationToken);
+                    using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
+                    {
+                        using (var writer = new StreamWriter(file, sourceText.Encoding))
+                        {
+                            sourceText.Write(writer, cancellationToken);
+                        }
+                    }
                 }
-
-                longRuleList.Clear();
-                var watch = new Stopwatch();
-                watch.Start();
-                Console.Write("Processing document: " + document.Name);
-                var newDocument = await RewriteDocumentAsync(document, longRuleList, cancellationToken);
-                hasChanges |= newDocument != document;
-                watch.Stop();
-                Console.WriteLine(" {0} seconds", watch.Elapsed.TotalSeconds);
-                foreach (var tuple in longRuleList)
-                {
-                    Console.WriteLine("\t{0} {1} seconds", tuple.Item1, tuple.Item2.TotalSeconds);
-                }
-
-                solution = newDocument.Project.Solution;
             }
-
-            if (workspace.TryApplyChanges(solution))
-            {
-                Console.WriteLine("Solution changes committed");
-            }
-
-            return hasChanges;
         }
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
@@ -105,31 +91,24 @@ namespace Microsoft.DotNet.CodeFormatting
             return true;
         }
 
-        private async Task<Document> RewriteDocumentAsync(Document document, List<Tuple<string, TimeSpan>> longRuleList, CancellationToken cancellationToken)
+        private async Task<SyntaxNode> GetSyntaxRootAndFilter(Document document, CancellationToken cancellationToken)
         {
-            var docText = await document.GetTextAsync();
-            var originalEncoding = docText.Encoding;
-            var watch = new Stopwatch();
-            foreach (var rule in _rules)
+            if (!await ShouldBeProcessedAsync(document))
             {
-                watch.Start();
-                document = await rule.ProcessAsync(document, cancellationToken);
-                watch.Stop();
-                var timeSpan = watch.Elapsed;
-                if (timeSpan.TotalSeconds > 1.0)
-                {
-                    longRuleList.Add(Tuple.Create(rule.GetType().Name, timeSpan));
-                }
-
-                watch.Reset();
+                return null;
             }
 
-            return await ChangeEncoding(document, originalEncoding);
+            return await document.GetSyntaxRootAsync(cancellationToken);
         }
 
-        private void StartDocument(Document document)
+        private void StartDocument(Document document, int depth = 1)
         {
-            Console.Write("\tProcessing {0}", document.Name);
+            for (int i = 0; i < depth; i++)
+            {
+                Console.Write("\t");
+            }
+
+            Console.Write("Processing {0}", document.Name);
             _watch.Restart();
         }
 
@@ -138,11 +117,19 @@ namespace Microsoft.DotNet.CodeFormatting
             _watch.Stop();
             if (_verbose && _watch.Elapsed.TotalSeconds > 1)
             {
-
+                Console.WriteLine(" {0} seconds", _watch.Elapsed.TotalSeconds);
             }
+
+            Console.WriteLine();
         }
 
-        private Task<Solution> FormatDocumentsSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        /// <summary>
+        /// Semantics is not involved in this pass at all.  It is just a straight modification of the 
+        /// parse tree so there are no issues about ensuring the version of <see cref="SemanticModel"/> and
+        /// the <see cref="SyntaxNode"/> line up.  Hence we do this by iteraning every <see cref="Document"/> 
+        /// and processing all rules against them at once 
+        /// </summary>
+        private async Task<Solution> RunSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             Console.WriteLine("Syntax Pass");
 
@@ -150,20 +137,64 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var documentId in documentIds)
             {
                 var document = originalSolution.GetDocument(documentId);
-
-                Console.Write("\tProcessing {0}", document.Name);
-
-                watch.Restart();
-                var newRoot = await documentFunc(document);
-                watch.Stop();
-
-                if (_verbose && watch.Elapsed.TotalSeconds > 1)
+                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                if (syntaxRoot == null)
                 {
-                    Console.Write(" {0} seconds", watch.Elapsed.TotalSeconds);
+                    continue;
                 }
-                Console.WriteLine();
 
-                if (newRoot != null)
+                StartDocument(document);
+                var newRoot = RunSyntaxPass(syntaxRoot);
+                EndDocument();
+
+                if (newRoot != syntaxRoot)
+                {
+                    currentSolution = currentSolution.WithDocumentSyntaxRoot(document.Id, newRoot); 
+                }
+            }
+
+            return currentSolution;
+        }
+
+        private SyntaxNode RunSyntaxPass(SyntaxNode root)
+        {
+            foreach (var rule in _syntaxRules)
+            {
+                root = rule.Process(root);
+            }
+
+            return root;
+        }
+
+        private async Task<Solution> RunLocalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        {
+            Console.WriteLine("Local Semantic Pass");
+            foreach (var localSemanticRule in _localSemanticRules)
+            {
+                solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
+            }
+
+            return solution;
+        }
+
+        private async Task<Solution> RunLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, ILocalSemanticFormattingRule localSemanticRule, CancellationToken cancellationToken)
+        {
+            Console.WriteLine("\t{0}", localSemanticRule.GetType().Name);
+            var currentSolution = originalSolution;
+            foreach (var documentId in documentIds)
+            {
+                var document = originalSolution.GetDocument(documentId);
+                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                if (syntaxRoot == null)
+                {
+                    continue;
+                }
+
+                StartDocument(document, depth: 2);
+                var newRoot = await localSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
+                EndDocument();
+
+                if (syntaxRoot != newRoot)
                 {
                     currentSolution = currentSolution.WithDocumentSyntaxRoot(documentId, newRoot);
                 }
@@ -172,57 +203,40 @@ namespace Microsoft.DotNet.CodeFormatting
             return currentSolution;
         }
 
-        private async Task<Solution> FormatDocumentsLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            Console.WriteLine("Local Semantic Pass");
-            Func<Document, Task<SyntaxTree> documentFunc = async(documentFunc) =>
+            Console.WriteLine("Global Semantic Pass");
+            foreach (var globalSemanticRule in _globalSemanticRules)
+            {
+                solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
+            }
+
+            return solution;
+        }
+
+        private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, IGlobalSemanticFormattingRule globalSemanticRule, CancellationToken cancellationToken)
+        {
+            Console.WriteLine("\t{0}", globalSemanticRule.GetType().Name);
+            foreach (var documentId in documentIds)
+            {
+                var document = solution.GetDocument(documentId);
+                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                if (syntaxRoot == null)
                 {
-                    var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken);
-                    if (syntaxRoot == null)
-                    {
-                        return null;
-                    }
+                    continue;
+                }
 
-                    return FormatLocalSemantic(document, syntaxRoot);
-                };
+                StartDocument(document, depth: 2);
+                var newRoot = await globalSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
+                EndDocument();
 
-            return FormatDocumentsCore(originalSolution, documentIds, documentFunc, cancellationToken);
-        }
-
-        private async Task<Solution> FormatDocumentsCore(
-            Solution originalSolution, 
-            IReadOnlyList<DocumentId> documentIds, 
-            Func<Document, Task<SyntaxTree> documentFunc,
-            CancellationToken cancellationToken)
-        {
-        }
-
-        private Task<SyntaxTree> FormatSyntaxTree(Document document, SyntaxNode syntaxRoot)
-        {
-            foreach (var syntaxRule in _syntaxRules)
-            {
-                syntaxRoot = syntaxRule.Process(syntaxRoot);
+                if (syntaxRoot != newRoot)
+                {
+                    solution = solution.WithDocumentSyntaxRoot(documentId, newRoot);
+                }
             }
 
-            return Task.FromResult(root);
-        }
-
-        private async Task<SyntaxTree> FormatLocalSemantic(Document originalDocument, SyntaxNode originalSyntaxRoot)
-        {
-            var currentSyntaxRoot = originalSyntaxRoot;
-            foreach (var localSemanticRule in _localSemanticRules)
-            {
-                currentSyntaxRoot = await localSemanticRule.ProcessAsync(originalDocument, originalSyntaxRoot, currentSyntaxRoot)
-            }
-
-            return currentSyntaxRoot;
-        }
-
-        private async Task<Document> ChangeEncoding(Document document, Encoding encoding)
-        {
-            var text = await document.GetTextAsync();
-            var newText = SourceText.From(text.ToString(), encoding);
-            return document.WithText(newText);
+            return solution;
         }
     }
 }

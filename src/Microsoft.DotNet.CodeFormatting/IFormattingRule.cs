@@ -29,9 +29,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// </summary>
     internal interface ILocalSemanticFormattingRule
     {
-        Task Record(Document document, SyntaxRoot  )
-
-        Task<SyntaxNode> ProcessAsync(Document originalDocument, SyntaxNode originalSyntaxRoot, SyntaxNode currentSyntaxRoot, CancellationToken cancellationToken);
+        Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -39,6 +37,6 @@ namespace Microsoft.DotNet.CodeFormatting
     /// </summary>
     internal interface IGlobalSemanticFormattingRule
     {
-        Task<Solution> ProcessAsync(Solution solution, CancellationToken cancellationToken);
+        Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
     }
 }
