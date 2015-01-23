@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.CodeFormatting
                             encoding = originalSourceText.Encoding;
                         }
 
-                        using (var writer = new StreamWriter(file, sourceText.Encoding))
+                        using (var writer = new StreamWriter(file, encoding))
                         {
                             sourceText.Write(writer, cancellationToken);
                         }
