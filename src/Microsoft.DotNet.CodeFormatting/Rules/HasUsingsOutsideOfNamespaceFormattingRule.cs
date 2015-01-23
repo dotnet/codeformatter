@@ -14,17 +14,15 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.HasUsingsOutsideOfNamespaceFormattingRule)]
-    internal sealed class HasUsingsOutsideOfNamespaceFormattingRule : IFormattingRule
+    internal sealed class HasUsingsOutsideOfNamespaceFormattingRule : ISyntaxFormattingRule
     {
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode syntaxNode)
         {
-            var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
-
+            var root = syntaxNode as CompilationUnitSyntax;
             if (root == null)
-                return document;
+                return syntaxNode;
 
             var newRoot = root;
-
             while (true)
             {
                 var namespaceWithUsings = newRoot.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault(n => n.Usings.Any());
@@ -34,7 +32,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 // Moving a using with an alias out of a namespace is an operation which requires
                 // semantic knowledge to get correct.
                 if (namespaceWithUsings.Usings.Any(x => x.Alias != null))
-                    return document;
+                    return syntaxNode;
 
                 // Remove nested usings
 
@@ -67,7 +65,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 newRoot = newRoot.AddUsings(usings);
             }
 
-            return document.WithSyntaxRoot(newRoot);
+            return newRoot;
         }
     }
 }

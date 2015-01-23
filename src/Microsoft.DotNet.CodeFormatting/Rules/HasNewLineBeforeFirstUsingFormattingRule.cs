@@ -16,19 +16,15 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.HasNewLineBeforeFirstUsingFormattingRule)]
-    internal sealed class HasNewLineBeforeFirstUsingFormattingRule : IFormattingRule
+    internal sealed class HasNewLineBeforeFirstUsingFormattingRule : ISyntaxFormattingRule
     {
         private const string FormatError = "Could not format using";
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode syntaxRoot)
         {
-            var syntaxRoot = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxRoot == null)
-                return document;
-
             var firstUsing = syntaxRoot.DescendantNodesAndSelf().OfType<UsingDirectiveSyntax>().FirstOrDefault();
             if (firstUsing == null)
-                return document;
+                return syntaxRoot;
 
             IEnumerable<SyntaxTrivia> newTrivia = Enumerable.Empty<SyntaxTrivia>();
 
@@ -39,9 +35,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var disabledUsingSpan = trivia.FirstOrDefault(t => t.CSharpKind() == SyntaxKind.DisabledTextTrivia && t.ToFullString().Contains("using")).Span;
                 if (!disabledUsingSpan.IsEmpty)
                 {
-                    var line = syntaxRoot.SyntaxTree.GetLineSpan(disabledUsingSpan, cancellationToken).StartLinePosition.Line + 1;
-                    FormatError.WriteConsoleError(line, document.Name);
-                    return document;
+                    Console.WriteLine("!!!Error with using");
+                    return syntaxRoot;
                 }
 
                 if (SyntaxKind.EndOfLineTrivia == trivia.Last().CSharpKind())
@@ -59,7 +54,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
             }
 
-            return document.WithSyntaxRoot(syntaxRoot.ReplaceNode(firstUsing, firstUsing.WithLeadingTrivia(newTrivia)));
+            return syntaxRoot.ReplaceNode(firstUsing, firstUsing.WithLeadingTrivia(newTrivia));
         }
 
         private IEnumerable<SyntaxTrivia> GetLeadingTriviaWithEndNewLines(IEnumerable<SyntaxTrivia> trivia)

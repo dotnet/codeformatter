@@ -13,19 +13,13 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.BraceNewLineRule)]
-    internal sealed class BraceNewLineRule : IFormattingRule
+    internal sealed class BraceNewLineRule : ISyntaxFormattingRule
     {
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode syntaxNode)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken);
-            if (syntaxNode == null)
-            {
-                return document;
-            }
-
             syntaxNode = FixOpenBraces(syntaxNode);
             syntaxNode = FixCloseBraces(syntaxNode);
-            return document.WithSyntaxRoot(syntaxNode);
+            return syntaxNode;
         }
 
         private static SyntaxNode FixOpenBraces(SyntaxNode syntaxNode)

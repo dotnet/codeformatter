@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
-    internal sealed class HasNoCustomCopyrightHeaderFormattingRule : IFormattingRule
+    internal sealed class HasNoCustomCopyrightHeaderFormattingRule : ISyntaxFormattingRule
     {
         private static string RulerMarker { get; set; }
         private static string StartMarker { get; set; }
@@ -26,26 +26,21 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         private const string FileSyntaxError = "There should be exactly 3 lines in CopyrightHeader.md.";
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode syntaxNode)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-                return document;
-
             // SetHeaders
             if (!SetHeaders())
-                return document;
+                return syntaxNode;
 
             var triviaList = syntaxNode.GetLeadingTrivia();
 
             SyntaxTrivia start;
             SyntaxTrivia end;
             if (!TryGetStartAndEndOfXmlHeader(triviaList, out start, out end))
-                return document;
+                return syntaxNode;
 
             var filteredList = Filter(triviaList, start, end);
-            var newSyntaxNode = syntaxNode.WithLeadingTrivia(filteredList);
-            return document.WithSyntaxRoot(newSyntaxNode);
+            return syntaxNode.WithLeadingTrivia(filteredList);
         }
 
         private static IEnumerable<SyntaxTrivia> Filter(SyntaxTriviaList triviaList, SyntaxTrivia start, SyntaxTrivia end)

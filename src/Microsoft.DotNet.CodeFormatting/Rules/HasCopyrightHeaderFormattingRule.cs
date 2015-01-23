@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.HasCopyrightHeaderFormattingRule)]
-    internal sealed class HasCopyrightHeaderFormattingRule : IFormattingRule
+    internal sealed class HasCopyrightHeaderFormattingRule : ISyntaxFormattingRule
     {
         private static readonly string[] s_copyrightHeader =
         {
@@ -22,17 +22,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
         };
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode syntaxNode)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-                return document;
-
             if (HasCopyrightHeader(syntaxNode))
-                return document;
+                return syntaxNode;
 
-            var newNode = AddCopyrightHeader(syntaxNode);
-            return document.WithSyntaxRoot(newNode);
+            return AddCopyrightHeader(syntaxNode);
         }
 
         private static bool HasCopyrightHeader(SyntaxNode syntaxNode)
@@ -46,7 +41,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                                   .SequenceEqual(s_copyrightHeader);
         }
 
-        private static SyntaxNode AddCopyrightHeader(CSharpSyntaxNode syntaxNode)
+        private static SyntaxNode AddCopyrightHeader(SyntaxNode syntaxNode)
         {
             var newTrivia = GetCopyrightHeader().Concat(syntaxNode.GetLeadingTrivia());
             return syntaxNode.WithLeadingTrivia(newTrivia);

@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.ExplicitVisibilityRule)]
-    internal sealed class ExplicitVisibilityRule : IFormattingRule
+    internal sealed class ExplicitVisibilityRule : ILocalSemanticFormattingRule
     {
         private sealed class VisibilityRewriter : CSharpSyntaxRewriter
         {
@@ -235,17 +235,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
         }
 
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
-            var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken) as CSharpSyntaxNode;
-            if (syntaxNode == null)
-            {
-                return document;
-            }
-
             var rewriter = new VisibilityRewriter(document, cancellationToken);
             var newNode = rewriter.Visit(syntaxNode);
-            return document.WithSyntaxRoot(newNode);
+            return Task.FromResult(newNode);
         }
     }
 }

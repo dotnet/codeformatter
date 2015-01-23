@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.HasNoIllegalHeadersFormattingRule)]
-    internal sealed class HasNoIllegalHeadersFormattingRule : IFormattingRule
+    internal sealed class HasNoIllegalHeadersFormattingRule 
     {
         // We are going to replace this header with the actual filename of the document being processed
         private const string FileNameIllegalHeader = "<<<filename>>>";

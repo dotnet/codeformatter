@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     // 
     // I left it in because in case we want to have batch support for it in the future.
     // 
-    internal sealed class IsSimplifiedFormattingRule : IFormattingRule
+    internal sealed class IsSimplifiedFormattingRule 
     {
         public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
         {

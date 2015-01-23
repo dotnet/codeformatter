@@ -21,23 +21,19 @@ namespace Microsoft.DotNet.CodeFormatting
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
         private readonly IEnumerable<IFormattingFilter> _filters;
-        private readonly IEnumerable<IFormattingRule> _rules;
         private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
         private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
-        private readonly bool _verbose;
         private readonly Stopwatch _watch = new Stopwatch();
 
         [ImportingConstructor]
         public FormattingEngineImplementation(
             [ImportMany] IEnumerable<IFormattingFilter> filters,
-            [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> rules,
             [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IOrderMetadata>> syntaxRules,
             [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IOrderMetadata>> localSemanticRules,
             [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IOrderMetadata>> globalSemanticRules)
         {
             _filters = filters;
-            _rules = rules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
             _syntaxRules = syntaxRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
             _localSemanticRules = localSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
             _globalSemanticRules = globalSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value);
@@ -115,7 +111,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private void EndDocument()
         {
             _watch.Stop();
-            if (_verbose && _watch.Elapsed.TotalSeconds > 1)
+            if (_watch.Elapsed.TotalSeconds > 1)
             {
                 Console.WriteLine(" {0} seconds", _watch.Elapsed.TotalSeconds);
             }
@@ -227,13 +223,8 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
 
                 StartDocument(document, depth: 2);
-                var newRoot = await globalSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
+                solution = await globalSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
                 EndDocument();
-
-                if (syntaxRoot != newRoot)
-                {
-                    solution = solution.WithDocumentSyntaxRoot(documentId, newRoot);
-                }
             }
 
             return solution;

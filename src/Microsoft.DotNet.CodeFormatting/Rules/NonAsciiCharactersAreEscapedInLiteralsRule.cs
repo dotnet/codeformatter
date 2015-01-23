@@ -16,18 +16,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [RuleOrder(RuleOrder.NonAsciiChractersAreEscapedInLiterals)]
-    internal sealed class NonAsciiCharactersAreEscapedInLiterals : IFormattingRule
+    internal sealed class NonAsciiCharactersAreEscapedInLiterals : ISyntaxFormattingRule
     {
-        public async Task<Document> ProcessAsync(Document document, CancellationToken cancellationToken)
+        public SyntaxNode Process(SyntaxNode root)
         {
-            var root = await document.GetSyntaxRootAsync(cancellationToken) as CompilationUnitSyntax;
-
-            if (root == null)
-                return document;
-
-            var newRoot = UnicodeCharacterEscapingSyntaxRewriter.Rewriter.Visit(root);
-
-            return document.WithSyntaxRoot(newRoot);
+            return UnicodeCharacterEscapingSyntaxRewriter.Rewriter.Visit(root);
         }
 
         /// <summary>
