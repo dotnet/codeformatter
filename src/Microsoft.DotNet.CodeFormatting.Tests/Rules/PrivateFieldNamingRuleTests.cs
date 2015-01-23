@@ -113,5 +113,36 @@ class C3
 
             Verify(text, expected, runFormatter: true);
         }
+
+        /// <summary>
+        /// If the name is pascal cased make it camel cased during the rewrite.  If it is not
+        /// pascal cased then do not change the casing.
+        /// </summary>
+        [Fact]
+        public void NameCasingField()
+        {
+            var text = @"
+class C
+{
+    int Field;
+    static int Other;
+    int GCField;
+    static int GCOther;
+}
+";
+
+            var expected = @"
+class C
+{
+    int _field;
+    static int s_other;
+    int _GCField;
+    static int s_GCOther;
+}
+";
+
+            Verify(text, expected, runFormatter: false);
+
+        }
     }
 }

@@ -215,6 +215,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return fieldSymbol.Name;
             }
 
+            if (name.Length > 2 && char.IsUpper(name[0]) && char.IsLower(name[1]))
+            {
+                name = char.ToLower(name[0]) + name.Substring(1);
+            }
+
             if (fieldSymbol.IsStatic)
             {
                 // Check for ThreadStatic private fields.
