@@ -9,16 +9,10 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
-    // TODO: this is a hack.  Need to delete it 
-    internal interface IFormattingRule
-    {
-
-    }
-
     /// <summary>
     /// Rules which need no semantic information and operate on parse trees only.  
     /// </summary>
-    internal interface ISyntaxFormattingRule : IFormattingRule
+    internal interface ISyntaxFormattingRule
     {
         SyntaxNode Process(SyntaxNode syntaxRoot);
     }
@@ -28,7 +22,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// used for rules that need to see a <see cref="Document"/> and <see cref="SyntaxNode"/> which
     /// are in sync with each other,
     /// </summary>
-    internal interface ILocalSemanticFormattingRule : IFormattingRule
+    internal interface ILocalSemanticFormattingRule
     {
         Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
     }
@@ -36,7 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// <summary>
     /// Rules which can affect more than the local document
     /// </summary>
-    internal interface IGlobalSemanticFormattingRule : IFormattingRule
+    internal interface IGlobalSemanticFormattingRule 
     {
         Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
     }

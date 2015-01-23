@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.BraceNewLineRule)]
+    [SyntaxRuleOrder(SyntaxRuleOrder.BraceNewLineRule)]
     internal sealed class BraceNewLineRule : ISyntaxFormattingRule
     {
         public SyntaxNode Process(SyntaxNode syntaxNode)

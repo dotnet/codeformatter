@@ -17,7 +17,7 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.PrivateFieldNamingRule)]
+    [GlobalSemanticRuleOrder(GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
     internal sealed class PrivateFieldNamingRule : IGlobalSemanticFormattingRule
     {
         /// <summary>

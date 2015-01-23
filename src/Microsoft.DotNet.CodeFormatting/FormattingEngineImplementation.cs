@@ -36,14 +36,14 @@ namespace Microsoft.DotNet.CodeFormatting
         [ImportingConstructor]
         public FormattingEngineImplementation(
             [ImportMany] IEnumerable<IFormattingFilter> filters,
-            [ImportMany] IEnumerable<Lazy<IFormattingRule, IOrderMetadata>> allRules)
+            [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IOrderMetadata>> syntaxRules,
+            [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IOrderMetadata>> localSemanticRules,
+            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IOrderMetadata>> globalSemanticRules)
         {
             _filters = filters;
-            var rulesSorted = allRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
-
-            _syntaxRules = rulesSorted.OfType<ISyntaxFormattingRule>().ToList();
-            _localSemanticRules = rulesSorted.OfType<ILocalSemanticFormattingRule>().ToList();
-            _globalSemanticRules = rulesSorted.OfType<IGlobalSemanticFormattingRule>().ToList();
+            _syntaxRules = syntaxRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
+            _localSemanticRules = localSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
+            _globalSemanticRules = globalSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
         }
 
         public Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)

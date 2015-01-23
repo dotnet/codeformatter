@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasNewLineBeforeFirstNamespaceFormattingRule)]
+    [SyntaxRuleOrder(SyntaxRuleOrder.HasNewLineBeforeFirstNamespaceFormattingRule)]
     internal sealed class HasNewLineBeforeFirstNamespaceFormattingRule : ISyntaxFormattingRule
     {
         public SyntaxNode Process(SyntaxNode syntaxRoot)

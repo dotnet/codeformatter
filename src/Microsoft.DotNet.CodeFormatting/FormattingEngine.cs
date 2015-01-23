@@ -25,7 +25,9 @@ namespace Microsoft.DotNet.CodeFormatting
             var filteredCatalog = new FilteredCatalog(catalog, cpd =>
             {
                 if (cpd.ExportDefinitions.Any(em =>
-                    em.ContractName == AttributedModelServices.GetContractName(typeof(IFormattingRule)) ||
+                    em.ContractName == AttributedModelServices.GetContractName(typeof(ISyntaxFormattingRule)) ||
+                    em.ContractName == AttributedModelServices.GetContractName(typeof(ILocalSemanticFormattingRule)) ||
+                    em.ContractName == AttributedModelServices.GetContractName(typeof(IGlobalSemanticFormattingRule)) ||
                     em.ContractName == AttributedModelServices.GetContractName(typeof(IFormattingFilter))))
                 {
                     object ruleType;

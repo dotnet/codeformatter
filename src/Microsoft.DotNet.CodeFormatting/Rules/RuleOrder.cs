@@ -10,20 +10,31 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     // Please keep these values sorted by number, not rule name.    
-    internal static class RuleOrder
+    internal static class SyntaxRuleOrder
     {
         public const int HasNoCustomCopyrightHeaderFormattingRule = 1;
-        public const int HasNoIllegalHeadersFormattingRule = 2;
-        public const int HasCopyrightHeaderFormattingRule = 3;
-        public const int HasUsingsOutsideOfNamespaceFormattingRule = 4;
-        public const int HasNewLineBeforeFirstUsingFormattingRule = 5;
-        public const int HasNewLineBeforeFirstNamespaceFormattingRule = 6;
-        public const int BraceNewLineRule = 7;
-        public const int ExplicitVisibilityRule = 8;
-        public const int PrivateFieldNamingRule = 9;
-        public const int IsFormattedFormattingRule = 10;
-        public const int UsesXunitForTestsFormattingRule = 11;
-        public const int NonAsciiChractersAreEscapedInLiterals = 12;
-        public const int RemoveExplicitThisRule = 13;
+        public const int HasCopyrightHeaderFormattingRule = 2;
+        public const int HasUsingsOutsideOfNamespaceFormattingRule = 3;
+        public const int HasNewLineBeforeFirstUsingFormattingRule = 4;
+        public const int HasNewLineBeforeFirstNamespaceFormattingRule = 5;
+        public const int BraceNewLineRule = 6;
+        public const int NonAsciiChractersAreEscapedInLiterals = 7;
+    }
+
+    // Please keep these values sorted by number, not rule name.    
+    internal static class LocalSemanticRuleOrder
+    {
+        public const int HasNoIllegalHeadersFormattingRule = 1;
+        public const int ExplicitVisibilityRule = 2;
+        public const int IsFormattedFormattingRule = 3;
+        public const int RemoveExplicitThisRule = 4;
+    }
+
+    // Please keep these values sorted by number, not rule name.    
+    internal static class GlobalSemanticRuleOrder
+    {
+        public const int PrivateFieldNamingRule = 1;
+        public const int UsesXunitForTestsFormattingRule = 2;
+
     }
 }

@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [RuleOrder(RuleOrder.HasNewLineBeforeFirstUsingFormattingRule)]
+    [SyntaxRuleOrder(SyntaxRuleOrder.HasNewLineBeforeFirstUsingFormattingRule)]
     internal sealed class HasNewLineBeforeFirstUsingFormattingRule : ISyntaxFormattingRule
     {
         private const string FormatError = "Could not format using";
