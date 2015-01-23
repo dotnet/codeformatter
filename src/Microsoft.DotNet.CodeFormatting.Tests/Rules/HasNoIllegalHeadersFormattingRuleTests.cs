@@ -1,13 +1,19 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class HasNoIllegalHeadersFormattingRuleTests : CodeFormattingTestBase
+    public class HasNoIllegalHeadersFormattingRuleTests : LocalSemanticRuleTestBase
     {
+        internal override ILocalSemanticFormattingRule Rule
+        {
+            get { return new Rules.HasNoIllegalHeadersFormattingRule(); }
+        }
+
         [Fact]
         public void TestHasNoIllegalHeadersFormattingRule01()
         {
@@ -243,11 +249,6 @@ using System;
 using System;
 ";
             Verify(text, expected);
-        }
-
-        internal override IFormattingRule GetFormattingRule()
-        {
-            return new Rules.HasNoIllegalHeadersFormattingRule();
         }
     }
 }

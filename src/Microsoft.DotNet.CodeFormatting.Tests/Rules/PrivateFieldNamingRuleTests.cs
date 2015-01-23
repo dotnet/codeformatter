@@ -5,11 +5,11 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class PrivateFieldNamingRuleTests : CodeFormattingTestBase
+    public class PrivateFieldNamingRuleTests : GlobalSemanticRuleTestBase
     {
-        internal override IFormattingRule GetFormattingRule()
+        internal override IGlobalSemanticFormattingRule Rule
         {
-            return new Rules.PrivateFieldNamingRule();
+            get { return new Rules.PrivateFieldNamingRule(); }
         }
 
         [Fact]

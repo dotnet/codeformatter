@@ -7,11 +7,11 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public sealed class ExplicitThisRuleTests : CodeFormattingTestBase
+    public sealed class ExplicitThisRuleTests : LocalSemanticRuleTestBase
     {
-        internal override IFormattingRule GetFormattingRule()
+        internal override ILocalSemanticFormattingRule Rule
         {
-            return new Rules.ExplicitThisRule();
+            get { return new Rules.ExplicitThisRule(); }
         }
 
         [Fact]
@@ -22,7 +22,7 @@ class C1
 {
     int _field1;
     string _field2;
-    string field3;
+    internal string field3;
 
     void Use(int i) { } 
 
@@ -43,7 +43,7 @@ class C1
 {
     int _field1;
     string _field2;
-    string field3;
+    internal string field3;
 
     void Use(int i) { } 
 
@@ -69,7 +69,7 @@ class C1
 {
     int _field1;
     string _field2;
-    string field3;
+    internal string field3;
 
     void M()
     {
@@ -85,7 +85,7 @@ class C1
 {
     int _field1;
     string _field2;
-    string field3;
+    internal string field3;
 
     void M()
     {

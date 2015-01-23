@@ -1,12 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class HasNewLineBeforeFirstNamespaceFormattingRuleTests : CodeFormattingTestBase
+    public class HasNewLineBeforeFirstNamespaceFormattingRuleTests : SyntaxRuleTestBase
     {
+        internal override ISyntaxFormattingRule Rule
+        {
+            get { return new Rules.HasNewLineBeforeFirstNamespaceFormattingRule(); }
+        }
+
         [Fact]
         public void TestNewLineBeforeFirstNamespace01()
         {
@@ -85,11 +91,6 @@ namespace N { }
 namespace N { }
 ";
             Verify(text, expected);
-        }
-
-        internal override IFormattingRule GetFormattingRule()
-        {
-            return new Rules.HasNewLineBeforeFirstNamespaceFormattingRule();
         }
     }
 }

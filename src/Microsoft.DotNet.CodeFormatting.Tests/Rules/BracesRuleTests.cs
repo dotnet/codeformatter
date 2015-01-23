@@ -1,15 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class BraceNewLineTests : CodeFormattingTestBase
+    public class BraceNewLineTests : SyntaxRuleTestBase
     {
-        internal override IFormattingRule GetFormattingRule()
+        internal override ISyntaxFormattingRule Rule
         {
-            return new Rules.BraceNewLineRule();
+            get { return new Rules.BraceNewLineRule(); }
         }
 
         [Fact]

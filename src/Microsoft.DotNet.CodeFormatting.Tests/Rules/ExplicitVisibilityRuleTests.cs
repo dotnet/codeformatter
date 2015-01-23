@@ -10,11 +10,11 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public sealed class ExplicitVisibilityRuleTests : CodeFormattingTestBase
+    public sealed class ExplicitVisibilityRuleTests : LocalSemanticRuleTestBase
     {
-        internal override IFormattingRule GetFormattingRule()
+        internal override ILocalSemanticFormattingRule Rule
         {
-            return new Rules.ExplicitVisibilityRule();
+            get { return new Rules.ExplicitVisibilityRule(); }
         }
 
         [Fact]

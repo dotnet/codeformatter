@@ -11,8 +11,13 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public class UsesXunitForTestsFormattingRuleTests : CodeFormattingTestBase
+    public class UsesXunitForTestsFormattingRuleTests : GlobalSemanticRuleTestBase
     {
+        internal override IGlobalSemanticFormattingRule Rule
+        {
+            get { return new Rules.UsesXunitForTestsFormattingRule(); }
+        }
+
         [Fact]
         public void TestUpdatesUsingStatements()
         {
@@ -199,11 +204,6 @@ namespace System.Composition.UnitTests
                     s_MSTestReference,
                     s_XunitReference
                 });
-        }
-
-        internal override IFormattingRule GetFormattingRule()
-        {
-            return new Rules.UsesXunitForTestsFormattingRule();
         }
     }
 }
