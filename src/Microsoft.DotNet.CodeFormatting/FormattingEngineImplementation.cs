@@ -112,6 +112,18 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<bool> ShouldBeProcessedAsync(Document document)
         {
+            if (document.FilePath != null)
+            {
+                var fileInfo = new FileInfo(document.FilePath);
+                if (!fileInfo.Exists || fileInfo.IsReadOnly)
+                {
+                    Console.WriteLine("warning: skipping document '{0}' because it {1}.",
+                        document.FilePath,
+                        fileInfo.IsReadOnly ? "is read-only" : "does not exist");
+                    return false;
+                }
+            }
+
             foreach (var filter in _filters)
             {
                 var shouldBeProcessed = await filter.ShouldBeProcessedAsync(document);
@@ -177,7 +189,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
                 if (newRoot != syntaxRoot)
                 {
-                    currentSolution = currentSolution.WithDocumentSyntaxRoot(document.Id, newRoot); 
+                    currentSolution = currentSolution.WithDocumentSyntaxRoot(document.Id, newRoot);
                 }
             }
 
