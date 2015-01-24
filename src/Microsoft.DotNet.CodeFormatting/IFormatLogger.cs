@@ -31,8 +31,10 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public void WriteErrorLine(string format, params object[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("Error: ");
             Console.WriteLine(format, args);
+            Console.ResetColor();
         }
 
         public void WriteLine()
