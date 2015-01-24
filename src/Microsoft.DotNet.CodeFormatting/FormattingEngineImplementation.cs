@@ -105,18 +105,12 @@ namespace Microsoft.DotNet.CodeFormatting
                     var sourceText = await document.GetTextAsync(cancellationToken);
                     using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
                     {
-                        var encoding = sourceText.Encoding;
+                        // The encoding of the file can change during the rewrite.  Make sure to save with the
+                        // original encoding
+                        var originalDocument = originalSolution.GetDocument(documentId);
+                        var originalSourceText = await originalDocument.GetTextAsync(cancellationToken);
 
-                        // TODO: It seems like a bug that Encoding could change but it is definitely
-                        // happening.  Ex: ArrayBuilder.Enumerator.cs
-                        if (encoding == null)
-                        {
-                            var originalDocument = originalSolution.GetDocument(documentId);
-                            var originalSourceText = await originalDocument.GetTextAsync(cancellationToken);
-                            encoding = originalSourceText.Encoding;
-                        }
-
-                        using (var writer = new StreamWriter(file, encoding))
+                        using (var writer = new StreamWriter(file, originalSourceText.Encoding))
                         {
                             sourceText.Write(writer, cancellationToken);
                         }

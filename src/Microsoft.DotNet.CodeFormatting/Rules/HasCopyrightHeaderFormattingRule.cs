@@ -26,6 +26,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
         public SyntaxNode Process(SyntaxNode syntaxNode)
         {
+            if (_options.CopyrightHeader.IsDefaultOrEmpty)
+            {
+                return syntaxNode;
+            }
+
             if (HasCopyrightHeader(syntaxNode))
                 return syntaxNode;
 

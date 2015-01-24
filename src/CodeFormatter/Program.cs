@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -32,13 +33,15 @@ namespace CodeFormatter
                 return -1;
             }
 
-            List<string> ruleTypes = new List<string>();
-            List<string> filenames = new List<string>();
+            var ruleTypes = new List<string>();
+            var filenames = new List<string>();
+            var disableCopyright = false;
+            var comparer = StringComparer.OrdinalIgnoreCase;
 
             for (int i = 1; i < args.Length; i++)
             {
                 string arg = args[i];
-                if (arg.Equals("/file", StringComparison.InvariantCultureIgnoreCase))
+                if (comparer.Equals(arg, "/file"))
                 {
                     if (i + 1 < args.Length)
                     {
@@ -47,28 +50,35 @@ namespace CodeFormatter
                         i++;
                     }
                 }
+                else if (comparer.Equals(arg, "/nocopyright"))
+                {
+                    disableCopyright = true;
+                }
                 else
                 {
                     ruleTypes.Add(arg);
                 }
             }
 
-
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-            RunAsync(projectOrSolutionPath, ruleTypes, filenames, ct).Wait(ct);
+            RunAsync(projectOrSolutionPath, ruleTypes, filenames, disableCopyright, ct).Wait(ct);
             Console.WriteLine("Completed formatting.");
             return 0;
         }
 
-        private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, CancellationToken cancellationToken)
+        private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, bool disableCopright, CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
             var engine = FormattingEngine.Create(ruleTypes, filenames);
             engine.Verbose = true;
+            if (disableCopright)
+            {
+                engine.CopyrightHeader = ImmutableArray<string>.Empty;
+            }
 
             string extension = Path.GetExtension(projectOrSolutionPath);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
