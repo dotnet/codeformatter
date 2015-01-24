@@ -34,6 +34,12 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _options.CopyrightHeader = value; }
         }
 
+        public ImmutableArray<string[]> PreprocessorConfigurations
+        {
+            get { return _options.PreprocessorConfigurations; }
+            set { _options.PreprocessorConfigurations = value; }
+        }
+
         public IFormatLogger FormatLogger
         {
             get { return _options.FormatLogger; }
