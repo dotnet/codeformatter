@@ -122,7 +122,7 @@ class S
         }
 
         [Fact]
-        public void TestNoNewLineBeforeEndBrace04()
+        public void TestEmptyBraceWhitespaceAfterOpen()
         {
             var text = @"
 class S 
@@ -133,6 +133,48 @@ class S
             var expected = @"
 class S
 {
+}";
+            Verify(text, expected);
+        }
+
+        [Fact]
+        public void TestEmptyBraceNoWhitespaceAfterOpen()
+        {
+            var text = @"
+class S 
+{
+    
+
+}";
+            var expected = @"
+class S
+{
+}";
+            Verify(text, expected);
+        }
+
+        [Fact]
+        public void TestBraceSingleMethodCall()
+        {
+            var text = @"
+class S 
+{
+    void M()     
+    {
+
+
+        G();
+
+
+    } 
+}";
+            var expected = @"
+class S
+{
+    void M()
+    {
+        G();
+    }
 }";
             Verify(text, expected);
         }
@@ -271,6 +313,42 @@ class L
 }";
 
             Verify(text, expected);
+        }
+
+        /// <summary>
+        /// This is a regression test for issue #36
+        /// </summary>
+        [Fact]
+        public void CommentsBeforeCloseBraces()
+        {
+            var text = @"
+class C
+{
+    void M()
+    {
+        if (b) {
+            G();
+
+            // A comment
+        }
+    }
+}";
+
+            var expected = @"
+class C
+{
+    void M()
+    {
+        if (b)
+        {
+            G();
+
+            // A comment
+        }
+    }
+}";
+
+            Verify(text, expected, runFormatter: true);
         }
     }
 }
