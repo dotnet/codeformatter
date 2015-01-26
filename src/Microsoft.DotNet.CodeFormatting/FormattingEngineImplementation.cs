@@ -14,12 +14,15 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     [Export(typeof(IFormattingEngine))]
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
+        internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
+
         private readonly Options _options;
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
@@ -88,41 +91,42 @@ namespace Microsoft.DotNet.CodeFormatting
 
             watch.Stop();
 
-            await SaveChanges(solution, originalSolution, cancellationToken);
+            if (!workspace.TryApplyChanges(solution))
+            {
+                FormatLogger.WriteErrorLine("Unable to save changes to disk");
+            }
+
             FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
+        }
+
+        internal Solution AddTablePreprocessorSymbol(Solution solution)
+        {
+            var projectIds = solution.ProjectIds;
+            foreach (var projectId in projectIds)
+            {
+                var project = solution.GetProject(projectId);
+                var parseOptions = project.ParseOptions as CSharpParseOptions;
+                if (parseOptions != null)
+                {
+                    var list = new List<string>();
+                    list.AddRange(parseOptions.PreprocessorSymbolNames);
+                    list.Add(TablePreprocessorSymbolName);
+                    parseOptions = parseOptions.WithPreprocessorSymbols(list);
+                    solution = project.WithParseOptions(parseOptions).Solution;
+                }
+            }
+
+            return solution;
         }
 
         internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             var solution = originalSolution;
+            solution = AddTablePreprocessorSymbol(originalSolution);
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
             return solution;
-        }
-
-        private async Task SaveChanges(Solution solution, Solution originalSolution, CancellationToken cancellationToken)
-        {
-            foreach (var projectChange in solution.GetChanges(originalSolution).GetProjectChanges())
-            {
-                foreach (var documentId in projectChange.GetChangedDocuments())
-                {
-                    var document = solution.GetDocument(documentId);
-                    var sourceText = await document.GetTextAsync(cancellationToken);
-                    using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
-                    {
-                        // The encoding of the file can change during the rewrite.  Make sure to save with the
-                        // original encoding
-                        var originalDocument = originalSolution.GetDocument(documentId);
-                        var originalSourceText = await originalDocument.GetTextAsync(cancellationToken);
-
-                        using (var writer = new StreamWriter(file, originalSourceText.Encoding))
-                        {
-                            sourceText.Write(writer, cancellationToken);
-                        }
-                    }
-                }
-            }
         }
 
         private bool ShouldBeProcessed(Document document)

@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
@@ -35,7 +36,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var parseOptions = (CSharpParseOptions)document.Project.ParseOptions;
                 foreach (var configuration in _options.PreprocessorConfigurations)
                 {
-                    var newParseOptions = parseOptions.WithPreprocessorSymbols(configuration);
+                    var list = new List<string>(configuration.Length + 1);
+                    list.AddRange(configuration);
+                    list.Add(FormattingEngineImplementation.TablePreprocessorSymbolName);
+
+                    var newParseOptions = parseOptions.WithPreprocessorSymbols(list);
                     document = project.WithParseOptions(newParseOptions).GetDocument(document.Id);
                     document = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
                 }
