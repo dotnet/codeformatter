@@ -19,7 +19,7 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <project or solution> [<rule types>] [/file <filename>]");
+                Console.WriteLine("CodeFormatter <project or solution> [<rule types>] [/file <filename>] [/nocopyright]");
                 Console.WriteLine("    <rule types> - Rule types to use in addition to the default ones.");
                 Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
                 Console.WriteLine("    <filename> - Only apply changes to files with specified name.");
@@ -74,7 +74,6 @@ namespace CodeFormatter
         {
             var workspace = MSBuildWorkspace.Create();
             var engine = FormattingEngine.Create(ruleTypes, filenames);
-            engine.Verbose = true;
             if (disableCopright)
             {
                 engine.CopyrightHeader = ImmutableArray<string>.Empty;

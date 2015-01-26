@@ -26,7 +26,6 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
-        private bool _verbose;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -38,12 +37,6 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             get { return _options.FormatLogger; }
             set { _options.FormatLogger = value; }
-        }
-
-        public bool Verbose
-        {
-            get { return _verbose; }
-            set { _verbose = value; }
         }
 
         [ImportingConstructor]
@@ -161,15 +154,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private void EndDocument(Document document)
         {
             _watch.Stop();
-            if (_verbose && _watch.Elapsed.TotalSeconds > 1)
-            {
-                FormatLogger.WriteLine();
-                FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
-            }
-            else
-            {
-                FormatLogger.Write(".");
-            }
+            FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
         }
 
         /// <summary>
@@ -202,7 +187,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
-            FormatLogger.WriteLine();
             return currentSolution;
         }
 
@@ -224,7 +208,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
             }
 
-            FormatLogger.WriteLine();
             return solution;
         }
 
@@ -251,7 +234,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
 
-            FormatLogger.WriteLine();
             return currentSolution;
         }
 
@@ -263,7 +245,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
             }
 
-            FormatLogger.WriteLine();
             return solution;
         }
 
@@ -284,7 +265,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 EndDocument(document);
             }
 
-            FormatLogger.WriteLine();
             return solution;
         }
     }
