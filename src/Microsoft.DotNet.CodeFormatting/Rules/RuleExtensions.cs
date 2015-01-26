@@ -24,10 +24,5 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             return trivia.Concat(new[] { SyntaxFactory.CarriageReturnLineFeed });
         }
-
-        public static IEnumerable<SyntaxTrivia> AddWhiteSpaceTrivia(this IEnumerable<SyntaxTrivia> trivia)
-        {
-            return trivia.Concat(new[] { SyntaxFactory.Tab });
-        }
     }
 }

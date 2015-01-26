@@ -21,11 +21,11 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
             _filenames = filenames;
         }
 
-        public Task<bool> ShouldBeProcessedAsync(Document document)
+        public bool ShouldBeProcessed(Document document)
         {
             if (!_filenames.Any())
             {
-                return Task.FromResult(true);
+                return true;
             }
 
             string docFilename = Path.GetFileName(document.FilePath);
@@ -34,11 +34,11 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
             {
                 if (filename.Equals(docFilename, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return Task.FromResult(true);
+                    return true;
                 }
             }
 
-            return Task.FromResult(false);
+            return false;
         }
     }
 }

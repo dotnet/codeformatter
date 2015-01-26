@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.CodeFormatting
             }
         }
 
-        private async Task<bool> ShouldBeProcessedAsync(Document document)
+        private bool ShouldBeProcessed(Document document)
         {
             if (document.FilePath != null)
             {
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
             foreach (var filter in _filters)
             {
-                var shouldBeProcessed = await filter.ShouldBeProcessedAsync(document);
+                var shouldBeProcessed = filter.ShouldBeProcessed(document);
                 if (!shouldBeProcessed)
                     return false;
             }
@@ -149,14 +149,14 @@ namespace Microsoft.DotNet.CodeFormatting
             return true;
         }
 
-        private async Task<SyntaxNode> GetSyntaxRootAndFilter(Document document, CancellationToken cancellationToken)
+        private Task<SyntaxNode> GetSyntaxRootAndFilter(Document document, CancellationToken cancellationToken)
         {
-            if (!await ShouldBeProcessedAsync(document))
+            if (!ShouldBeProcessed(document))
             {
                 return null;
             }
 
-            return await document.GetSyntaxRootAsync(cancellationToken);
+            return document.GetSyntaxRootAsync(cancellationToken);
         }
 
         private void StartDocument()
