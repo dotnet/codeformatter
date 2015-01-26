@@ -26,7 +26,6 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
-        private bool _verbose;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -38,12 +37,6 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             get { return _options.FormatLogger; }
             set { _options.FormatLogger = value; }
-        }
-
-        public bool Verbose
-        {
-            get { return _verbose; }
-            set { _verbose = value; }
         }
 
         [ImportingConstructor]

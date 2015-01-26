@@ -74,7 +74,6 @@ namespace CodeFormatter
         {
             var workspace = MSBuildWorkspace.Create();
             var engine = FormattingEngine.Create(ruleTypes, filenames);
-            engine.Verbose = true;
             if (disableCopright)
             {
                 engine.CopyrightHeader = ImmutableArray<string>.Empty;
