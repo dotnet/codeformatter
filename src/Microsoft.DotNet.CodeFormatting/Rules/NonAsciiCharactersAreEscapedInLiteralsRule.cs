@@ -51,6 +51,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             {
                 Debug.Assert(node.CSharpKind() == SyntaxKind.StringLiteralExpression);
 
+                if (node.Token.IsVerbatimStringLiteral())
+                {
+                    // We do not correctly rewrite verbatim string literals yet.  Once Issue 39 is
+                    // fixed we can remove this early out.
+                    return node;
+                }
+
                 if (HasNonAsciiCharacters(node.Token.Text))
                 {
                     string convertedText = EscapeNonAsciiCharacters(node.Token.Text);
