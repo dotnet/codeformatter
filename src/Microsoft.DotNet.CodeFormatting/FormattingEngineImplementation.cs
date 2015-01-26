@@ -127,18 +127,6 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private bool ShouldBeProcessed(Document document)
         {
-            if (document.FilePath != null)
-            {
-                var fileInfo = new FileInfo(document.FilePath);
-                if (!fileInfo.Exists || fileInfo.IsReadOnly)
-                {
-                    FormatLogger.WriteLine("warning: skipping document '{0}' because it {1}.",
-                        document.FilePath,
-                        fileInfo.IsReadOnly ? "is read-only" : "does not exist");
-                    return false;
-                }
-            }
-
             foreach (var filter in _filters)
             {
                 var shouldBeProcessed = filter.ShouldBeProcessed(document);
