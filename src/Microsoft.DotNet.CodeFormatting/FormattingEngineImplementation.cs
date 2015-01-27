@@ -145,7 +145,7 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             if (!ShouldBeProcessed(document))
             {
-                return null;
+                return Task.FromResult<SyntaxNode>(null);
             }
 
             return document.GetSyntaxRootAsync(cancellationToken);
