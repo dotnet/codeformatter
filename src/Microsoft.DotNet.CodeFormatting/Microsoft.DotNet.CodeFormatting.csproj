@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Filters\FilenameFilter.cs" />
+    <Compile Include="Filters\UsableFileFilter.cs" />
     <Compile Include="FormattingEngine.cs" />
     <Compile Include="FormattingEngineImplementation.cs" />
     <Compile Include="IFormatLogger.cs" />

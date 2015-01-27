@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             s_formattingEngine.CopyrightHeader = ImmutableArray.Create("", "// header");
             s_formattingEngine.FormatLogger = new EmptyFormatLogger();
+            s_formattingEngine.PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
         }
 
         protected override async Task<Document> RewriteDocumentAsync(Document document)
@@ -91,6 +92,134 @@ internal class C
     }
 }";
 
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void PreprocessorSymbolNotDefined()
+        {
+            var text = @"
+class C
+{
+#if DOG
+    void M() { } 
+#endif 
+}";
+
+            var expected = @"
+// header
+
+internal class C
+{
+#if DOG
+    void M() { } 
+#endif 
+}";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void PreprocessorSymbolDefined()
+        {
+            var text = @"
+internal class C
+{
+#if DOG
+    internal void M() {
+} 
+#endif 
+}";
+
+            var expected = @"
+// header
+
+internal class C
+{
+#if DOG
+    internal void M()
+    {
+    }
+#endif
+}";
+
+            s_formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "DOG" } });
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TableCode()
+        {
+            var text = @"
+class C
+{
+    void G() { 
+
+    }
+
+#if !DOTNET_FORMATTER
+    void M() {
+}
+#endif 
+}";
+
+            var expected = @"
+// header
+
+internal class C
+{
+    private void G()
+    {
+    }
+
+#if !DOTNET_FORMATTER
+    void M() {
+}
+#endif 
+}";
+
+            Verify(text, expected, runFormatter: false);
+        }
+
+        /// <summary>
+        /// Make sure the code which deals with additional configurations respects the
+        /// table exception.
+        /// </summary>
+        [Fact]
+        public void TableCodeAndAdditionalConfiguration()
+        {
+            var text = @"
+class C
+{
+#if TEST
+    void G(){
+    }
+#endif
+
+#if !DOTNET_FORMATTER
+    void M() {
+}
+#endif 
+}";
+
+            var expected = @"
+// header
+
+internal class C
+{
+#if TEST
+    void G()
+    {
+    }
+#endif
+
+#if !DOTNET_FORMATTER
+    void M() {
+}
+#endif 
+}";
+
+            s_formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "TEST" } });
             Verify(text, expected, runFormatter: false);
         }
     }

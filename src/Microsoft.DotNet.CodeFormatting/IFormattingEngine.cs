@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.CodeFormatting
     public interface IFormattingEngine
     {
         ImmutableArray<string> CopyrightHeader { get; set; }
+        ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
         Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project porject, CancellationToken cancellationToken);
     }

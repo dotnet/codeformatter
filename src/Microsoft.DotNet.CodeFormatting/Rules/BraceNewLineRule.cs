@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [SyntaxRuleOrder(SyntaxRuleOrder.BraceNewLineRule)]
     internal sealed class BraceNewLineRule : ISyntaxFormattingRule
     {
+        private enum NewLineKind
+        {
+            WhitespaceAndNewLine,
+            NewLine,
+            Directive,
+            None,
+        }
+
         public SyntaxNode Process(SyntaxNode syntaxNode)
         {
             syntaxNode = FixOpenBraces(syntaxNode);
@@ -22,116 +31,268 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return syntaxNode;
         }
 
+        /// <summary>
+        /// Fix the new lines around open brace tokens.  An open brace should be followed by content, not a blank
+        /// line.  Remove those here.  
+        /// </summary>
         private static SyntaxNode FixOpenBraces(SyntaxNode syntaxNode)
         {
-            var openBraceTokens = syntaxNode.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.OpenBraceToken);
-            Func<SyntaxToken, SyntaxToken, SyntaxToken> replacementForTokens = (token, dummy) =>
-            {
-                int elementsToRemove = 1;
-                if (token.LeadingTrivia.Count > 1)
+            // Look for the open brace tokens that are followed by empty blank lines.  The new lines will
+            // be attached to the next nodes, not the open brace token.
+            var tokensToReplace = syntaxNode.DescendantTokens().Where((token) =>
                 {
-                    while (elementsToRemove < token.LeadingTrivia.Count &&
-                            token.LeadingTrivia.ElementAt(elementsToRemove).CSharpKind() == SyntaxKind.EndOfLineTrivia)
-                        elementsToRemove++;
-                }
+                    var nextToken = token.GetNextToken();
+                    if (token.CSharpKind() != SyntaxKind.OpenBraceToken || !nextToken.HasLeadingTrivia)
+                    {
+                        return false;
+                    }
 
-                var newToken = token.WithLeadingTrivia(token.LeadingTrivia.Skip(elementsToRemove));
-                return newToken;
-            };
+                    return IsSimpleNewLine(nextToken.LeadingTrivia, 0);
+                }).Select(x => x.GetNextToken());
 
-            var tokensToReplace = openBraceTokens.Where((token) =>
-            {
-                var nextToken = token.GetNextToken();
-                return (nextToken.HasLeadingTrivia && nextToken.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia);
-            }).Select((token) => token.GetNextToken());
-
-            return syntaxNode.ReplaceTokens(tokensToReplace, replacementForTokens);
+            return syntaxNode.ReplaceTokens(tokensToReplace, (_, y) => FixOpenBraceNextToken(y));
         }
 
+        /// <summary>
+        /// Remove the extra new lines on the token which immediately follows an open brace.
+        /// </summary>
+        private static SyntaxToken FixOpenBraceNextToken(SyntaxToken token)
+        {
+            if (!token.HasLeadingTrivia)
+            {
+                return token;
+            }
+
+            if (token.CSharpKind() == SyntaxKind.CloseBraceToken && 
+                token.LeadingTrivia.All(x => x.IsKind(SyntaxKind.WhitespaceTrivia) || x.IsKind(SyntaxKind.EndOfLineTrivia)))
+            {
+                // This is an open / close brace combo with no content inbetween.  Just return the 
+                // close brace and let the formatter handle the white space issues.  If there was a new line 
+                // between the two it will be attached to the open brace and hence maintained. 
+                return token.WithLeadingTrivia(SyntaxTriviaList.Empty);
+            }
+
+            // Remove all of the new lines at the top
+            var triviaList = token.LeadingTrivia;
+            var list = new List<SyntaxTrivia>(triviaList.Count);
+            var index = MovePastSimpleNewLines(triviaList, 0);
+
+            while (index < triviaList.Count)
+            {
+                list.Add(triviaList[index]);
+                index++;
+            }
+
+            var newTriviaList = SyntaxFactory.TriviaList(list);
+            return token.WithLeadingTrivia(newTriviaList);
+        }
+
+        /// <summary>
+        /// Close braces should never have a newline between the last line of content and the 
+        /// closing brace.  Also want to remove consecutive new lines before any comments or
+        /// #pragma that preceeds the close brace.
+        /// </summary>
         private static SyntaxNode FixCloseBraces(SyntaxNode syntaxNode)
         {
-            var closeBraceTokens = syntaxNode.DescendantTokens().Where((token) => token.CSharpKind() == SyntaxKind.CloseBraceToken);
-            Func<SyntaxToken, SyntaxToken, SyntaxToken> replaceTriviaInTokens = (token, dummy) =>
-            {
-                var newTrivia = RemoveNewLinesFromTop(token.LeadingTrivia);
-                newTrivia = RemoveNewLinesFromBottom(newTrivia);
-                return token.WithLeadingTrivia(newTrivia);
-            };
+            var tokensToReplace = syntaxNode.DescendantTokens().Where((token) => 
+                {
+                    return
+                        token.CSharpKind() == SyntaxKind.CloseBraceToken &&
+                        token.HasLeadingTrivia &&
+                        (IsSimpleNewLine(token.LeadingTrivia, 0) || IsSimpleNewLine(token.LeadingTrivia, token.LeadingTrivia.Count - 1));
+                });
 
-            var tokensToReplace = closeBraceTokens.Where((token) => token.HasLeadingTrivia && (
-                                    token.LeadingTrivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
-                                    token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia ||
-                                    token.LeadingTrivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia));
-
-            return syntaxNode.ReplaceTokens(tokensToReplace, replaceTriviaInTokens);
+            return syntaxNode.ReplaceTokens(tokensToReplace, (_, y) => FixCloseBraceLeadingTrivia(y));
         }
 
-        private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromTop(IEnumerable<SyntaxTrivia> trivia)
+        private static SyntaxToken FixCloseBraceLeadingTrivia(SyntaxToken token)
         {
-            int elementsToRemoveAtStart = 0;
-            if (trivia.First().CSharpKind() == SyntaxKind.EndOfLineTrivia)
+            if (!token.HasLeadingTrivia)
             {
-                elementsToRemoveAtStart = 1;
-                if (trivia.Count() > 1)
+                return token;
+            }
+
+            var triviaList = token.LeadingTrivia;
+            if (triviaList.All(x => x.IsKind(SyntaxKind.WhitespaceTrivia) || x.IsKind(SyntaxKind.EndOfLineTrivia)))
+            {
+                // Simplest case.  It's all new lines and white space.  
+                if (EndsWithSimpleNewLine(token.GetPreviousToken().TrailingTrivia))
                 {
-                    while (elementsToRemoveAtStart < trivia.Count() &&
-                            trivia.ElementAt(elementsToRemoveAtStart).CSharpKind() == SyntaxKind.EndOfLineTrivia)
-                        elementsToRemoveAtStart++;
+                    triviaList = SyntaxTriviaList.Empty;
+                }
+                else
+                {
+                    // new line and we are done. 
+                    triviaList = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed);
+                }
+            }
+            else
+            {
+                triviaList = RemoveNewLinesFromTop(triviaList);
+                triviaList = RemoveNewLinesFromBottom(triviaList);
+            }
+
+            return token.WithLeadingTrivia(triviaList);
+        }
+
+        /// <summary>
+        /// Don't allow consecutive newlines at the top of the comments / pragma before a close
+        /// brace token.
+        /// </summary>
+        private static SyntaxTriviaList RemoveNewLinesFromTop(SyntaxTriviaList triviaList)
+        {
+            // This rule only needs to run if there is a new line at the top.
+            if (!IsSimpleNewLine(triviaList, 0))
+            {
+                return triviaList;
+            }
+
+            var list = new List<SyntaxTrivia>(triviaList.Count);
+            list.Add(SyntaxFactory.CarriageReturnLineFeed);
+
+            var index = MovePastSimpleNewLines(triviaList, 0);
+            while (index < triviaList.Count)
+            {
+                list.Add(triviaList[index]);
+                index++;
+            }
+
+            return SyntaxFactory.TriviaList(list);
+        }
+
+        /// <summary>
+        /// Remove all extra new lines from the begining of a close brace token.  This is only called in
+        /// the case at least one new line is present hence we don't have to worry about the single line
+        /// case.
+        /// </summary>
+        private static SyntaxTriviaList RemoveNewLinesFromBottom(SyntaxTriviaList triviaList)
+        {
+            var index = triviaList.Count - 1;
+            var searching = true;
+            while (index >= 0 && searching)
+            {
+                var current = triviaList[index];
+                switch (current.CSharpKind())
+                {
+                    case SyntaxKind.WhitespaceTrivia:
+                    case SyntaxKind.EndOfLineTrivia:
+                        index--;
+                        break;
+                    default:
+                        searching = false;
+                        break;
                 }
             }
 
-            return trivia.Skip(elementsToRemoveAtStart);
+            // Nothing to adjust, the removal of new lines from the top of the list will handle all of the
+            // important cases.
+            if (index < 0)
+            {
+                return triviaList;
+            }
+
+            var list = new List<SyntaxTrivia>(triviaList.Count);
+            for (int i = 0; i <= index; i++)
+            {
+                list.Add(triviaList[i]);
+            }
+
+            // A directive has an implicit new line after it.
+            if (!list[index].IsDirective)
+            {
+                list.Add(SyntaxFactory.CarriageReturnLineFeed);
+            }
+
+            if (triviaList.Last().IsKind(SyntaxKind.WhitespaceTrivia))
+            {
+                list.Add(triviaList.Last());
+            }
+
+            return SyntaxFactory.TriviaList(list);
         }
 
-        private static IEnumerable<SyntaxTrivia> RemoveNewLinesFromBottom(IEnumerable<SyntaxTrivia> trivia)
+        private static NewLineKind GetNewLineKind(IReadOnlyList<SyntaxTrivia> list, int index)
         {
-            bool addWhitespace = false;
-            bool addNewLine = false;
-            var initialCount = trivia.Count();
-            if (initialCount > 1 && trivia.Last().CSharpKind() == SyntaxKind.WhitespaceTrivia)
+            if (index >= list.Count)
             {
-                addWhitespace = true;
-                trivia = trivia.Take(initialCount - 1);
-            }
-            else if (initialCount > 1 &&
-                trivia.ElementAt(initialCount - 2).CSharpKind() != SyntaxKind.EndOfLineTrivia &&
-                trivia.ElementAt(initialCount - 2).CSharpKind() != SyntaxKind.WhitespaceTrivia &&
-                !trivia.ElementAt(initialCount - 2).HasStructure)
-            {
-                addNewLine = true;
+                return NewLineKind.None;
             }
 
-            int elementsToRemoveAtEnd = trivia.Count() - 1;
-
-            if (trivia.Any() && trivia.Last().CSharpKind() == SyntaxKind.EndOfLineTrivia)
+            switch (list[index].CSharpKind())
             {
-                if (trivia.Count() > 1)
+                case SyntaxKind.EndOfLineTrivia:
+                    return NewLineKind.NewLine;
+                case SyntaxKind.WhitespaceTrivia:
+                    if (index + 1 < list.Count && list[index + 1].CSharpKind() == SyntaxKind.EndOfLineTrivia)
+                    {
+                        return NewLineKind.WhitespaceAndNewLine;
+                    }
+
+                    return NewLineKind.None;
+                default:
+                    if (list[index].IsDirective)
+                    {
+                        return NewLineKind.Directive;
+                    }
+
+                    return NewLineKind.None;
+            }
+        }
+
+        private static bool IsSimpleNewLine(IReadOnlyList<SyntaxTrivia> list, int index)
+        {
+            switch (GetNewLineKind(list, index))
+            {
+                case NewLineKind.NewLine:
+                case NewLineKind.WhitespaceAndNewLine:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool EndsWithSimpleNewLine(IReadOnlyList<SyntaxTrivia> list)
+        {
+            if (list.Count == 0)
+            {
+                return false;
+            }
+
+            if (list.Last().IsKind(SyntaxKind.EndOfLineTrivia))
+            {
+                return true;
+            }
+
+            if (list.Count > 1 && 
+                list[list.Count - 1].IsKind(SyntaxKind.WhitespaceTrivia) &&
+                list[list.Count - 2].IsKind(SyntaxKind.EndOfLineTrivia))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static int MovePastSimpleNewLines(IReadOnlyList<SyntaxTrivia> list, int index)
+        {
+            var inNewLines = true;
+            while (index < list.Count && inNewLines)
+            {
+                switch (GetNewLineKind(list, index))
                 {
-                    while (elementsToRemoveAtEnd >= 0 &&
-                            trivia.ElementAt(elementsToRemoveAtEnd).CSharpKind() == SyntaxKind.EndOfLineTrivia)
-                        elementsToRemoveAtEnd--;
+                    case NewLineKind.WhitespaceAndNewLine:
+                        index += 2;
+                        break;
+                    case NewLineKind.NewLine:
+                        index++;
+                        break;
+                    default:
+                        inNewLines = false;
+                        break;
                 }
             }
 
-            var newTrivia = trivia.Take(elementsToRemoveAtEnd + 1);
-
-            if (newTrivia.Any() && newTrivia.Last().CSharpKind().ToString().ToLower().Contains("comment"))
-                addNewLine = true;
-
-            if (addWhitespace)
-            {
-                if (newTrivia.Last().IsDirective)
-                    return newTrivia.AddWhiteSpaceTrivia();
-
-                return newTrivia.AddNewLine().AddWhiteSpaceTrivia();
-            }
-
-            if (addNewLine)
-            {
-                return newTrivia.AddNewLine();
-            }
-
-            return newTrivia;
+            return index;
         }
     }
 }

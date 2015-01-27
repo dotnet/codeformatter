@@ -21,12 +21,14 @@ namespace Microsoft.DotNet.CodeFormatting
         };
 
         internal ImmutableArray<string> CopyrightHeader { get; set; }
+        internal ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
         internal IFormatLogger FormatLogger { get; set; }
 
         [ImportingConstructor]
         internal Options()
         {
             CopyrightHeader = ImmutableArray.Create(s_defaultCopyrightHeader);
+            PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
             FormatLogger = new ConsoleFormatLogger();
         }
     }

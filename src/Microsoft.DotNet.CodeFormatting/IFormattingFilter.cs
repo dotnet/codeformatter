@@ -8,9 +8,8 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
-    // TODO: does this need to be async? 
     internal interface IFormattingFilter
     {
-        Task<bool> ShouldBeProcessedAsync(Document document);
+        bool ShouldBeProcessed(Document document);
     }
 }

@@ -14,12 +14,15 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     [Export(typeof(IFormattingEngine))]
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
+        internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
+
         private readonly Options _options;
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
@@ -31,6 +34,12 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             get { return _options.CopyrightHeader; }
             set { _options.CopyrightHeader = value; }
+        }
+
+        public ImmutableArray<string[]> PreprocessorConfigurations
+        {
+            get { return _options.PreprocessorConfigurations; }
+            set { _options.PreprocessorConfigurations = value; }
         }
 
         public IFormatLogger FormatLogger
@@ -75,60 +84,49 @@ namespace Microsoft.DotNet.CodeFormatting
 
             watch.Stop();
 
-            await SaveChanges(solution, originalSolution, cancellationToken);
+            if (!workspace.TryApplyChanges(solution))
+            {
+                FormatLogger.WriteErrorLine("Unable to save changes to disk");
+            }
+
             FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
+        }
+
+        internal Solution AddTablePreprocessorSymbol(Solution solution)
+        {
+            var projectIds = solution.ProjectIds;
+            foreach (var projectId in projectIds)
+            {
+                var project = solution.GetProject(projectId);
+                var parseOptions = project.ParseOptions as CSharpParseOptions;
+                if (parseOptions != null)
+                {
+                    var list = new List<string>();
+                    list.AddRange(parseOptions.PreprocessorSymbolNames);
+                    list.Add(TablePreprocessorSymbolName);
+                    parseOptions = parseOptions.WithPreprocessorSymbols(list);
+                    solution = project.WithParseOptions(parseOptions).Solution;
+                }
+            }
+
+            return solution;
         }
 
         internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             var solution = originalSolution;
+            solution = AddTablePreprocessorSymbol(originalSolution);
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
             return solution;
         }
 
-        private async Task SaveChanges(Solution solution, Solution originalSolution, CancellationToken cancellationToken)
+        private bool ShouldBeProcessed(Document document)
         {
-            foreach (var projectChange in solution.GetChanges(originalSolution).GetProjectChanges())
-            {
-                foreach (var documentId in projectChange.GetChangedDocuments())
-                {
-                    var document = solution.GetDocument(documentId);
-                    var sourceText = await document.GetTextAsync(cancellationToken);
-                    using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
-                    {
-                        // The encoding of the file can change during the rewrite.  Make sure to save with the
-                        // original encoding
-                        var originalDocument = originalSolution.GetDocument(documentId);
-                        var originalSourceText = await originalDocument.GetTextAsync(cancellationToken);
-
-                        using (var writer = new StreamWriter(file, originalSourceText.Encoding))
-                        {
-                            sourceText.Write(writer, cancellationToken);
-                        }
-                    }
-                }
-            }
-        }
-
-        private async Task<bool> ShouldBeProcessedAsync(Document document)
-        {
-            if (document.FilePath != null)
-            {
-                var fileInfo = new FileInfo(document.FilePath);
-                if (!fileInfo.Exists || fileInfo.IsReadOnly)
-                {
-                    FormatLogger.WriteLine("warning: skipping document '{0}' because it {1}.",
-                        document.FilePath,
-                        fileInfo.IsReadOnly ? "is read-only" : "does not exist");
-                    return false;
-                }
-            }
-
             foreach (var filter in _filters)
             {
-                var shouldBeProcessed = await filter.ShouldBeProcessedAsync(document);
+                var shouldBeProcessed = filter.ShouldBeProcessed(document);
                 if (!shouldBeProcessed)
                     return false;
             }
@@ -136,14 +134,14 @@ namespace Microsoft.DotNet.CodeFormatting
             return true;
         }
 
-        private async Task<SyntaxNode> GetSyntaxRootAndFilter(Document document, CancellationToken cancellationToken)
+        private Task<SyntaxNode> GetSyntaxRootAndFilter(Document document, CancellationToken cancellationToken)
         {
-            if (!await ShouldBeProcessedAsync(document))
+            if (!ShouldBeProcessed(document))
             {
-                return null;
+                return Task.FromResult<SyntaxNode>(null);
             }
 
-            return await document.GetSyntaxRootAsync(cancellationToken);
+            return document.GetSyntaxRootAsync(cancellationToken);
         }
 
         private void StartDocument()

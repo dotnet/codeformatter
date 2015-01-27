@@ -12,15 +12,15 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
     [Export(typeof(IFormattingFilter))]
     internal sealed class IgnoreDesignerGeneratedCodeFilter : IFormattingFilter
     {
-        public Task<bool> ShouldBeProcessedAsync(Document document)
+        public bool ShouldBeProcessed(Document document)
         {
             if (document.FilePath == null)
             {
-                return Task.FromResult(true);
+                return true;
             }
 
             var isDesignerGenerated = document.FilePath.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase);
-            return Task.FromResult(!isDesignerGenerated);
+            return !isDesignerGenerated;
         }
     }
 }

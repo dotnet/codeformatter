@@ -37,6 +37,7 @@ namespace CodeFormatter
             var filenames = new List<string>();
             var disableCopyright = false;
             var comparer = StringComparer.OrdinalIgnoreCase;
+            var preprocessorConfigurations = new List<string[]>();
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -54,6 +55,12 @@ namespace CodeFormatter
                 {
                     disableCopyright = true;
                 }
+                else if (arg.StartsWith("/c:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var all = arg.Substring(3);
+                    var configs = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    preprocessorConfigurations.Add(configs);
+                }
                 else
                 {
                     ruleTypes.Add(arg);
@@ -65,15 +72,17 @@ namespace CodeFormatter
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-            RunAsync(projectOrSolutionPath, ruleTypes, filenames, disableCopyright, ct).Wait(ct);
+            RunAsync(projectOrSolutionPath, ruleTypes, filenames, disableCopyright, ImmutableArray.CreateRange(preprocessorConfigurations), ct).Wait(ct);
             Console.WriteLine("Completed formatting.");
             return 0;
         }
 
-        private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, bool disableCopright, CancellationToken cancellationToken)
+        private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, bool disableCopright, ImmutableArray<string[]> preprocessorConfigurations, CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
             var engine = FormattingEngine.Create(ruleTypes, filenames);
+            engine.PreprocessorConfigurations = preprocessorConfigurations;
+
             if (disableCopright)
             {
                 engine.CopyrightHeader = ImmutableArray<string>.Empty;

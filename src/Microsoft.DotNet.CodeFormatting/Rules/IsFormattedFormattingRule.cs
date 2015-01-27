@@ -11,22 +11,42 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [LocalSemanticRuleOrder(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
     internal sealed class IsFormattedFormattingRule : ILocalSemanticFormattingRule
     {
+        private readonly Options _options;
+
+        [ImportingConstructor]
+        internal IsFormattedFormattingRule(Options options)
+        {
+            _options = options;
+        }
+
         public async Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
-            var newDocument = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
-            // TODO Bug 1076609: Roslyn formatter doesn't format code in #if false as it's considered as DisabledTextTrivia. Will be removed after the bug is fixed.
-            // Doing that manually here
-            var preprocessorNames = document.DefinedProjectPreprocessorNames();
-            newDocument = await newDocument.GetNewDocumentWithPreprocessorSymbols(preprocessorNames, cancellationToken);
-            newDocument = await Formatter.FormatAsync(newDocument, cancellationToken: cancellationToken);
+            document = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
 
-            return await newDocument.GetOriginalDocumentWithPreprocessorSymbols(preprocessorNames).GetSyntaxRootAsync(cancellationToken);
+            if (!_options.PreprocessorConfigurations.IsDefaultOrEmpty)
+            {
+                var project = document.Project;
+                var parseOptions = (CSharpParseOptions)document.Project.ParseOptions;
+                foreach (var configuration in _options.PreprocessorConfigurations)
+                {
+                    var list = new List<string>(configuration.Length + 1);
+                    list.AddRange(configuration);
+                    list.Add(FormattingEngineImplementation.TablePreprocessorSymbolName);
+
+                    var newParseOptions = parseOptions.WithPreprocessorSymbols(list);
+                    document = project.WithParseOptions(newParseOptions).GetDocument(document.Id);
+                    document = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
+                }
+            }
+
+            return await document.GetSyntaxRootAsync(cancellationToken);
         }
     }
 }
