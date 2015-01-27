@@ -62,6 +62,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         public static void CalculateTextChanges(ConditionalRegionChain chain, List<TextChange> changes)
         {
+            bool removeEndif = true;
+
             for (int i = 0; i < chain.Regions.Count; i++)
             {
                 var region = chain.Regions[i];
@@ -76,17 +78,27 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     {
                         // Remove the contents of the region
                         changes.Add(new TextChange(new TextSpan(region.StartDirective.FullSpan.End, region.EndDirective.FullSpan.Start - region.StartDirective.FullSpan.End), string.Empty));
-
-                        if (i + 1 < chain.Regions.Count &&
-                            chain.Regions[i + 1].State != ConditionalRegionState.Varying)
-                        {
-                            endDirectiveReplacementText = GetReplacementText(region);
-                        }
                     }
 
-                    // Remove the end directive
-                    changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), string.Empty));
+                    // If the next region is varying, then the end directive needs replacement
+                    if (i + 1 < chain.Regions.Count &&
+                        chain.Regions[i + 1].State == ConditionalRegionState.Varying)
+                    {
+                        endDirectiveReplacementText = GetReplacementText(region);
+                        changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), endDirectiveReplacementText));
+                    }
                 }
+                else
+                {
+                    removeEndif = false;
+                }
+            }
+
+            // Remove the final #endif all the other regions have been removed
+            if (removeEndif)
+            {
+                var region = chain.Regions[chain.Regions.Count - 1];
+                changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), string.Empty));
             }
         }
 

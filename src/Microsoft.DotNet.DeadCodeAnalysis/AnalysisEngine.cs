@@ -139,6 +139,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         {
             DirectiveTriviaSyntax previousDirective = null;
             Tristate previousRegionState = Tristate.False;
+            bool hasEnabledRegion = false;
             var chain = new List<ConditionalRegion>();
 
             for (int i = 0; i < directives.Count; i++)
@@ -155,6 +156,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 {
                     var regionState = EvaluateDirectiveExpression(previousDirective, previousRegionState);
                     previousRegionState = regionState;
+
+                    if (regionState == Tristate.True)
+                    {
+                        // There can only be one always enabled region per chain
+                        regionState = hasEnabledRegion ? Tristate.False : Tristate.True;
+                        hasEnabledRegion = true;
+                    }
 
                     var region = new ConditionalRegion(previousDirective, directive, chain, chain.Count, regionState);
                     chain.Add(region);

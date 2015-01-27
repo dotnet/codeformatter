@@ -107,6 +107,7 @@ class A {}
         [Fact]
         public void RemoveDisabledIfWithVaryingElifElse()
         {
+            // Replace elifs where the previous region is an if
             var source = @"
 // Test
 #if false
