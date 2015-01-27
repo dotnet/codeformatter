@@ -36,21 +36,22 @@ using System;
 class Test
 {{
     public static readonly string BadString = ""This has {0} and {1}, which are both bad."";
-    public static readonly string AnotherBadString = @""This has {0} and {1}, which are both bad."";
+    public static readonly string AnotherBadString = @""This has {0} and {1}, which are both bad, but we don't rewrite yet."";
     public const char BadChar = '{0}';
 }}
 ", '\u2713', "\U0001F308");
 
-            var expected = @"
+            var expected = string.Format(@"
 using System;
 
 class Test
-{
+{{
     public static readonly string BadString = ""This has \u2713 and \U0001F308, which are both bad."";
-    public static readonly string AnotherBadString = @""This has \u2713 and \U0001F308, which are both bad."";
+    public static readonly string AnotherBadString = @""This has {0} and {1}, which are both bad, but we don't rewrite yet."";
     public const char BadChar = '\u2713';
-}
-";
+}}
+", '\u2713', "\U0001F308");
+
             Verify(text, expected);
         }
 
