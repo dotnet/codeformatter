@@ -26,15 +26,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
             // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
             var newText = await info.Document.GetTextAsync(cancellationToken);
-            //newText = newText.WithChanges(changes);
-
-            for (int i = changes.Count - 1; i >= 0; --i)
-            {
-                var change = changes[i];
-                var textToReplace = newText.GetSubText(change.Span);
-                Console.WriteLine("Replacing: " + textToReplace);
-                newText = newText.Replace(change.Span, change.NewText);
-            }
+            newText = newText.WithChanges(changes);
 
             return info.Document.WithText(newText);
         }
@@ -69,23 +61,43 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 var region = chain.Regions[i];
                 if (region.State != ConditionalRegionState.Varying)
                 {
+                    var startDirective = region.StartDirective;
+                    var endDirective = region.EndDirective;
+                    string endDirectiveReplacementText = string.Empty;
+
                     // Remove the start directive
                     changes.Add(new TextChange(new TextSpan(region.SpanStart, region.StartDirective.FullSpan.End - region.SpanStart), string.Empty));
-
-                    string endDirectiveReplacementText = string.Empty;
 
                     if (region.State == ConditionalRegionState.AlwaysDisabled)
                     {
                         // Remove the contents of the region
                         changes.Add(new TextChange(new TextSpan(region.StartDirective.FullSpan.End, region.EndDirective.FullSpan.Start - region.StartDirective.FullSpan.End), string.Empty));
-                    }
 
-                    // If the next region is varying, then the end directive needs replacement
-                    if (i + 1 < chain.Regions.Count &&
-                        chain.Regions[i + 1].State == ConditionalRegionState.Varying)
-                    {
-                        endDirectiveReplacementText = GetReplacementText(region);
-                        changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), endDirectiveReplacementText));
+                        // Grow the chain until we hit a region that is not always disabled
+                        for (int j = i + 1; j < chain.Regions.Count; j++)
+                        {
+                            var nextRegion = chain.Regions[j];
+                            if (nextRegion.State == ConditionalRegionState.AlwaysDisabled)
+                            {
+                                endDirective = nextRegion.EndDirective;
+                                region = nextRegion;
+                                i = j;
+
+                                // Remove the start directive and the contents of the region
+                                changes.Add(new TextChange(new TextSpan(region.SpanStart, region.StartDirective.FullSpan.End - region.SpanStart), string.Empty));
+                                changes.Add(new TextChange(new TextSpan(region.StartDirective.FullSpan.End, region.EndDirective.FullSpan.Start - region.StartDirective.FullSpan.End), string.Empty));
+                            }
+                            else
+                            {
+                                // If the next region is varying, then the end directive needs replacement
+                                if (nextRegion.State == ConditionalRegionState.Varying)
+                                {
+                                    endDirectiveReplacementText = GetReplacementText(startDirective, endDirective);
+                                    changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), endDirectiveReplacementText));
+                                }
+                                break;
+                            }
+                        }
                     }
                 }
                 else
@@ -102,11 +114,11 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
         }
 
-        private static string GetReplacementText(ConditionalRegion region)
+        private static string GetReplacementText(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective)
         {
-            if (region.StartDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia && region.EndDirective.CSharpKind() == SyntaxKind.ElifDirectiveTrivia)
+            if (startDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia && endDirective.CSharpKind() == SyntaxKind.ElifDirectiveTrivia)
             {
-                var elifDirective = (ElifDirectiveTriviaSyntax)region.EndDirective;
+                var elifDirective = (ElifDirectiveTriviaSyntax)endDirective;
                 var elifKeyword = elifDirective.ElifKeyword;
                 var newIfDirective = SyntaxFactory.IfDirectiveTrivia(
                     elifDirective.HashToken,
@@ -121,7 +133,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
             else
             {
-                return region.EndDirective.ToFullString();
+                return endDirective.ToFullString();
             }
         }
 
