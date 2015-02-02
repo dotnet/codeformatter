@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 
         static CombinationTest()
         {
-            s_formattingEngine = (FormattingEngineImplementation)FormattingEngine.Create(Enumerable.Empty<string>(), Enumerable.Empty<string>());
+            s_formattingEngine = (FormattingEngineImplementation)FormattingEngine.Create(ImmutableArray<string>.Empty);
         }
 
         public CombinationTest()

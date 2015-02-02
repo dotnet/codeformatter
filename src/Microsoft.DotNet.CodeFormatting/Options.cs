@@ -22,6 +22,12 @@ namespace Microsoft.DotNet.CodeFormatting
 
         internal ImmutableArray<string> CopyrightHeader { get; set; }
         internal ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
+
+        /// <summary>
+        /// When non-empty the formatter will only process files with the specified name.
+        /// </summary>
+        internal ImmutableArray<string> FileNames { get; set; }
+
         internal IFormatLogger FormatLogger { get; set; }
 
         [ImportingConstructor]

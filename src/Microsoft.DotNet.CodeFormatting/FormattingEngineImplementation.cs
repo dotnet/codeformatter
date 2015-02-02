@@ -42,6 +42,12 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _options.PreprocessorConfigurations = value; }
         }
 
+        public ImmutableArray<string> FileNames
+        {
+            get { return _options.FileNames; }
+            set { _options.FileNames = value; }
+        }
+
         public IFormatLogger FormatLogger
         {
             get { return _options.FormatLogger; }

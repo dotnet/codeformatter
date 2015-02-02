@@ -19,10 +19,12 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <project or solution> [<rule types>] [/file <filename>] [/nocopyright]");
+                Console.WriteLine("CodeFormatter <project or solution> [<rule types>] [/file:<filename>] [/nocopyright] [/c:<config1,config2>");
                 Console.WriteLine("    <rule types> - Rule types to use in addition to the default ones.");
                 Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
-                Console.WriteLine("    <filename> - Only apply changes to files with specified name.");
+                Console.WriteLine("    <filename>   - Only apply changes to files with specified name.");
+                Console.WriteLine("    <configs>    - Additional preprocessor configurations the formatter")
+                Console.WriteLine("                   should run under");
                 return -1;
             }
 
@@ -33,37 +35,34 @@ namespace CodeFormatter
                 return -1;
             }
 
-            var ruleTypes = new List<string>();
-            var filenames = new List<string>();
-            var disableCopyright = false;
+            var fileNamesBuilder = ImmutableArray.CreateBuilder<string>();
+            var ruleTypeBuilder = ImmutableArray.CreateBuilder<string>();
+            var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             var comparer = StringComparer.OrdinalIgnoreCase;
-            var preprocessorConfigurations = new List<string[]>();
+            var disableCopyright = false;
 
             for (int i = 1; i < args.Length; i++)
             {
                 string arg = args[i];
-                if (comparer.Equals(arg, "/file"))
+                if (arg.StartsWith("/file:", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (i + 1 < args.Length)
-                    {
-                        string param = args[i + 1];
-                        filenames.Add(param);
-                        i++;
-                    }
-                }
-                else if (comparer.Equals(arg, "/nocopyright"))
-                {
-                    disableCopyright = true;
+                    var all = arg.Substring(6);
+                    var files = all.Split(new[] { ','}, StringSplitOptions.RemoveEmptyEntries);
+                    fileNamesBuilder.AddRange(files);
                 }
                 else if (arg.StartsWith("/c:", StringComparison.OrdinalIgnoreCase))
                 {
                     var all = arg.Substring(3);
                     var configs = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    preprocessorConfigurations.Add(configs);
+                    configBuilder.Add(configs);
+                }
+                else if (comparer.Equals(arg, "/nocopyright"))
+                {
+                    disableCopyright = true;
                 }
                 else
                 {
-                    ruleTypes.Add(arg);
+                    ruleTypeBuilder.Add(arg);
                 }
             }
 
@@ -72,16 +71,29 @@ namespace CodeFormatter
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-            RunAsync(projectOrSolutionPath, ruleTypes, filenames, disableCopyright, ImmutableArray.CreateRange(preprocessorConfigurations), ct).Wait(ct);
+            RunAsync(
+                projectOrSolutionPath, 
+                ruleTypeBuilder.ToImmutableArray(),
+                fileNamesBuilder.ToImmutableArray(),
+                configBuilder.ToImmutableArray(),
+                disableCopyright, 
+                ct).Wait(ct);
             Console.WriteLine("Completed formatting.");
             return 0;
         }
 
-        private static async Task RunAsync(string projectOrSolutionPath, IEnumerable<string> ruleTypes, IEnumerable<string> filenames, bool disableCopright, ImmutableArray<string[]> preprocessorConfigurations, CancellationToken cancellationToken)
+        private static async Task RunAsync(
+            string projectOrSolutionPath, 
+            ImmutableArray<string> ruleTypes, 
+            ImmutableArray<string> fileNames, 
+            ImmutableArray<string[]> preprocessorConfigurations, 
+            bool disableCopright, 
+            CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
-            var engine = FormattingEngine.Create(ruleTypes, filenames);
+            var engine = FormattingEngine.Create(ruleTypes);
             engine.PreprocessorConfigurations = preprocessorConfigurations;
+            engine.FileNames = fileNames;
 
             if (disableCopright)
             {

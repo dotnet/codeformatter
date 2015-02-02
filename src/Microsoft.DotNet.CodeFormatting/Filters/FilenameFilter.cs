@@ -12,27 +12,29 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting.Filters
 {
+    [Export(typeof(IFormattingFilter))]
     internal sealed class FilenameFilter : IFormattingFilter
     {
-        private IEnumerable<string> _filenames;
+        private readonly Options _options;
 
-        public FilenameFilter(IEnumerable<string> filenames)
+        [ImportingConstructor]
+        public FilenameFilter(Options options)
         {
-            _filenames = filenames;
+            _options = options;
         }
 
         public bool ShouldBeProcessed(Document document)
         {
-            if (!_filenames.Any())
+            var fileNames = _options.FileNames;
+            if (fileNames.IsDefaultOrEmpty)
             {
                 return true;
             }
 
             string docFilename = Path.GetFileName(document.FilePath);
-
-            foreach (var filename in _filenames)
+            foreach (var filename in fileNames)
             {
-                if (filename.Equals(docFilename, StringComparison.InvariantCultureIgnoreCase))
+                if (filename.Equals(docFilename, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
