@@ -14,12 +14,6 @@ namespace Microsoft.DotNet.CodeFormatting
     [Export(typeof(Options))]
     internal sealed class Options
     {
-        private static readonly string[] s_defaultCopyrightHeader =
-        {
-            "// Copyright (c) Microsoft. All rights reserved.",
-            "// Licensed under the MIT license. See LICENSE file in the project root for full license information."
-        };
-
         internal ImmutableArray<string> CopyrightHeader { get; set; }
         internal ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
 
@@ -33,7 +27,8 @@ namespace Microsoft.DotNet.CodeFormatting
         [ImportingConstructor]
         internal Options()
         {
-            CopyrightHeader = ImmutableArray.Create(s_defaultCopyrightHeader);
+            CopyrightHeader = FormattingConstants.DefaultCopyrightHeader;
+            FileNames = ImmutableArray<string>.Empty;
             PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
             FormatLogger = new ConsoleFormatLogger();
         }
