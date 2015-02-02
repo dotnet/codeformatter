@@ -364,5 +364,27 @@ public partial class C { }
 
             Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void IgnorePartialMethods()
+        {
+            var text = @"
+class C
+{
+    void M1();
+    partial void M2();
+}
+";
+
+            var expected = @"
+internal class C
+{
+    private void M1();
+    partial void M2();
+}
+";
+
+            Verify(text, expected, runFormatter: false);
+        }
     }
 }
