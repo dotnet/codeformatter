@@ -96,7 +96,6 @@
     <Compile Include="Rules\PrivateFieldNamingRule.cs" />
     <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />
     <Compile Include="Rules\FormatDocumentFormattingRule.cs" />
-    <Compile Include="Rules\IsSimplifiedFormattingRule.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
     <Compile Include="Rules\ExplicitThisRule.cs" />
     <Compile Include="Rules\RuleOrder.cs" />
