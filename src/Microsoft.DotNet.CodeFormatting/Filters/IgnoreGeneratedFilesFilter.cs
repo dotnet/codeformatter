@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.DotNet.CodeFormatting.Filters
 {
     [Export(typeof(IFormattingFilter))]
-    internal sealed class IgnoreDesignerGeneratedCodeFilter : IFormattingFilter
+    internal sealed class IgnoreGeneratedFilesFilter : IFormattingFilter
     {
         public bool ShouldBeProcessed(Document document)
         {
@@ -19,8 +19,13 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
                 return true;
             }
 
-            var isDesignerGenerated = document.FilePath.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase);
-            return !isDesignerGenerated;
+            if (document.FilePath.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
+                document.FilePath.EndsWith(".Generated.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

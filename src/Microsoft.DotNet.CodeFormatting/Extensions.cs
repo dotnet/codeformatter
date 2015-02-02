@@ -10,12 +10,12 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     internal static class Extensions
     {
-        public static IEnumerable<SyntaxTrivia> AddTwoNewLines(this IEnumerable<SyntaxTrivia> trivia)
+        internal static IEnumerable<SyntaxTrivia> AddTwoNewLines(this IEnumerable<SyntaxTrivia> trivia)
         {
             return trivia.Concat(new[] { SyntaxFactory.CarriageReturnLineFeed, SyntaxFactory.CarriageReturnLineFeed });
         }
 
-        public static IEnumerable<SyntaxTrivia> AddNewLine(this IEnumerable<SyntaxTrivia> trivia)
+        internal static IEnumerable<SyntaxTrivia> AddNewLine(this IEnumerable<SyntaxTrivia> trivia)
         {
             return trivia.Concat(new[] { SyntaxFactory.CarriageReturnLineFeed });
         }

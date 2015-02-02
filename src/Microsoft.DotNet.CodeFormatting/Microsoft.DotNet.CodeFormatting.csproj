@@ -80,7 +80,7 @@
     <Compile Include="IFormattingEngine.cs" />
     <Compile Include="IFormattingFilter.cs" />
     <Compile Include="IFormattingRule.cs" />
-    <Compile Include="Filters\IgnoreDesignerGeneratedCodeFilter.cs" />
+    <Compile Include="Filters\IgnoreGeneratedFilesFilter.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="RuleOrderAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
