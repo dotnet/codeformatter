@@ -29,7 +29,7 @@ namespace CodeFormatter
                 Console.WriteLine("    <filename>   - Only apply changes to files with specified name.");
                 Console.WriteLine("    <configs>    - Additional preprocessor configurations the formatter");
                 Console.WriteLine("                   should run under.");
-                Console.WriteLine("    <copyright>  - Specifies file containing copyright header.")
+                Console.WriteLine("    <copyright>  - Specifies file containing copyright header.");
                 return -1;
             }
 
