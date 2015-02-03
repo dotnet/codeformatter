@@ -8,12 +8,13 @@ using System.ComponentModel.Composition;
 using System.Collections.Generic;
 using Microsoft.DotNet.CodeFormatting.Rules;
 using Microsoft.DotNet.CodeFormatting.Filters;
+using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingEngine
     {
-        public static IFormattingEngine Create(IEnumerable<string> ruleTypes, IEnumerable<string> filenames)
+        public static IFormattingEngine Create(ImmutableArray<string> ruleTypes)
         {
             var catalog = new AssemblyCatalog(typeof(FormattingEngine).Assembly);
 
@@ -46,12 +47,6 @@ namespace Microsoft.DotNet.CodeFormatting
             });
 
             var container = new CompositionContainer(filteredCatalog);
-
-            if (filenames.Any())
-            {
-                container.ComposeExportedValue<IFormattingFilter>(new FilenameFilter(filenames));
-            }
-
             var engine = container.GetExportedValue<IFormattingEngine>();
             var consoleFormatLogger = new ConsoleFormatLogger();
 

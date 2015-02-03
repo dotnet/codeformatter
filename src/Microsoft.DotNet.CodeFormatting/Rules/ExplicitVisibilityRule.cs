@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
             {
-                if (node.ExplicitInterfaceSpecifier != null)
+                if (node.ExplicitInterfaceSpecifier != null || node.Modifiers.Any(x => x.IsKind(SyntaxKind.PartialKeyword)))
                 {
                     return node;
                 }

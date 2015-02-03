@@ -16,12 +16,12 @@ using System.Collections.Generic;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [LocalSemanticRuleOrder(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
-    internal sealed class IsFormattedFormattingRule : ILocalSemanticFormattingRule
+    internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
     {
         private readonly Options _options;
 
         [ImportingConstructor]
-        internal IsFormattedFormattingRule(Options options)
+        internal FormatDocumentFormattingRule(Options options)
         {
             _options = options;
         }
