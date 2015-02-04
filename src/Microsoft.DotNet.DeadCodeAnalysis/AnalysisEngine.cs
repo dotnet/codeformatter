@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
         private IEnumerable<PreprocessorExpressionEvaluator> m_expressionEvaluators;
 
+        public event Func<DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
+
         public static AnalysisEngine FromFilePaths(
             IEnumerable<string> filePaths,
             IEnumerable<IEnumerable<string>> symbolConfigurations = null,
@@ -87,7 +89,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         private AnalysisEngine(Options options)
         {
             m_options = options;
-            m_expressionEvaluators = options.SymbolStates.Select(config => new PreprocessorExpressionEvaluator(config));
+            m_expressionEvaluators = options.SymbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config));
         }
 
         /// <summary>
@@ -132,7 +134,13 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                 }
             }
 
-            return new DocumentConditionalRegionInfo(document, chains);
+            var info = new DocumentConditionalRegionInfo(document, chains);
+            if (DocumentAnalyzed != null)
+            {
+                await DocumentAnalyzed(info, cancellationToken);
+            }
+
+            return info;
         }
 
         private List<ConditionalRegion> ParseConditionalRegionChain(List<DirectiveTriviaSyntax> directives, HashSet<DirectiveTriviaSyntax> visitedDirectives)

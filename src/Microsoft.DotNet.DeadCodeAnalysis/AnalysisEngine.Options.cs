@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
         {
             public IEnumerable<Document> Documents { get; private set; }
 
-            public IEnumerable<IReadOnlyDictionary<string, Tristate>> SymbolStates { get; private set; }
+            public IEnumerable<IReadOnlyDictionary<string, Tristate>> SymbolConfigurations { get; private set; }
 
             internal Options(
                 IEnumerable<Project> projects = null,
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
                     Documents = solution.Projects.Single().Documents;
                 }
 
-                SymbolStates = CalculateSymbolConfigurations(
+                SymbolConfigurations = CalculateSymbolConfigurations(
                     alwaysDisabledSymbols,
                     alwaysDefinedSymbols,
                     alwaysIgnoredSymbols,
