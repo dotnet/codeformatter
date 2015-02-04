@@ -30,6 +30,7 @@ namespace DeadCode
             var projectPaths = new List<string>();
             IEnumerable<string> ignoredSymbols = null;
             IEnumerable<string> definedSymbols = null;
+            IEnumerable<string> disabledSymbols = null;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -54,6 +55,18 @@ namespace DeadCode
                         if (++i < args.Length)
                         {
                             definedSymbols = args[i].Split(';', ',', ' ', '\t', '\n');
+                        }
+                        else
+                        {
+                            PrintUsage();
+                            return -1;
+                        }
+                    }
+                    else if (argName.Equals("disable", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (++i < args.Length)
+                        {
+                            disabledSymbols = args[i].Split(';', ',', ' ', '\t', '\n');
                         }
                         else
                         {
@@ -99,6 +112,7 @@ namespace DeadCode
             _engine = AnalysisEngine.FromFilePaths(
                 projectPaths,
                 alwaysDefinedSymbols: definedSymbols,
+                alwaysDisabledSymbols: disabledSymbols,
                 alwaysIgnoredSymbols: ignoredSymbols);
 
             try
