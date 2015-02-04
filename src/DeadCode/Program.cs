@@ -49,8 +49,6 @@ namespace DeadCode
             var ct = cts.Token;
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-            Console.WriteLine("Analyzing...");
-
             s_engine = AnalysisEngine.FromFilePaths(
                 s_filePaths,
                 symbolConfigurations: s_symbolConfigurations,
@@ -61,8 +59,7 @@ namespace DeadCode
             try
             {
                 s_engine.DocumentAnalyzed += OnDocumentAnalyzed;
-                s_engine.GetConditionalRegionInfo(ct).Wait(ct);
-                PrintConditionalRegionInfoSummary();
+                RunAsync(ct).Wait(ct);
             }
             catch (OperationCanceledException)
             {
@@ -146,6 +143,12 @@ namespace DeadCode
                     {
                         s_printVarying = true;
                     }
+                    else if (argName.Equals("print", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        s_printDisabled = true;
+                        s_printEnabled = true;
+                        s_printVarying = true;
+                    }
                     else if (argName.Equals("edit", StringComparison.InvariantCultureIgnoreCase))
                     {
                         s_edit = true;
@@ -165,16 +168,14 @@ namespace DeadCode
             return true;
         }
 
-        private static Task OnDocumentAnalyzed(DocumentConditionalRegionInfo info, CancellationToken cancellationToken)
+        private static async Task RunAsync(CancellationToken cancellationToken)
         {
-            return Task.Run(() => OnDocumentAnalyzedAsync(info, cancellationToken));
+            var regionInfos = await s_engine.GetConditionalRegionInfo(cancellationToken);
+            PrintConditionalRegionInfo(regionInfos);
         }
 
-        private static async void OnDocumentAnalyzedAsync(DocumentConditionalRegionInfo info, CancellationToken cancellationToken)
+        private static async Task OnDocumentAnalyzed(DocumentConditionalRegionInfo info, CancellationToken cancellationToken)
         {
-            // TODO: Logging this info should probably not happen in real time as this can all be async and output could get muddled
-            TrackConditionalRegionInfo(info);
-
             if (s_edit)
             {
                 var document = await s_engine.RemoveUnnecessaryRegions(info, cancellationToken);
@@ -184,6 +185,7 @@ namespace DeadCode
                 {
                     var writer = new StreamWriter(file, text.Encoding);
                     text.Write(writer, cancellationToken);
+                    await writer.FlushAsync();
                 }
             }
         }
@@ -204,78 +206,79 @@ PARAMETERS
   /printenabled
   /printdisabled
   /printvarying
+  /print
   /edit
   @<response file>");
         }
 
-        private static void TrackConditionalRegionInfo(DocumentConditionalRegionInfo info)
+        private static void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfos)
         {
             var originalForegroundColor = Console.ForegroundColor;
 
-            foreach (var chain in info.Chains)
+            foreach (var info in regionInfos)
             {
-                foreach (var region in chain.Regions)
+                foreach (var chain in info.Chains)
                 {
-                    switch (region.State)
+                    foreach (var region in chain.Regions)
                     {
-                        case ConditionalRegionState.AlwaysDisabled:
-                            s_disabledCount++;
-                            Console.ForegroundColor = ConsoleColor.Blue;
-                            if (s_printDisabled)
-                            {
-                                Console.WriteLine(region);
-                            }
-                            break;
-                        case ConditionalRegionState.AlwaysEnabled:
-                            s_enabledCount++;
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            if (s_printEnabled)
-                            {
-                                Console.WriteLine(region);
-                            }
-                            break;
-                        case ConditionalRegionState.Varying:
-                            s_varyingCount++;
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
-                            if (s_printVarying)
-                            {
-                                Console.WriteLine(region);
-                            }
-                            break;
+                        switch (region.State)
+                        {
+                            case ConditionalRegionState.AlwaysDisabled:
+                                s_disabledCount++;
+                                Console.ForegroundColor = ConsoleColor.Blue;
+                                if (s_printDisabled)
+                                {
+                                    Console.WriteLine(region);
+                                }
+                                break;
+                            case ConditionalRegionState.AlwaysEnabled:
+                                s_enabledCount++;
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                if (s_printEnabled)
+                                {
+                                    Console.WriteLine(region);
+                                }
+                                break;
+                            case ConditionalRegionState.Varying:
+                                s_varyingCount++;
+                                Console.ForegroundColor = ConsoleColor.DarkGray;
+                                if (s_printVarying)
+                                {
+                                    Console.WriteLine(region);
+                                }
+                                break;
+                        }
                     }
                 }
             }
 
             Console.ForegroundColor = originalForegroundColor;
-        }
 
-        private static void PrintConditionalRegionInfoSummary()
-        {
             // Print summary
-            Console.WriteLine();
-
             int totalRegionCount = s_disabledCount + s_enabledCount + s_varyingCount;
             if (totalRegionCount == 0)
             {
                 Console.WriteLine("Did not find any conditional regions.");
             }
-
-            Console.WriteLine("Found");
-            Console.WriteLine("  {0,5} conditional regions total", totalRegionCount);
-
-            if (s_disabledCount > 0)
+            else
             {
-                Console.WriteLine("  {0,5} disabled", s_disabledCount);
-            }
+                Console.WriteLine("Found");
+                Console.WriteLine("  {0,5} conditional regions total", totalRegionCount);
 
-            if (s_enabledCount > 0)
-            {
-                Console.WriteLine("  {0,5} enabled", s_enabledCount);
-            }
+                if (s_disabledCount > 0)
+                {
+                    Console.WriteLine("  {0,5} disabled", s_disabledCount);
+                }
 
-            if (s_varyingCount > 0)
-            {
-                Console.WriteLine("  {0,5} varying", s_varyingCount);
+                if (s_enabledCount > 0)
+                {
+                    Console.WriteLine("  {0,5} enabled", s_enabledCount);
+                }
+
+                if (s_varyingCount > 0)
+                {
+                    Console.WriteLine("  {0,5} varying", s_varyingCount);
+                }
             }
 
             // TODO: Lines of dead code.  A chain struct might be useful because there are many operations on a chain.

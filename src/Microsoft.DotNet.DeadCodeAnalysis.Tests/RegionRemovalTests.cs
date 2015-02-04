@@ -306,6 +306,27 @@ class D {}
             Verify(source, expected);
         }
 
+        [Fact]
+        public void RemoveNestedRegions()
+        {
+            var source = @"
+#if false
+  #if false
+    #if VARYING
+    #endif
+  #else
+    // True
+  #endif
+#endif
+";
+            var expected = @"
+";
+            Verify(source, expected);
+        }
+
+        // TODO: If a region to be removed is bookended by extra whitespace/new lines, ensure that there is only a single newline left
+        //   or just leave this to the formatter
+
         protected void Verify(string source, string expected, bool runFormatter = true)
         {
             var inputSolution = CreateSolution(new[] { source });

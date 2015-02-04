@@ -26,14 +26,25 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
 
             // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
             var newText = await info.Document.GetTextAsync(cancellationToken);
-            newText = newText.WithChanges(changes);
+
+            try
+            {
+                newText = newText.WithChanges(changes);
+            }
+            catch (Exception e)
+            {
+                var changesString = new StringBuilder();
+
+                foreach (var change in changes)
+                {
+                    changesString.AppendLine(change.ToString());
+                }
+
+                Console.WriteLine(string.Format("Failed to remove regions from document '{0}':{1}{2}", info.Document.FilePath, Environment.NewLine, changesString.ToString()));
+                return info.Document;
+            }
 
             return info.Document.WithText(newText);
-        }
-
-        private static int CompareTextChanges(TextChange x, TextChange y)
-        {
-            return x.Span.CompareTo(y.Span);
         }
 
         private static List<TextChange> CalculateTextChanges(List<ConditionalRegionChain> chains)
@@ -48,8 +59,7 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
 
             changes.Sort(CompareTextChanges);
-
-            return changes;
+            return MergeOverlappingRegions(changes);
         }
 
         public static void CalculateTextChanges(ConditionalRegionChain chain, List<TextChange> changes)
@@ -137,27 +147,45 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             }
         }
 
-        private class SpanToReplace : IComparable<SpanToReplace>
+        private static int CompareTextChanges(TextChange x, TextChange y)
         {
-            public TextSpan Span { get; private set; }
-
-            public string ReplacementText { get; private set; }
-
-            public SpanToReplace(int start, int end, string replacementText)
+            int result = x.Span.End - y.Span.End;
+            if (result == 0)
             {
-                if (end < start)
+                return x.Span.Start - y.Span.Start;
+            }
+
+            return result;
+        }
+
+        private static List<TextChange> MergeOverlappingRegions(List<TextChange> changes)
+        {
+            // Note: we assume the changes are ordered by CompareTextChanges
+            var newChanges = new List<TextChange>();
+
+            for (int i = 0; i < changes.Count; i++)
+            {
+                TextChange change = changes[i];
+                for (int j = i + 1; j < changes.Count; j++)
                 {
-                    throw new ArgumentOutOfRangeException("end");
+                    TextChange nextChange = changes[j];
+
+                    if (nextChange.Span.Start <= change.Span.End &&
+                        nextChange.Span.End >= change.Span.End)
+                    {
+                        // This change overlaps but is not contained within the previous change.
+                        // In the case that this change ends where the previous change ends, we need to take
+                        // the replacement text of this change, because it is possible for end directives to
+                        // need non-empty replacement.
+                        change = new TextChange(new TextSpan(change.Span.Start, nextChange.Span.End - change.Span.Start), nextChange.NewText);
+                        i = j;
+                    }
                 }
 
-                Span = new TextSpan(start, end - start);
-                ReplacementText = replacementText;
+                newChanges.Add(change);
             }
 
-            public int CompareTo(SpanToReplace other)
-            {
-                return Span.CompareTo(other.Span);
-            }
+            return newChanges;
         }
     }
 }
