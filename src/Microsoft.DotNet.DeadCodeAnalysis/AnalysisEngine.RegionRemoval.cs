@@ -16,7 +16,10 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
     {
         public async Task<Document> RemoveUnnecessaryRegions(DocumentConditionalRegionInfo info, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Debug.Assert(info != null);
+            if (info == null)
+            {
+                throw new ArgumentNullException("info");
+            }
 
             var changes = CalculateTextChanges(info.Chains);
             if (changes == null || changes.Count == 0)
@@ -31,13 +34,15 @@ namespace Microsoft.DotNet.DeadCodeAnalysis
             {
                 newText = newText.WithChanges(changes);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 var changesString = new StringBuilder();
+                var syntaxTree = await info.Document.GetSyntaxTreeAsync(cancellationToken);
 
                 foreach (var change in changes)
                 {
-                    changesString.AppendLine(change.ToString());
+                    var lineSpan = Location.Create(syntaxTree, change.Span).GetLineSpan();
+                    changesString.AppendFormat("({0}-{1}): {2}", lineSpan.StartLinePosition.Line, lineSpan.EndLinePosition.Line, newText.GetSubText(change.Span).ToString());
                 }
 
                 Console.WriteLine(string.Format("Failed to remove regions from document '{0}':{1}{2}", info.Document.FilePath, Environment.NewLine, changesString.ToString()));
