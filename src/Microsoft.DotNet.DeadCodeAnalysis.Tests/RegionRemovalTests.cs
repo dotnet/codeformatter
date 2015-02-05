@@ -324,8 +324,99 @@ class D {}
             Verify(source, expected);
         }
 
-        // TODO: If a region to be removed is bookended by extra whitespace/new lines, ensure that there is only a single newline left
-        //   or just leave this to the formatter
+        [Fact(Skip = "Not Implemented")]
+        public void RemovePrecedingWhitespace()
+        {
+            var source = @"
+class A { }
+
+#if false
+#endif
+";
+            var expected = @"
+class A { }
+";
+            Verify(source, expected);
+        }
+
+        [Fact(Skip = "Not Implemented")]
+        public void RemovePrecedingWhitespace2()
+        {
+            var source = @"
+class A
+{
+
+#if false
+#endif
+}
+
+
+";
+            var expected = @"
+class A
+{
+}
+";
+            Verify(source, expected);
+        }
+
+        [Fact(Skip = "Not Implemented")]
+        public void RemoveProcedingWhitespace()
+        {
+            var source = @"
+#if false
+#endif
+
+class A { }
+";
+            var expected = @"
+class A { }
+";
+            Verify(source, expected);
+        }
+
+        [Fact(Skip = "Not Implemented")]
+        public void RemoveProcedingWhitespace2()
+        {
+            var source = @"
+class A
+{
+#if false
+#endif
+
+}
+
+
+";
+            var expected = @"
+class A
+{
+}
+";
+            Verify(source, expected);
+        }
+
+        [Fact(Skip = "Not Implemented")]
+        public void RemoveSurroundingWhitespace()
+        {
+            var source = @"
+class A
+{
+
+#if false
+#endif
+
+}
+
+
+";
+            var expected = @"
+class A
+{
+}
+";
+            Verify(source, expected);
+        }
 
         protected void Verify(string source, string expected, bool runFormatter = true)
         {
