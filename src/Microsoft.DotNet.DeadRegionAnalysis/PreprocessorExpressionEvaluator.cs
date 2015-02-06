@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis
+namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     internal class PreprocessorExpressionEvaluator : CSharpSyntaxVisitor<Tristate>
     {

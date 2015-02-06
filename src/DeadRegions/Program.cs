@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.DotNet.DeadCodeAnalysis;
+using Microsoft.DotNet.DeadRegionAnalysis;
 using System.Threading;
 using System.IO;
 
-namespace DeadCode
+namespace DeadRegions
 {
-    // TODO: Rename this to "DeadRegions". Rename namespaces to ConditionalRegionAnalysis? ConditionalRegionAnalysisEngine?
-    // to allow for more dead code analysis based on roslyn which is not about proprocessor regions.
-    internal class DeadCode
+    internal class DeadRegions
     {
         private static AnalysisEngine s_engine;
         private static bool s_printDisabled;

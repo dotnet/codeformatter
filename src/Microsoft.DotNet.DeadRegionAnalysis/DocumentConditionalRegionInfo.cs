@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis
+namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     /// <summary>
     /// Represents a list of conditional region chains in a given document in prefix document order.

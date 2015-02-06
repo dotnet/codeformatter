@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis
+namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public partial class AnalysisEngine
     {

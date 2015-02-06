@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis
+namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public class ConditionalRegion : IComparable<ConditionalRegion>, IEquatable<ConditionalRegion>
     {

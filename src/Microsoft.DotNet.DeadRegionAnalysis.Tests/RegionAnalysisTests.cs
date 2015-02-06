@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using Xunit;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
+namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 {
     public class RegionAnalysisTests : TestBase
     {

@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.22129.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadCodeAnalysis", "Microsoft.DotNet.DeadCodeAnalysis\Microsoft.DotNet.DeadCodeAnalysis.csproj", "{27F04393-37FD-4D02-B574-0084BB7F6A59}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadRegionAnalysis", "Microsoft.DotNet.DeadRegionAnalysis\Microsoft.DotNet.DeadRegionAnalysis.csproj", "{27F04393-37FD-4D02-B574-0084BB7F6A59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadCodeAnalysis.Tests", "Microsoft.DotNet.DeadCodeAnalysis.Tests\Microsoft.DotNet.DeadCodeAnalysis.Tests.csproj", "{7C57FD95-030E-48B2-B369-6694BB922C8C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadRegionAnalysis.Tests", "Microsoft.DotNet.DeadRegionAnalysis.Tests\Microsoft.DotNet.DeadRegionAnalysis.Tests.csproj", "{7C57FD95-030E-48B2-B369-6694BB922C8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadCode", "DeadCode\DeadCode.csproj", "{B65D5F61-64BF-4219-863C-74C2744AE8FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadRegions", "DeadRegions\DeadRegions.csproj", "{B65D5F61-64BF-4219-863C-74C2744AE8FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

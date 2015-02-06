@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Xunit;
 using System;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
+namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 {
     public class PreprocessorExpressionEvaluatorTests
     {

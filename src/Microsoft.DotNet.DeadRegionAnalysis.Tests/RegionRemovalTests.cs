@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Xunit;
 using System;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
+namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 {
     public class RegionRemovalTests : TestBase
     {

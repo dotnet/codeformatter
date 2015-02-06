@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 using Xunit;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Microsoft.DotNet.DeadCodeAnalysis.Tests
+namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 {
     public class TestBase
     {
