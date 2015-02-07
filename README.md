@@ -11,7 +11,7 @@ In order to build or run this tool you will need to have Microsoft Build Tools
 2015 Preview installed.  This comes as a part of Visual Studio 2015 Preview or
 can be installed separately from [here][vs-2015-download].
 
-[vs-2015-download]: http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs)
+[vs-2015-download]: http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs
 
 ## Usage
 
