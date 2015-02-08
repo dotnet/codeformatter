@@ -7,8 +7,8 @@ SET SOLUTION_PATH=%~dp0src\CodeFormatter.sln
 SET BUILD_TOOLS_PATH="%ProgramFiles(x86)%\MSBuild\14.0\bin\MSBuild.exe"
 
 IF NOT EXIST %BUILD_TOOLS_PATH% (
-  echo In order to build or run this tool you need either Visual Studio 2015 Preview or
-  echo Microsoft Build Tools 2015 Preview tools installed.
+  echo In order to build or run this tool you need either Visual Studio 2015 or
+  echo Microsoft Build Tools 2015 tools installed.
   echo.
   echo Visit http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs 
   echo to download either.
