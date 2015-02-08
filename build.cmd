@@ -10,8 +10,10 @@ IF NOT EXIST %BUILD_TOOLS_PATH% (
   echo In order to build or run this tool you need either Visual Studio 2015 or
   echo Microsoft Build Tools 2015 tools installed.
   echo.
-  echo Visit http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs 
-  echo to download either.
+  echo Visit this page to download either:
+  echo.
+  echo http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs
+  echo.
   goto :eof
 )
 
