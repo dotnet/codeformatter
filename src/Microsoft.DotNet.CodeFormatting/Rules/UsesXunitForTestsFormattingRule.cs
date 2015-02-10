@@ -52,6 +52,23 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             foreach (var usingSyntax in root.Usings)
             {
+                Action<UsingDirectiveSyntax> addUsing = (UsingDirectiveSyntax newUsingSyntax) =>
+                {
+                    UsingDirectiveSyntax usingDirectiveToUse = newUsingSyntax;
+                    if (usingDirectiveToUse.HasLeadingTrivia)
+                    {
+                        var newLeadingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetLeadingTrivia());
+                        usingDirectiveToUse = usingDirectiveToUse.WithLeadingTrivia(newLeadingTrivia);
+                    }
+                    if (usingDirectiveToUse.HasTrailingTrivia)
+                    {
+                        var newTrailingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetTrailingTrivia());
+                        usingDirectiveToUse = usingDirectiveToUse.WithTrailingTrivia(newTrailingTrivia);
+                    }
+
+                    newUsings.Add(usingDirectiveToUse);
+                };
+
                 var symbolInfo = semanticModel.GetSymbolInfo(usingSyntax.Name);
                 if (symbolInfo.Symbol != null)
                 {
@@ -62,20 +79,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     }
                     else
                     {
-                        UsingDirectiveSyntax usingDirectiveToUse = usingSyntax;
-                        if (usingDirectiveToUse.HasLeadingTrivia)
-                        {
-                            var newLeadingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetLeadingTrivia());
-                            usingDirectiveToUse = usingDirectiveToUse.WithLeadingTrivia(newLeadingTrivia);
-                        }
-                        if (usingDirectiveToUse.HasTrailingTrivia)
-                        {
-                            var newTrailingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetTrailingTrivia());
-                            usingDirectiveToUse = usingDirectiveToUse.WithTrailingTrivia(newTrailingTrivia);
-                        }
-
-                        newUsings.Add(usingDirectiveToUse);
+                        addUsing(usingSyntax);
                     }
+                }
+                else
+                {
+                    addUsing(usingSyntax);
                 }
             }
 
@@ -86,6 +95,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             TransformationTracker transformationTracker = new TransformationTracker();
             RemoveTestClassAttributes(root, semanticModel, transformationTracker);
+            RemoveContractsRequiredAttributes(root, semanticModel, transformationTracker);
             ChangeTestMethodAttributesToFact(root, semanticModel, transformationTracker);
             ChangeAssertCalls(root, semanticModel, transformationTracker);
             root = transformationTracker.TransformRoot(root);
@@ -115,7 +125,17 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return document.WithSyntaxRoot(root).Project.Solution;
         }
 
+        private void RemoveContractsRequiredAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        {
+            RemoveTestAttributes(root, semanticModel, transformationTracker, "ContractsRequiredAttribute");
+        }
+
         private void RemoveTestClassAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
+        {
+            RemoveTestAttributes(root, semanticModel, transformationTracker, "TestClassAttribute");
+        }
+
+        private void RemoveTestAttributes(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker, string attributeName)
         {
             List<AttributeSyntax> nodesToRemove = new List<AttributeSyntax>();
 
@@ -127,7 +147,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     if (typeInfo.Type != null)
                     {
                         string attributeTypeDocID = typeInfo.Type.GetDocumentationCommentId();
-                        if (IsTestNamespaceType(attributeTypeDocID, "TestClassAttribute"))
+                        if (IsTestNamespaceType(attributeTypeDocID, attributeName))
                         {
                             return true;
                         }
@@ -156,6 +176,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return transformationRoot;
             });
         }
+
         private void ChangeTestMethodAttributesToFact(CompilationUnitSyntax root, SemanticModel semanticModel, TransformationTracker transformationTracker)
         {
             List<AttributeSyntax> nodesToReplace = new List<AttributeSyntax>();
