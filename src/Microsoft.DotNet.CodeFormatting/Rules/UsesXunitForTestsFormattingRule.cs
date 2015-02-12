@@ -32,6 +32,27 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             _options = options;
         }
 
+        private static UsingDirectiveSyntax RemoveLeadingAndTrailingCompilerDirectives(UsingDirectiveSyntax usingSyntax)
+        {
+            UsingDirectiveSyntax usingDirectiveToUse = usingSyntax;
+            if (usingDirectiveToUse.HasLeadingTrivia)
+            {
+                if (usingDirectiveToUse.HasLeadingTrivia)
+                {
+                    var newLeadingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetLeadingTrivia());
+                    usingDirectiveToUse = usingDirectiveToUse.WithLeadingTrivia(newLeadingTrivia);
+                }
+                if (usingDirectiveToUse.HasTrailingTrivia)
+                {
+                    var newTrailingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetTrailingTrivia());
+                    usingDirectiveToUse = usingDirectiveToUse.WithTrailingTrivia(newTrailingTrivia);
+                }
+            }
+
+            return usingDirectiveToUse;
+        }
+
+
         public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
             var root = syntaxNode as CompilationUnitSyntax;
@@ -52,23 +73,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             foreach (var usingSyntax in root.Usings)
             {
-                Action<UsingDirectiveSyntax> addUsing = (UsingDirectiveSyntax newUsingSyntax) =>
-                {
-                    UsingDirectiveSyntax usingDirectiveToUse = newUsingSyntax;
-                    if (usingDirectiveToUse.HasLeadingTrivia)
-                    {
-                        var newLeadingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetLeadingTrivia());
-                        usingDirectiveToUse = usingDirectiveToUse.WithLeadingTrivia(newLeadingTrivia);
-                    }
-                    if (usingDirectiveToUse.HasTrailingTrivia)
-                    {
-                        var newTrailingTrivia = RemoveCompilerDirectives(usingDirectiveToUse.GetTrailingTrivia());
-                        usingDirectiveToUse = usingDirectiveToUse.WithTrailingTrivia(newTrailingTrivia);
-                    }
-
-                    newUsings.Add(usingDirectiveToUse);
-                };
-
                 var symbolInfo = semanticModel.GetSymbolInfo(usingSyntax.Name);
                 if (symbolInfo.Symbol != null)
                 {
@@ -79,12 +83,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     }
                     else
                     {
-                        addUsing(usingSyntax);
+                        newUsings.Add(RemoveLeadingAndTrailingCompilerDirectives(usingSyntax));
                     }
                 }
                 else
                 {
-                    addUsing(usingSyntax);
+                    newUsings.Add(RemoveLeadingAndTrailingCompilerDirectives(usingSyntax));
                 }
             }
 
