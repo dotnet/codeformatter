@@ -109,6 +109,7 @@
     <Compile Include="Rules\CombinationTest.cs" />
     <Compile Include="Rules\ExplicitThisRuleTests.cs" />
     <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
+    <Compile Include="Rules\HasNewLineAtEndOfFileFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
