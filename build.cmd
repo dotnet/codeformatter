@@ -28,4 +28,4 @@ IF EXIST "%~dp0src\packages" goto build
 
 :build
 
-%BUILD_TOOLS_PATH% %SOLUTION_PATH% /p:OutDir="%~dp0bin " /nologo /m /v:m /flp:verbosity=normal %*
+%BUILD_TOOLS_PATH% %SOLUTION_PATH% /p:OutDir="%~dp0bin" /nologo /m /v:m /flp:verbosity=normal %*
