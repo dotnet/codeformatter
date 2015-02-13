@@ -17,12 +17,12 @@ using System.IO;
 
 namespace XUnitConverter
 {
-    internal sealed class XUnitConverter 
+    public sealed class XUnitConverter 
     {
         private static object _lockObject = new object();
         private static HashSet<string> _mstestNamespaces;
 
-        internal XUnitConverter()
+        public XUnitConverter()
         {
         }
 
@@ -46,6 +46,23 @@ namespace XUnitConverter
             return usingDirectiveToUse;
         }
 
+        public async Task<Solution> ProcessAsync(Project project, CancellationToken cancellationToken)
+        {
+            var solution = project.Solution;
+            foreach (var id in project.DocumentIds)
+            {
+                var document = solution.GetDocument(id);
+                var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken);
+                if (syntaxNode == null)
+                {
+                    continue;
+                }
+
+                solution = await ProcessAsync(document, syntaxNode, cancellationToken);
+            }
+
+            return solution;
+        }
 
         public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
