@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.CodeGeneration;
 using System.Runtime.Serialization;
 using System.IO;
 
-namespace Microsoft.DotNet.CodeFormatting.Rules
+namespace XUnitConverter
 {
     internal sealed class XUnitConverter 
     {
