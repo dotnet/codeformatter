@@ -9,58 +9,43 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.VisualBasic;
+using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     internal partial class CopyrightHeaderRule
     {
-        private sealed class VisualBasicRule
+        private sealed class VisualBasicRule : CommonRule
         {
-            private readonly Options _options;
-
-            internal VisualBasicRule(Options options)
+            internal VisualBasicRule(ImmutableArray<string> header) : base(header)
             {
-                _options = options;
             }
 
-            internal SyntaxNode Process(SyntaxNode syntaxNode)
+            protected override SyntaxTriviaList CreateTriviaList(IEnumerable<SyntaxTrivia> e)
             {
-                if (_options.CopyrightHeader.IsDefaultOrEmpty)
-                {
-                    return syntaxNode;
-                }
-
-                if (HasCopyrightHeader(syntaxNode))
-                    return syntaxNode;
-
-                return AddCopyrightHeader(syntaxNode);
+                return SyntaxFactory.TriviaList(e);
             }
 
-            private bool HasCopyrightHeader(SyntaxNode syntaxNode)
+            protected override bool IsLineComment(SyntaxTrivia trivia)
             {
-                var leadingComments = syntaxNode.GetLeadingTrivia().Where(t => t.VBKind() == SyntaxKind.CommentTrivia).ToArray();
-                var header = _options.CopyrightHeader;
-                if (leadingComments.Length < header.Length)
-                    return false;
-
-                return leadingComments.Take(header.Length)
-                                      .Select(t => GetCommentText(t.ToFullString()))
-                                      .SequenceEqual(header.Select(GetCommentText));
+                return trivia.VBKind() == SyntaxKind.CommentTrivia;
             }
 
-            private SyntaxNode AddCopyrightHeader(SyntaxNode syntaxNode)
+            protected override bool IsWhiteSpaceOrNewLine(SyntaxTrivia trivia)
             {
-                var newTrivia = GetCopyrightHeader().Concat(syntaxNode.GetLeadingTrivia());
-                return syntaxNode.WithLeadingTrivia(newTrivia);
+                return
+                    trivia.VBKind() == SyntaxKind.WhitespaceTrivia ||
+                    trivia.VBKind() == SyntaxKind.EndOfLineTrivia;
             }
 
-            private IEnumerable<SyntaxTrivia> GetCopyrightHeader()
+            protected override SyntaxTrivia CreateLineComment(string commentText)
             {
-                foreach (var headerLine in _options.CopyrightHeader)
-                {
-                    yield return SyntaxFactory.CommentTrivia("' " + GetCommentText(headerLine));
-                    yield return SyntaxFactory.CarriageReturnLineFeed;
-                }
+                return SyntaxFactory.CommentTrivia("' " + commentText);
+            }
+
+            protected override SyntaxTrivia CreateNewLine()
+            {
+                return SyntaxFactory.CarriageReturnLineFeed;
             }
         }
     }

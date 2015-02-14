@@ -73,6 +73,25 @@ class C
         }
 
         [Fact]
+        public void CSharpRemoveOlder()
+        {
+            _options.CopyrightHeader = ImmutableArray.Create("test");
+            var source = @"// copyright
+
+class C
+{
+}";
+
+            var expected = @"// test
+
+class C
+{
+}";
+            Verify(source, expected);
+
+        }
+
+        [Fact]
         public void VisualBasicSimple()
         {
             _options.CopyrightHeader = ImmutableArray.Create("test");
