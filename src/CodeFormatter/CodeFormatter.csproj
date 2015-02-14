@@ -111,6 +111,5 @@
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(ProjectDir)IllegalHeaders.md" DestinationFolder="$(OutDir)" ContinueOnError="true" />
     <Copy SourceFiles="$(ProjectDir)CopyrightHeader.md" DestinationFolder="$(OutDir)" ContinueOnError="true" />
-    <Copy SourceFiles="$(ProjectDir)MSTestNamespaces.txt" DestinationFolder="$(OutDir)" ContinueOnError="true" />
   </Target>
 </Project>
