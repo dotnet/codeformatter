@@ -72,7 +72,7 @@ namespace XUnitConverterTests
         }
 
         [Fact]
-        public void TestUpdatesUsingStatements()
+        public async Task TestUpdatesUsingStatements()
         {
             var text = @"
 using System;
@@ -91,11 +91,11 @@ namespace System.Composition.UnitTests
 {
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestUpdatesUsingStatementsWithIfDefs()
+        public async Task TestUpdatesUsingStatementsWithIfDefs()
         {
             var text = @"
 using System;
@@ -120,11 +120,11 @@ namespace System.Composition.UnitTests
 {
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestRemovesTestClassAttributes()
+        public async Task TestRemovesTestClassAttributes()
         {
             var text = @"
 using System;
@@ -150,11 +150,11 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestUpdatesTestMethodAttributes()
+        public async Task TestUpdatesTestMethodAttributes()
         {
             var text = @"
 using System;
@@ -187,11 +187,11 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestUpdatesAsserts()
+        public async Task TestUpdatesAsserts()
         {
             var text = @"
 using System;
@@ -244,7 +244,7 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
     }
 }
