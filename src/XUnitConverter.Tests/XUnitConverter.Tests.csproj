@@ -103,7 +103,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConverterTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestAssertTrueOrFalseRuleTests.cs" />
     <Compile Include="UsesXunitForTestsFormattingRuleTests.cs" />
   </ItemGroup>
   <ItemGroup>

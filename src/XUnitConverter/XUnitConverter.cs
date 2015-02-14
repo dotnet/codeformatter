@@ -17,14 +17,10 @@ using System.IO;
 
 namespace XUnitConverter
 {
-    public sealed class XUnitConverter 
+    public sealed class XUnitConverter : ConverterBase
     {
         private static object _lockObject = new object();
         private static HashSet<string> _mstestNamespaces;
-
-        public XUnitConverter()
-        {
-        }
 
         private static UsingDirectiveSyntax RemoveLeadingAndTrailingCompilerDirectives(UsingDirectiveSyntax usingSyntax)
         {
@@ -46,25 +42,7 @@ namespace XUnitConverter
             return usingDirectiveToUse;
         }
 
-        public async Task<Solution> ProcessAsync(Project project, CancellationToken cancellationToken)
-        {
-            var solution = project.Solution;
-            foreach (var id in project.DocumentIds)
-            {
-                var document = solution.GetDocument(id);
-                var syntaxNode = await document.GetSyntaxRootAsync(cancellationToken);
-                if (syntaxNode == null)
-                {
-                    continue;
-                }
-
-                solution = await ProcessAsync(document, syntaxNode, cancellationToken);
-            }
-
-            return solution;
-        }
-
-        public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
+        protected override async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
             var root = syntaxNode as CompilationUnitSyntax;
             if (root == null)

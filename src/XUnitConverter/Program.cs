@@ -29,9 +29,19 @@ namespace XUnitConverter
             workspace.LoadMetadataForReferencedProjects = true;
 
             var project = await workspace.OpenProjectAsync(projectPath, cancellationToken);
-            var xunitConverter = new XUnitConverter();
-            var solution = await xunitConverter.ProcessAsync(project, cancellationToken);
-            workspace.TryApplyChanges(solution);
+            var converters = new ConverterBase[] 
+                {
+                    new XUnitConverter(),
+                    new TestAssertTrueOrFalseConverter()
+                };
+
+            foreach (var converter in converters)
+            {
+                var solution = await converter.ProcessAsync(project, cancellationToken);
+                project = solution.GetProject(project.Id);
+            }
+
+            workspace.TryApplyChanges(project.Solution);
         }
     }
 }

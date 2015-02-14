@@ -99,8 +99,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConverterBase.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestAssertTrueOrFalseConverter.cs" />
     <Compile Include="XUnitConverter.cs" />
   </ItemGroup>
   <ItemGroup>
