@@ -10,20 +10,18 @@ using Microsoft.CodeAnalysis;
 using Xunit;
 using System.Threading;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Text;
 
 namespace XUnitConverterTests
 {
     public class UsesXunitForTestsFormattingRuleTests
     {
+        private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromAssembly(typeof(object).Assembly);
+        private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromAssembly(typeof(Enumerable).Assembly);
         private static readonly MetadataReference s_MSTestReference = MetadataReference.CreateFromAssembly(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly);
         private static readonly MetadataReference s_XunitReference = MetadataReference.CreateFromAssembly(typeof(FactAttribute).Assembly);
 
-        private CustomWorkspace CreateWorkspace()
-        {
-            return null;
-        }
-
-        private async Task<Solution> RunConverter(Project project, bool runFormatter)
+        private async Task<Project> RunConverter(Project project, bool runFormatter)
         {
             var xunitConverter = new XUnitConverter.XUnitConverter();
             var solution = await xunitConverter.ProcessAsync(project, CancellationToken.None);
@@ -38,19 +36,40 @@ namespace XUnitConverterTests
                 }
             }
 
-            return solution;
+            return solution.GetProject(project.Id); ;
         }
 
-        /*
-        protected override IEnumerable<MetadataReference> GetSolutionMetadataReferences()
+        private Project CreateSolution(string source)
         {
-            return base.GetSolutionMetadataReferences()
-                .Concat(new[] {
+            var testProjectName = "Test";
+            var projectId = ProjectId.CreateNewId(testProjectName);
+
+            var references = new[]
+                {
+                    s_CorlibReference,
+                    s_SystemCoreReference,
                     s_MSTestReference,
                     s_XunitReference
-                });
+                };
+
+            var solution = new CustomWorkspace()
+                .CurrentSolution
+                .AddProject(projectId, testProjectName, testProjectName, LanguageNames.CSharp)
+                .AddMetadataReferences(projectId, references);
+
+            var fileName = "File.cs";
+            var documentId = DocumentId.CreateNewId(projectId, fileName);
+            solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
+            return solution.GetProject(projectId);
         }
-        */
+
+        private async Task Verify(string text, string expected, bool runFormatter = true)
+        {
+            var project = CreateSolution(text);
+            project = await RunConverter(project, runFormatter);
+            var actual = await project.Documents.Single().GetTextAsync(CancellationToken.None);
+            Assert.Equal(expected, actual.ToString());
+        }
 
         [Fact]
         public void TestUpdatesUsingStatements()

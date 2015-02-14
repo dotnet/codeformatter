@@ -30,7 +30,7 @@ namespace XUnitConverter
 
             var project = await workspace.OpenProjectAsync(projectPath, cancellationToken);
             var xunitConverter = new XUnitConverter();
-            var solution = xunitConverter.ProcessAsync(project, cancellationToken);
+            var solution = await xunitConverter.ProcessAsync(project, cancellationToken);
             workspace.TryApplyChanges(solution);
         }
     }
