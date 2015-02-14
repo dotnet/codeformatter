@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             None,
         }
 
-        public SyntaxNode Process(SyntaxNode syntaxNode)
+        public SyntaxNode Process(SyntaxNode syntaxNode, string languageName)
         {
             syntaxNode = FixOpenBraces(syntaxNode);
             syntaxNode = FixCloseBraces(syntaxNode);

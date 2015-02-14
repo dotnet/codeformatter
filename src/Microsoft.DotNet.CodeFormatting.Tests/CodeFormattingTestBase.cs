@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         protected override async Task<Document> RewriteDocumentAsync(Document document)
         {
             var syntaxRoot = await document.GetSyntaxRootAsync();
-            syntaxRoot = Rule.Process(syntaxRoot);
+            syntaxRoot = Rule.Process(syntaxRoot, document.Project.Language);
             return document.WithSyntaxRoot(syntaxRoot);
         }
     }

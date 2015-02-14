@@ -204,13 +204,13 @@ namespace Microsoft.DotNet.CodeFormatting
             return currentSolution;
         }
 
-        private SyntaxNode RunSyntaxPass(SyntaxNode root, string langaugeName)
+        private SyntaxNode RunSyntaxPass(SyntaxNode root, string languageName)
         {
             foreach (var rule in _syntaxRules)
             {
-                if (rule.SupportsLanguage(langaugeName))
+                if (rule.SupportsLanguage(languageName))
                 {
-                    root = rule.Process(root);
+                    root = rule.Process(root, languageName);
                 }
             }
 

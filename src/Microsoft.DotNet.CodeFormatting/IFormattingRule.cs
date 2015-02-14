@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// </summary>
     internal interface ISyntaxFormattingRule : IFormattingRule
     {
-        SyntaxNode Process(SyntaxNode syntaxRoot);
+        SyntaxNode Process(SyntaxNode syntaxRoot, string languageName);
     }
 
     /// <summary>

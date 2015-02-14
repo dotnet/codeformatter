@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             _options = options;
         }
 
-        public SyntaxNode Process(SyntaxNode syntaxNode)
+        public SyntaxNode Process(SyntaxNode syntaxNode, string languageName)
         {
             if (_options.CopyrightHeader.IsDefaultOrEmpty)
             {

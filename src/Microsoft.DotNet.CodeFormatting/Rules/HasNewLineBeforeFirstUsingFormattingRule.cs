@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     {
         private const string FormatError = "Could not format using";
 
-        public SyntaxNode Process(SyntaxNode syntaxRoot)
+        public SyntaxNode Process(SyntaxNode syntaxRoot, string languageName)
         {
             var firstUsing = syntaxRoot.DescendantNodesAndSelf().OfType<UsingDirectiveSyntax>().FirstOrDefault();
             if (firstUsing == null)
