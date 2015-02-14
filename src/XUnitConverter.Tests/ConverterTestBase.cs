@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Xunit;
 using XUnitConverter;
 
-namespace XUnitConverterTests
+namespace XUnitConverter.Tests
 {
     public abstract class ConverterTestBase
     {

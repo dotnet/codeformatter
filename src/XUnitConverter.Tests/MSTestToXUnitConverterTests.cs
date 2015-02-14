@@ -12,13 +12,13 @@ using System.Threading;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
-namespace XUnitConverterTests
+namespace XUnitConverter.Tests
 {
-    public class UsesXunitForTestsFormattingRuleTests : ConverterTestBase
+    public class MSTestToXUnitConverterTests : ConverterTestBase
     {
         protected override XUnitConverter.ConverterBase CreateConverter()
         {
-            return new XUnitConverter.XUnitConverter();
+            return new XUnitConverter.MSTestToXUnitConverter();
         }
 
         [Fact]

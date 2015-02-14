@@ -103,7 +103,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestAssertTrueOrFalseConverter.cs" />
-    <Compile Include="XUnitConverter.cs" />
+    <Compile Include="MSTestToXUnitConverter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Xunit;
 
-namespace XUnitConverterTests
+namespace XUnitConverter.Tests
 {
-    public class TestAssertTrueOrFalseRuleTests : ConverterTestBase
+    public class TestAssertTrueOrFalseConverterTests : ConverterTestBase
     {
         protected override XUnitConverter.ConverterBase CreateConverter()
         {

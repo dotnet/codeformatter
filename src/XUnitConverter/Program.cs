@@ -31,7 +31,7 @@ namespace XUnitConverter
             var project = await workspace.OpenProjectAsync(projectPath, cancellationToken);
             var converters = new ConverterBase[] 
                 {
-                    new XUnitConverter(),
+                    new MSTestToXUnitConverter(),
                     new TestAssertTrueOrFalseConverter()
                 };
 
