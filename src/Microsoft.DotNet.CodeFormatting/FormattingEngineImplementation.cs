@@ -150,6 +150,16 @@ namespace Microsoft.DotNet.CodeFormatting
             return document.GetSyntaxRootAsync(cancellationToken);
         }
 
+        private Task<SyntaxNode> GetSyntaxRootAndFilter(IFormattingRule formattingRule, Document document, CancellationToken cancellationToken)
+        {
+            if (!formattingRule.SupportsLanguage(document.Project.Language))
+            {
+                return Task.FromResult<SyntaxNode>(null);
+            }
+
+            return GetSyntaxRootAndFilter(formattingRule, document, cancellationToken);
+        }
+
         private void StartDocument()
         {
             _watch.Restart();
@@ -182,7 +192,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
 
                 StartDocument();
-                var newRoot = RunSyntaxPass(syntaxRoot);
+                var newRoot = RunSyntaxPass(syntaxRoot, document.Project.Language);
                 EndDocument(document);
 
                 if (newRoot != syntaxRoot)
@@ -194,11 +204,14 @@ namespace Microsoft.DotNet.CodeFormatting
             return currentSolution;
         }
 
-        private SyntaxNode RunSyntaxPass(SyntaxNode root)
+        private SyntaxNode RunSyntaxPass(SyntaxNode root, string langaugeName)
         {
             foreach (var rule in _syntaxRules)
             {
-                root = rule.Process(root);
+                if (rule.SupportsLanguage(langaugeName))
+                {
+                    root = rule.Process(root);
+                }
             }
 
             return root;
@@ -222,7 +235,7 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var documentId in documentIds)
             {
                 var document = originalSolution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                var syntaxRoot = await GetSyntaxRootAndFilter(localSemanticRule, document, cancellationToken);
                 if (syntaxRoot == null)
                 {
                     continue;
@@ -258,7 +271,7 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var documentId in documentIds)
             {
                 var document = solution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                var syntaxRoot = await GetSyntaxRootAndFilter(globalSemanticRule, document, cancellationToken);
                 if (syntaxRoot == null)
                 {
                     continue;

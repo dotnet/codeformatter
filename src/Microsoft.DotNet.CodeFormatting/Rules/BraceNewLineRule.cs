@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [SyntaxRuleOrder(SyntaxRuleOrder.BraceNewLineRule)]
-    internal sealed class BraceNewLineRule : ISyntaxFormattingRule
+    internal sealed class BraceNewLineRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         private enum NewLineKind
         {

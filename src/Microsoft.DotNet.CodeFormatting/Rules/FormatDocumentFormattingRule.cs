@@ -16,7 +16,7 @@ using System.Collections.Generic;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [LocalSemanticRuleOrder(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
-    internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
+    internal sealed class FormatDocumentFormattingRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
         private readonly Options _options;
 

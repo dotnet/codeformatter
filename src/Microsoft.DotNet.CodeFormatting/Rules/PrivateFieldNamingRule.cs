@@ -18,7 +18,7 @@ using Microsoft.CodeAnalysis.Rename;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [GlobalSemanticRuleOrder(GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
-    internal sealed class PrivateFieldNamingRule : IGlobalSemanticFormattingRule
+    internal sealed class PrivateFieldNamingRule : CSharpOnlyFormattingRule, IGlobalSemanticFormattingRule
     {
         /// <summary>
         /// This will add an annotation to any private field that needs to be renamed.

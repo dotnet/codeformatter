@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [LocalSemanticRuleOrder(LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
-    internal sealed class HasNoIllegalHeadersFormattingRule : ILocalSemanticFormattingRule
+    internal sealed class HasNoIllegalHeadersFormattingRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
         // We are going to replace this header with the actual filename of the document being processed
         private const string FileNameIllegalHeader = "<<<filename>>>";

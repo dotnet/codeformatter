@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [SyntaxRuleOrder(SyntaxRuleOrder.HasCopyrightHeaderFormattingRule)]
-    internal sealed class HasCopyrightHeaderFormattingRule : ISyntaxFormattingRule
+    internal sealed class HasCopyrightHeaderFormattingRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         private readonly Options _options;
 

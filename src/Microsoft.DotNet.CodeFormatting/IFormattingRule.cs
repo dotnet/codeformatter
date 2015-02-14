@@ -10,9 +10,17 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.DotNet.CodeFormatting
 {
     /// <summary>
+    /// Base formatting rule which helps establish which language the rule applies to.
+    /// </summary>
+    internal interface IFormattingRule
+    {
+        bool SupportsLanguage(string languageName);
+    }
+
+    /// <summary>
     /// Rules which need no semantic information and operate on parse trees only.  
     /// </summary>
-    internal interface ISyntaxFormattingRule
+    internal interface ISyntaxFormattingRule : IFormattingRule
     {
         SyntaxNode Process(SyntaxNode syntaxRoot);
     }
@@ -22,7 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// used for rules that need to see a <see cref="Document"/> and <see cref="SyntaxNode"/> which
     /// are in sync with each other,
     /// </summary>
-    internal interface ILocalSemanticFormattingRule
+    internal interface ILocalSemanticFormattingRule : IFormattingRule
     {
         Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
     }
@@ -30,7 +38,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// <summary>
     /// Rules which can affect more than the local document
     /// </summary>
-    internal interface IGlobalSemanticFormattingRule 
+    internal interface IGlobalSemanticFormattingRule : IFormattingRule
     {
         Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
     }
