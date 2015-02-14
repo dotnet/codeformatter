@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 return Task.FromResult<SyntaxNode>(null);
             }
 
-            return GetSyntaxRootAndFilter(formattingRule, document, cancellationToken);
+            return GetSyntaxRootAndFilter(document, cancellationToken);
         }
 
         private void StartDocument()

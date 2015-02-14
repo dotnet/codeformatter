@@ -93,10 +93,10 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 
         protected abstract Task<Document> RewriteDocumentAsync(Document document);
 
-        protected void Verify(string[] sources, string[] expected, bool runFormatter)
+        protected void Verify(string[] sources, string[] expected, bool runFormatter, string languageName)
         {
-            var inputSolution = CreateSolution(sources);
-            var expectedSolution = CreateSolution(expected);
+            var inputSolution = CreateSolution(sources, languageName);
+            var expectedSolution = CreateSolution(expected, languageName);
             var actualSolution = Format(inputSolution, runFormatter).Result;
 
             if (actualSolution == null)
@@ -105,9 +105,9 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             AssertSolutionEqual(expectedSolution, actualSolution);
         }
 
-        protected void Verify(string source, string expected, bool runFormatter = true)
+        protected void Verify(string source, string expected, bool runFormatter = true, string languageName = LanguageNames.CSharp)
         {
-            Verify(new string[] { source }, new string[] { expected }, runFormatter);
+            Verify(new string[] { source }, new string[] { expected }, runFormatter, languageName);
         }
     }
 

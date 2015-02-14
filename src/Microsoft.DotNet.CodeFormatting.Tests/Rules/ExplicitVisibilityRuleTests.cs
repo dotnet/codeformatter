@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -338,7 +339,7 @@ public partial class C { }
 public partial class C { }
 ";
 
-            Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false);
+            Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
         }
 
         [Fact]
