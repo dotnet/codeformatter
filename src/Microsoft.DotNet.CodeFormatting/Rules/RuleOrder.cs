@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int HasNewLineBeforeFirstNamespaceFormattingRule = 5;
         public const int BraceNewLineRule = 6;
         public const int NonAsciiChractersAreEscapedInLiterals = 7;
-        public const int TestAssertTrueOrFalseRule = 8;
     }
 
     // Please keep these values sorted by number, not rule name.    

@@ -114,7 +114,6 @@
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
-    <Compile Include="Rules\TestAssertTrueOrFalseRuleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
