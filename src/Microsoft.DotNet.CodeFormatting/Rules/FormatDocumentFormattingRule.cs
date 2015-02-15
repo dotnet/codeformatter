@@ -12,11 +12,13 @@ using Microsoft.CodeAnalysis.CSharp;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [LocalSemanticRuleOrder(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
-    internal sealed class FormatDocumentFormattingRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
+    internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
     {
         private readonly Options _options;
 
@@ -26,6 +28,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             _options = options;
         }
 
+        public bool SupportsLanguage(string languageName)
+        {
+            return
+                languageName == LanguageNames.CSharp ||
+                languageName == LanguageNames.VisualBasic;
+        }
+
         public async Task<SyntaxNode> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
             document = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
@@ -33,20 +42,37 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             if (!_options.PreprocessorConfigurations.IsDefaultOrEmpty)
             {
                 var project = document.Project;
-                var parseOptions = (CSharpParseOptions)document.Project.ParseOptions;
+                var parseOptions = document.Project.ParseOptions;
                 foreach (var configuration in _options.PreprocessorConfigurations)
                 {
                     var list = new List<string>(configuration.Length + 1);
                     list.AddRange(configuration);
                     list.Add(FormattingEngineImplementation.TablePreprocessorSymbolName);
 
-                    var newParseOptions = parseOptions.WithPreprocessorSymbols(list);
+                    var newParseOptions = WithPreprocessorSymbols(parseOptions, list);
                     document = project.WithParseOptions(newParseOptions).GetDocument(document.Id);
                     document = await Formatter.FormatAsync(document, cancellationToken: cancellationToken);
                 }
             }
 
             return await document.GetSyntaxRootAsync(cancellationToken);
+        }
+
+        private static ParseOptions WithPreprocessorSymbols(ParseOptions parseOptions, List<string> symbols)
+        {
+            var csharpParseOptions = parseOptions as CSharpParseOptions;
+            if (csharpParseOptions != null)
+            {
+                return csharpParseOptions.WithPreprocessorSymbols(symbols);
+            }
+
+            var basicParseOptions = parseOptions as VisualBasicParseOptions;
+            if (basicParseOptions != null)
+            {
+                return basicParseOptions.WithPreprocessorSymbols(symbols.Select(x => new KeyValuePair<string, object>(x, true)));
+            }
+
+            throw new NotSupportedException();
         }
     }
 }

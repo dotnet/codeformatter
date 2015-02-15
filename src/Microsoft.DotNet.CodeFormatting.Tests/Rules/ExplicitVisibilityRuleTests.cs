@@ -11,17 +11,20 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public sealed class ExplicitVisibilityRuleTests : LocalSemanticRuleTestBase
+    public abstract class ExplicitVisibilityRuleTests : LocalSemanticRuleTestBase
     {
         internal override ILocalSemanticFormattingRule Rule
         {
             get { return new Rules.ExplicitVisibilityRule(); }
         }
 
-        [Fact]
-        public void TestTypeVisibility()
+        public sealed class CSharpTests : ExplicitVisibilityRuleTests
         {
-            var text = @"
+
+            [Fact]
+            public void TestTypeVisibility()
+            {
+                var text = @"
 class C1 { } 
 sealed partial class C2 { } 
 struct S1 { }
@@ -30,7 +33,7 @@ enum E1 { }
 delegate void D1() { } 
 ";
 
-            var expected = @"
+                var expected = @"
 internal class C1 { } 
 internal sealed partial class C2 { } 
 internal struct S1 { }
@@ -39,13 +42,13 @@ internal enum E1 { }
 internal delegate void D1() { } 
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void TestNestedTypeVisibility()
-        {
-            var text = @"
+            [Fact]
+            public void TestNestedTypeVisibility()
+            {
+                var text = @"
 class C
 {
     class C { } 
@@ -56,7 +59,7 @@ class C
 }
 ";
 
-            var expected = @"
+                var expected = @"
 internal class C
 {
     private class C { } 
@@ -67,13 +70,13 @@ internal class C
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void TestMethodVisibility()
-        {
-            var text = @"
+            [Fact]
+            public void TestMethodVisibility()
+            {
+                var text = @"
 internal class C
 {
     void M1();
@@ -93,7 +96,7 @@ internal interface I
 }
 ";
 
-            var expected = @"
+                var expected = @"
 internal class C
 {
     private void M1();
@@ -113,13 +116,13 @@ internal interface I
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void TestExplicitInterfaceImplementation()
-        {
-            var text = @"
+            [Fact]
+            public void TestExplicitInterfaceImplementation()
+            {
+                var text = @"
 interface I1
 {
     int this[int index] { get; set; }
@@ -146,7 +149,7 @@ class C : I1
 }
 ";
 
-            var expected = @"
+                var expected = @"
 internal interface I1
 {
     int this[int index] { get; set; }
@@ -173,13 +176,13 @@ internal class C : I1
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void TestFieldImplementation()
-        {
-            var text = @"
+            [Fact]
+            public void TestFieldImplementation()
+            {
+                var text = @"
 class C
 {
     const int Max;
@@ -199,7 +202,7 @@ struct C
 }
 ";
 
-            var expected = @"
+                var expected = @"
 internal class C
 {
     private const int Max;
@@ -219,13 +222,13 @@ internal struct C
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void TestConstructor()
-        {
-            var text = @"
+            [Fact]
+            public void TestConstructor()
+            {
+                var text = @"
 class C
 {
     static C() { } 
@@ -240,7 +243,7 @@ struct S
     internal S(int p1, int p2) { } 
 }
 ";
-            var expected = @"
+                var expected = @"
 internal class C
 {
     static C() { } 
@@ -256,13 +259,13 @@ internal struct S
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void TestPrivateFields()
-        {
-            var text = @"
+            [Fact]
+            public void TestPrivateFields()
+            {
+                var text = @"
 using System;
 class T
 {
@@ -274,7 +277,7 @@ class T
     int k = 1, s = 2;
     // some trivia
 }";
-            var expected = @"
+                var expected = @"
 using System;
 internal class T
 {
@@ -286,66 +289,66 @@ internal class T
     private int k = 1, s = 2;
     // some trivia
 }";
-            Verify(text, expected);
-        }
+                Verify(text, expected);
+            }
 
-        [Fact]
-        public void LonePartialType()
-        {
-            var text = @"
+            [Fact]
+            public void LonePartialType()
+            {
+                var text = @"
 partial class C { }
 ";
 
-            var expected = @"
+                var expected = @"
 internal partial class C { }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
 
-        [Fact]
-        public void CorrectPartialType()
-        {
-            var text = @"
+            [Fact]
+            public void CorrectPartialType()
+            {
+                var text = @"
 partial class C { }
 public partial class C { }
 ";
 
-            var expected = @"
+                var expected = @"
 public partial class C { }
 public partial class C { }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void PartialAcrossFiles()
-        {
-            var text1 = @"
+            [Fact]
+            public void PartialAcrossFiles()
+            {
+                var text1 = @"
 public partial class C { }
 ";
 
-            var text2 = @"
+                var text2 = @"
 partial class C { }
 ";
 
-            var expected1 = @"
+                var expected1 = @"
 public partial class C { }
 ";
 
-            var expected2 = @"
+                var expected2 = @"
 public partial class C { }
 ";
 
-            Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
-        }
+                Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
+            }
 
-        [Fact]
-        public void PartialTypesWithNestedClasses()
-        {
-            var text = @"
+            [Fact]
+            public void PartialTypesWithNestedClasses()
+            {
+                var text = @"
 partial class C {
     class N1 { }
     class N2 { }
@@ -354,7 +357,7 @@ partial class C {
 public partial class C { }
 ";
 
-            var expected = @"
+                var expected = @"
 public partial class C {
     private class N1 { }
     private class N2 { }
@@ -363,13 +366,13 @@ public partial class C {
 public partial class C { }
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void IgnorePartialMethods()
-        {
-            var text = @"
+            [Fact]
+            public void IgnorePartialMethods()
+            {
+                var text = @"
 class C
 {
     void M1();
@@ -377,7 +380,7 @@ class C
 }
 ";
 
-            var expected = @"
+                var expected = @"
 internal class C
 {
     private void M1();
@@ -385,7 +388,207 @@ internal class C
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
+                Verify(text, expected, runFormatter: false);
+            }
+        }
+
+        public sealed class VisualBasicTests : ExplicitVisibilityRuleTests
+        {
+            [Fact]
+            public void TypeSimple()
+            {
+                var text = @"
+Class C
+End Class
+Structure S
+End Structure
+Module M
+End Module
+Enum E
+    Value
+End Enum";
+
+                var expected = @"
+Friend Class C
+End Class
+Friend Structure S
+End Structure
+Friend Module M
+End Module
+Friend Enum E
+    Value
+End Enum";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            /// <summary>
+            /// It is interesting to note that nested typs in VB.Net default to public accessibility 
+            /// instead of private as C# does.
+            /// </summary>
+            [Fact]
+            public void NestedType()
+            {
+                var text = @"
+Class Outer
+    Class C
+    End Class
+    Structure S
+    End Structure
+    Enum E
+        Value
+    End Enum
+End Class";
+
+                var expected = @"
+Friend Class Outer
+    Public Class C
+    End Class
+    Public Structure S
+    End Structure
+    Public Enum E
+        Value
+    End Enum
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void Methods()
+            {
+                var text = @"
+Class C
+    Sub M1()
+    End Sub
+    Function M2()
+    End Function
+    Private Sub M3()
+    End Sub
+End Class";
+
+                var expected = @"
+Friend Class C
+    Public Sub M1()
+    End Sub
+    Public Function M2()
+    End Function
+    Private Sub M3()
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void Fields()
+            {
+                var text = @"
+Class C
+    Dim Field1 As Integer
+    Public Field2 As Integer
+End Class";
+
+                var expected = @"
+Friend Class C
+    Private Field1 As Integer
+    Public Field2 As Integer
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void Constructors()
+            {
+                var text = @"
+Class C
+    Sub New()
+    End Sub
+    Shared Sub New()
+    End Sub
+End Class";
+
+                var expected = @"
+Friend Class C
+    Public Sub New()
+    End Sub
+    Shared Sub New()
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void InterfaceMembers()
+            {
+                var text = @"
+Interface I1
+    Property P1 As Integer
+    Sub S1()
+    Function F1()
+End Interface";
+
+                var expected = @"
+Friend Interface I1
+    Property P1 As Integer
+    Sub S1()
+    Function F1()
+End Interface";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            /// <summary>
+            /// VB.Net can have visibility modifiers + explicit interface implementation unlike C#. The 
+            /// visibility rules for these members is the same as normal members.
+            /// </summary>
+            [Fact]
+            public void InterfaceImplementation()
+            {
+                var text = @"
+Interface I1
+    Property P1 As Integer
+    Sub S1()
+    Function F1()
+End Interface
+
+Class C1
+    Implements I1
+
+    Function F1() As Object Implements I1.F1
+        Return Nothing
+    End Function
+
+    Property P1 As Integer Implements I1.P1
+
+    Sub S1() Implements I1.S1
+    End Sub
+End Class";
+
+                var expected = @"
+Friend Interface I1
+    Property P1 As Integer
+    Sub S1()
+    Function F1()
+End Interface
+
+Friend Class C1
+    Implements I1
+
+    Public Function F1() As Object Implements I1.F1
+        Return Nothing
+    End Function
+
+    Public Property P1 As Integer Implements I1.P1
+
+    Public Sub S1() Implements I1.S1
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
         }
     }
 }

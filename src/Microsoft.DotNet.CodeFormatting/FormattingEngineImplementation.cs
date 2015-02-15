@@ -21,6 +21,10 @@ namespace Microsoft.DotNet.CodeFormatting
     [Export(typeof(IFormattingEngine))]
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
+        /// <summary>
+        /// Developers who want to opt out of the code formatter for items like unicode
+        /// tables can surround them with #if !DOTNET_FORMATTER.  
+        /// </summary>
         internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
 
         private readonly Options _options;
