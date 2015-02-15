@@ -165,6 +165,62 @@ End Class";
 
                 Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
             }
+
+            [Fact]
+            public void ModuleFieldsAreShared()
+            {
+                var text = @"
+Module C
+    Private Field As Integer
+End Module";
+
+                var expected = @"
+Module C
+    Private s_field As Integer
+End Module";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void MultipleDeclarations()
+            {
+                var text = @"
+Class C 
+    Private Field1, Field2 As Integer
+End Class";
+
+                var expected = @"
+Class C 
+    Private _field1,_field2 As Integer
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void FieldAndUse()
+            {
+                var text = @"
+Class C 
+    Private Field As Integer
+
+    Sub M()
+        Console.WriteLine(Field)
+    End Sub
+End Class";
+
+                var expected = @"
+Class C 
+    Private _field As Integer
+
+    Sub M()
+        Console.WriteLine(_field)
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
         }
     }
 }
