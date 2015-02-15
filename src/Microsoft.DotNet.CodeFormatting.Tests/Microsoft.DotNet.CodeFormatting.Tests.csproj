@@ -105,6 +105,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
+    <Compile Include="Rules\AttributeNoParenthesesRuleTests.cs" />
+    <Compile Include="Rules\AttributeSeparateListsRuleTests.cs" />
     <Compile Include="Rules\BracesRuleTests.cs" />
     <Compile Include="Rules\CombinationTest.cs" />
     <Compile Include="Rules\ExplicitThisRuleTests.cs" />
