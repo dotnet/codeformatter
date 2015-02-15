@@ -21,7 +21,7 @@ In order get the usage, simply invoke the tool with no arguments:
 
 ```
 $ .\CodeFormatter.exe
-CodeFormatter <project or solution> [<rule types>] [/file <filename>] [/nocopyright]
+CodeFormatter <project or solution> [<rule types>] [/file:<filename>] [/nocopyright] [/c:<config1,config2> [/copyright:file]
     <rule types> - Rule types to use in addition to the default ones.
                    Use ConvertTests to convert MSTest tests to xUnit.
     <filename>   - Only apply changes to files with specified name.
