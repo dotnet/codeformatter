@@ -20,7 +20,9 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
             }
 
             if (document.FilePath.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
-                document.FilePath.EndsWith(".Generated.cs", StringComparison.OrdinalIgnoreCase))
+                document.FilePath.EndsWith(".Generated.cs", StringComparison.OrdinalIgnoreCase) ||
+            if (document.FilePath.EndsWith(".Designer.vb", StringComparison.OrdinalIgnoreCase) ||
+                document.FilePath.EndsWith(".Generated.vb", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
