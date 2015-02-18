@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var trivia = currentTrivia.Token.LeadingTrivia;
             return trivia.SkipWhile(t => t != currentTrivia)
                          .Skip(1)
-                         .SkipWhile(t => t.CSharpKind() != SyntaxKind.SingleLineCommentTrivia)
+                         .SkipWhile(t => t.Kind() != SyntaxKind.SingleLineCommentTrivia)
                          .Select(t => (SyntaxTrivia?)t)
                          .FirstOrDefault();
         }

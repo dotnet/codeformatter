@@ -216,5 +216,48 @@ internal class C
             s_formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "TEST" } });
             Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void WhenBlocks()
+        {
+            var source = @"
+internal class C
+{
+    private void M()
+    {
+        try
+        {
+            if(x){
+                G();
+            }
+        } catch(Exception e)when(H(e))
+        {
+
+        }
+    }
+}";
+
+            var expected = @"// header
+
+internal class C
+{
+    private void M()
+    {
+        try
+        {
+            if (x)
+            {
+                G();
+            }
+        }
+        catch (Exception e) when (H(e))
+        {
+        }
+    }
+}";
+
+            Verify(source, expected, runFormatter: false);
+
+        }
     }
 }

@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var tokensToReplace = syntaxNode.DescendantTokens().Where((token) =>
                 {
                     var nextToken = token.GetNextToken();
-                    if (token.CSharpKind() != SyntaxKind.OpenBraceToken || !nextToken.HasLeadingTrivia)
+                    if (token.Kind() != SyntaxKind.OpenBraceToken || !nextToken.HasLeadingTrivia)
                     {
                         return false;
                     }
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return token;
             }
 
-            if (token.CSharpKind() == SyntaxKind.CloseBraceToken && 
+            if (token.Kind() == SyntaxKind.CloseBraceToken && 
                 token.LeadingTrivia.All(x => x.IsKind(SyntaxKind.WhitespaceTrivia) || x.IsKind(SyntaxKind.EndOfLineTrivia)))
             {
                 // This is an open / close brace combo with no content inbetween.  Just return the 
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             var tokensToReplace = syntaxNode.DescendantTokens().Where((token) => 
                 {
                     return
-                        token.CSharpKind() == SyntaxKind.CloseBraceToken &&
+                        token.Kind() == SyntaxKind.CloseBraceToken &&
                         token.HasLeadingTrivia &&
                         (IsSimpleNewLine(token.LeadingTrivia, 0) || IsSimpleNewLine(token.LeadingTrivia, token.LeadingTrivia.Count - 1));
                 });
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             while (index >= 0 && searching)
             {
                 var current = triviaList[index];
-                switch (current.CSharpKind())
+                switch (current.Kind())
                 {
                     case SyntaxKind.WhitespaceTrivia:
                     case SyntaxKind.EndOfLineTrivia:
@@ -218,12 +218,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return NewLineKind.None;
             }
 
-            switch (list[index].CSharpKind())
+            switch (list[index].Kind())
             {
                 case SyntaxKind.EndOfLineTrivia:
                     return NewLineKind.NewLine;
                 case SyntaxKind.WhitespaceTrivia:
-                    if (index + 1 < list.Count && list[index + 1].CSharpKind() == SyntaxKind.EndOfLineTrivia)
+                    if (index + 1 < list.Count && list[index + 1].Kind() == SyntaxKind.EndOfLineTrivia)
                     {
                         return NewLineKind.WhitespaceAndNewLine;
                     }

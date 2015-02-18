@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
                 foreach (var modifier in node.Modifiers)
                 {
-                    switch (modifier.VBKind())
+                    switch (modifier.Kind())
                     {
                         case SyntaxKind.PublicKeyword:
                         case SyntaxKind.FriendKeyword:

@@ -31,29 +31,29 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             public override SyntaxNode VisitClassBlock(ClassBlockSyntax originalNode)
             {
                 var node = (ClassBlockSyntax)base.VisitClassBlock(originalNode);
-                var begin = (ClassStatementSyntax)EnsureVisibility(node.Begin, node.Begin.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
-                return node.WithBegin(begin);
+                var begin = (ClassStatementSyntax)EnsureVisibility(node.ClassStatement, node.ClassStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                return node.WithClassStatement(begin);
             }
 
             public override SyntaxNode VisitStructureBlock(StructureBlockSyntax originalNode)
             {
                 var node = (StructureBlockSyntax)base.VisitStructureBlock(originalNode);
-                var begin = (StructureStatementSyntax)EnsureVisibility(node.Begin, node.Begin.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
-                return node.WithBegin(begin);
+                var begin = (StructureStatementSyntax)EnsureVisibility(node.StructureStatement, node.StructureStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                return node.WithStructureStatement(begin);
             }
 
             public override SyntaxNode VisitInterfaceBlock(InterfaceBlockSyntax originalNode)
             {
                 var node = (InterfaceBlockSyntax)base.VisitInterfaceBlock(originalNode);
-                var begin = (InterfaceStatementSyntax)EnsureVisibility(node.Begin, node.Begin.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
-                return node.WithBegin(begin);
+                var begin = (InterfaceStatementSyntax)EnsureVisibility(node.InterfaceStatement, node.InterfaceStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                return node.WithInterfaceStatement(begin);
             }
 
             public override SyntaxNode VisitModuleBlock(ModuleBlockSyntax node)
             {
                 node = (ModuleBlockSyntax)base.VisitModuleBlock(node);
-                var begin = (ModuleStatementSyntax)EnsureVisibility(node.Begin, node.Begin.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.FriendKeyword);
-                return node.WithBegin(begin);
+                var begin = (ModuleStatementSyntax)EnsureVisibility(node.ModuleStatement, node.ModuleStatement.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.FriendKeyword);
+                return node.WithModuleStatement(begin);
             }
 
             public override SyntaxNode VisitEnumBlock(EnumBlockSyntax node)
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var i = 0;
                 while (i < list.Count)
                 {
-                    if (list[i].VBKind() == SyntaxKind.DimKeyword)
+                    if (list[i].Kind() == SyntaxKind.DimKeyword)
                     {
                         list = list.RemoveAt(i);
                         break;
@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             private SyntaxKind GetTypeDefaultVisibility(TypeBlockSyntax originalTypeBlockSyntax)
             {
                 // In the case of partial types we need to use the existing visibility if it exists
-                if (originalTypeBlockSyntax.Begin.Modifiers.Any(x => x.VisualBasicContextualKind() == SyntaxKind.PartialKeyword))
+                if (originalTypeBlockSyntax.BlockStatement.Modifiers.Any(x => x.Kind() == SyntaxKind.PartialKeyword))
                 {
                     SyntaxKind? kind = GetExistingPartialVisibility(originalTypeBlockSyntax);
                     if (kind.HasValue)
@@ -171,16 +171,16 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             private static bool IsInterfaceMember(SyntaxNode node)
             {
-                return node.Parent != null && node.Parent.VBKind() == SyntaxKind.InterfaceBlock;
+                return node.Parent != null && node.Parent.Kind() == SyntaxKind.InterfaceBlock;
             }
 
             private static SyntaxKind? GetVisibilityModifier(SyntaxTokenList list)
             {
                 foreach (var token in list)
                 {
-                    if (SyntaxFacts.IsAccessibilityModifier(token.VBKind()))
+                    if (SyntaxFacts.IsAccessibilityModifier(token.Kind()))
                     {
-                        return token.VBKind();
+                        return token.Kind();
                     }
                 }
 
@@ -192,7 +192,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var current = node.Parent;
                 while (current != null)
                 {
-                    var kind = current.VBKind();
+                    var kind = current.Kind();
                     if (kind == SyntaxKind.ClassBlock || kind == SyntaxKind.StructureBlock || kind == SyntaxKind.InterfaceBlock)
                     {
                         return true;
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             /// </summary>
             private static SyntaxNode EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : SyntaxNode
             {
-                if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.VBKind())))
+                if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.Kind())))
                 {
                     return node;
                 }

@@ -31,15 +31,15 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             if (firstUsing.HasLeadingTrivia)
             {
                 var trivia = firstUsing.GetLeadingTrivia();
-                var x = trivia.FirstOrDefault(t => t.CSharpKind() == SyntaxKind.DisabledTextTrivia && t.ToFullString().Contains("using"));
-                var disabledUsingSpan = trivia.FirstOrDefault(t => t.CSharpKind() == SyntaxKind.DisabledTextTrivia && t.ToFullString().Contains("using")).Span;
+                var x = trivia.FirstOrDefault(t => t.Kind() == SyntaxKind.DisabledTextTrivia && t.ToFullString().Contains("using"));
+                var disabledUsingSpan = trivia.FirstOrDefault(t => t.Kind() == SyntaxKind.DisabledTextTrivia && t.ToFullString().Contains("using")).Span;
                 if (!disabledUsingSpan.IsEmpty)
                 {
                     Console.WriteLine("!!!Error with using");
                     return syntaxRoot;
                 }
 
-                if (SyntaxKind.EndOfLineTrivia == trivia.Last().CSharpKind())
+                if (SyntaxKind.EndOfLineTrivia == trivia.Last().Kind())
                 {
                     newTrivia = GetLeadingTriviaWithEndNewLines(trivia);
                 }
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             int index = trivia.Count() - 2;
             while (index >= 0)
             {
-                if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
+                if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).Kind())
                     break;
                 index--;
             }
@@ -96,11 +96,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             // Insert two new lines before the structured trivia, previous element is a comment
-            if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).CSharpKind())
+            if (SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index).Kind())
                 return trivia.Take(index + 1).AddTwoNewLines().Concat(trivia.Skip(index + 1));
 
             // Insert one new line before the structured trivia, previous element is new line
-            if (index != 0 && SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).CSharpKind())
+            if (index != 0 && SyntaxKind.EndOfLineTrivia != trivia.ElementAt(index - 1).Kind())
                 return trivia.Take(index + 1).AddNewLine().Concat(trivia.Skip(index + 1));
 
             // Already has the right format

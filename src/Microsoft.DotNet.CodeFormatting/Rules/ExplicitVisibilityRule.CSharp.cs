@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
             {
-                if (node.Modifiers.Any(x => x.CSharpKind() == SyntaxKind.StaticKeyword))
+                if (node.Modifiers.Any(x => x.Kind() == SyntaxKind.StaticKeyword))
                 {
                     return node;
                 }
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             private SyntaxKind GetTypeDefaultVisibility(BaseTypeDeclarationSyntax originalDeclarationSyntax)
             {
                 // In the case of partial types we need to use the existing visibility if it exists
-                if (originalDeclarationSyntax.Modifiers.Any(x => x.CSharpContextualKind() == SyntaxKind.PartialKeyword))
+                if (originalDeclarationSyntax.Modifiers.Any(x => x.Kind() == SyntaxKind.PartialKeyword))
                 {
                     SyntaxKind? kind = GetExistingPartialVisibility(originalDeclarationSyntax);
                     if (kind.HasValue)
@@ -159,9 +159,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             {
                 foreach (var token in list)
                 {
-                    if (SyntaxFacts.IsAccessibilityModifier(token.CSharpKind()))
+                    if (SyntaxFacts.IsAccessibilityModifier(token.Kind()))
                     {
-                        return token.CSharpKind();
+                        return token.Kind();
                     }
                 }
 
@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 var current = node.Parent;
                 while (current != null)
                 {
-                    if (SyntaxFacts.IsTypeDeclaration(current.CSharpKind()))
+                    if (SyntaxFacts.IsTypeDeclaration(current.Kind()))
                     {
                         return true;
                     }
@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             /// </summary>
             private static MemberDeclarationSyntax EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : MemberDeclarationSyntax
             {
-                if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.CSharpKind())))
+                if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.Kind())))
                 {
                     return node;
                 }

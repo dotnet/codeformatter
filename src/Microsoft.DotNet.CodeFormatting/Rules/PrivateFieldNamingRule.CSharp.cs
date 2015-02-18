@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 isInstance = true;
                 foreach (var modifier in fieldSyntax.Modifiers)
                 {
-                    switch (modifier.CSharpKind())
+                    switch (modifier.Kind())
                     {
                         case SyntaxKind.PublicKeyword:
                         case SyntaxKind.ConstKeyword:

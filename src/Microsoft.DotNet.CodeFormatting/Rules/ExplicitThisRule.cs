@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 node = (MemberAccessExpressionSyntax)base.VisitMemberAccessExpression(node);
                 var name = node.Name.Identifier.ValueText;
                 if (node.Expression != null &&
-                    node.Expression.CSharpKind() == SyntaxKind.ThisExpression &&
+                    node.Expression.Kind() == SyntaxKind.ThisExpression &&
                     IsPrivateField(node))
                 {
                     _addedAnnotations = true;
