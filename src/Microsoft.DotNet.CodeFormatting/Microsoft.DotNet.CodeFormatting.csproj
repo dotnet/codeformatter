@@ -89,6 +89,7 @@
     <Compile Include="Rules\BraceNewLineRule.cs" />
     <Compile Include="Rules\ExplicitVisibilityRule.cs" />
     <Compile Include="Rules\HasCopyrightHeaderFormattingRule.cs" />
+    <Compile Include="Rules\HasNewLineAtEndOfFileFormattingRule.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRule.cs" />
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRule.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRule.cs" />
