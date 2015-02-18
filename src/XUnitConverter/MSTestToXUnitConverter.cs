@@ -10,27 +10,17 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics;
-using System.ComponentModel.Composition;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CodeGeneration;
 using System.Runtime.Serialization;
 using System.IO;
 
-namespace Microsoft.DotNet.CodeFormatting.Rules
+namespace XUnitConverter
 {
-    [GlobalSemanticRuleOrder(GlobalSemanticRuleOrder.UsesXunitForTestsFormattingRule)]
-    [PartMetadata(RuleTypeConstants.PartMetadataKey, RuleTypeConstants.ConvertTestsRuleType)]
-    internal sealed class UsesXunitForTestsFormattingRule : IGlobalSemanticFormattingRule
+    public sealed class MSTestToXUnitConverter : ConverterBase
     {
         private static object _lockObject = new object();
         private static HashSet<string> _mstestNamespaces;
-        private readonly Options _options;
-
-        [ImportingConstructor]
-        internal UsesXunitForTestsFormattingRule(Options options)
-        {
-            _options = options;
-        }
 
         private static UsingDirectiveSyntax RemoveLeadingAndTrailingCompilerDirectives(UsingDirectiveSyntax usingSyntax)
         {
@@ -52,8 +42,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             return usingDirectiveToUse;
         }
 
-
-        public async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
+        protected override async Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
             var root = syntaxNode as CompilationUnitSyntax;
             if (root == null)
@@ -325,12 +314,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 }
 
                 var filePath = Path.Combine(
-                    Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(typeof(UsesXunitForTestsFormattingRule).Assembly.CodeBase).Path)),
+                    Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(typeof(MSTestToXUnitConverter).Assembly.CodeBase).Path)),
                     "MSTestNamespaces.txt");
 
                 if (!File.Exists(filePath))
                 {
-                    _options.FormatLogger.WriteErrorLine("The MSTestNamespaces.txt file was not found.");
+                    Console.WriteLine("The MSTestNamespaces.txt file was not found.");
                     return false;
                 }
 

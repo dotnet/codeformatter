@@ -4,25 +4,29 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Microsoft.DotNet.CodeFormatting.Rules
+namespace XUnitConverter
 {
-    [SyntaxRuleOrder(SyntaxRuleOrder.TestAssertTrueOrFalseRule)]
-    internal sealed class TestAssertTrueOrFalseRule : ISyntaxFormattingRule
+    public sealed class TestAssertTrueOrFalseConverter  : ConverterBase
     {
-        public SyntaxNode Process(SyntaxNode root)
+        private readonly AssertTrueOrFalseRewriter _rewriter = new AssertTrueOrFalseRewriter();
+
+        protected override Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxNode, CancellationToken cancellationToken)
         {
-            var rewriter = new AssertTrueOrFalseRewriter();
-            return rewriter.Visit(root);
+            var newNode = _rewriter.Visit(syntaxNode);
+            if (newNode != syntaxNode)
+            {
+                document = document.WithSyntaxRoot(newNode);
+            }
+
+            return Task.FromResult(document.Project.Solution);
         }
 
         internal sealed class AssertTrueOrFalseRewriter : CSharpSyntaxRewriter

@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Xunit;
 
-namespace Microsoft.DotNet.CodeFormatting.Tests
+namespace XUnitConverter.Tests
 {
-    public class TestAssertTrueOrFalseRuleTests : SyntaxRuleTestBase
+    public class TestAssertTrueOrFalseConverterTests : ConverterTestBase
     {
-        internal override ISyntaxFormattingRule Rule
+        protected override XUnitConverter.ConverterBase CreateConverter()
         {
-            get { return new Rules.TestAssertTrueOrFalseRule(); }
+            return new XUnitConverter.TestAssertTrueOrFalseConverter();
         }
 
         [Fact]
-        public void TestAssertEqualNotEqual()
+        public async Task TestAssertEqualNotEqual()
         {
             var text = @"
 using System;
@@ -64,11 +64,11 @@ namespace System.UnitTests
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestAssertEqualNotEqualNull()
+        public async Task TestAssertEqualNotEqualNull()
         {
             var text = @"
 using System;
@@ -107,11 +107,11 @@ public class Testing
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestAssertEqualNotEqualTrueOrFalse()
+        public async Task TestAssertEqualNotEqualTrueOrFalse()
         {
             var text = @"
 using System;
@@ -158,11 +158,11 @@ public class Testing
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestAssertEqualNotEqualNegation()
+        public async Task TestAssertEqualNotEqualNegation()
         {
             var text = @"
 using System;
@@ -195,7 +195,7 @@ public class Testing
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
     }
 }

@@ -8,18 +8,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Xunit;
+using System.Threading;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.DotNet.CodeFormatting.Tests
+namespace XUnitConverter.Tests
 {
-    public class UsesXunitForTestsFormattingRuleTests : GlobalSemanticRuleTestBase
+    public class MSTestToXUnitConverterTests : ConverterTestBase
     {
-        internal override IGlobalSemanticFormattingRule Rule
+        protected override XUnitConverter.ConverterBase CreateConverter()
         {
-            get { return new Rules.UsesXunitForTestsFormattingRule(new Options()); }
+            return new XUnitConverter.MSTestToXUnitConverter();
         }
 
         [Fact]
-        public void TestUpdatesUsingStatements()
+        public async Task TestUpdatesUsingStatements()
         {
             var text = @"
 using System;
@@ -38,11 +41,11 @@ namespace System.Composition.UnitTests
 {
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestUpdatesUsingStatementsWithIfDefs()
+        public async Task TestUpdatesUsingStatementsWithIfDefs()
         {
             var text = @"
 using System;
@@ -67,11 +70,11 @@ namespace System.Composition.UnitTests
 {
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestRemovesTestClassAttributes()
+        public async Task TestRemovesTestClassAttributes()
         {
             var text = @"
 using System;
@@ -97,11 +100,11 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestUpdatesTestMethodAttributes()
+        public async Task TestUpdatesTestMethodAttributes()
         {
             var text = @"
 using System;
@@ -134,11 +137,11 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            Verify(text, expected);
+            await Verify(text, expected);
         }
 
         [Fact]
-        public void TestUpdatesAsserts()
+        public async Task TestUpdatesAsserts()
         {
             var text = @"
 using System;
@@ -191,19 +194,7 @@ namespace System.Composition.UnitTests
     }
 }
 ";
-            Verify(text, expected);
-        }
-
-        private static readonly MetadataReference s_MSTestReference = MetadataReference.CreateFromAssembly(typeof(VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly);
-        private static readonly MetadataReference s_XunitReference = MetadataReference.CreateFromAssembly(typeof(FactAttribute).Assembly);
-
-        protected override IEnumerable<MetadataReference> GetSolutionMetadataReferences()
-        {
-            return base.GetSolutionMetadataReferences()
-                .Concat(new[] {
-                    s_MSTestReference,
-                    s_XunitReference
-                });
+            await Verify(text, expected);
         }
     }
 }
