@@ -146,6 +146,72 @@ class C
 
                 Verify(text, expected, runFormatter: false);
             }
+
+            [Fact]
+            public void Issue68()
+            {
+                var text = @"
+delegate void Action();
+class C
+{
+    Action someAction;
+    void M(C p)
+    {
+        someAction();
+        this.someAction();
+        p.someAction();
+    }
+}";
+
+                var expected = @"
+delegate void Action();
+class C
+{
+    Action _someAction;
+    void M(C p)
+    {
+        _someAction();
+        this._someAction();
+        p._someAction();
+    }
+}";
+
+                Verify(text, expected);
+            }
+
+            /// <summary>
+            /// Ensure that Roslyn properly renames private fields when accessed through a non-this
+            /// instance within the same type.
+            /// </summary>
+            [Fact]
+            public void Issue69()
+            {
+                var text = @"
+class C
+{
+    int field;
+
+    int M(C p)
+    {
+        int x = p.field;
+        return x;
+    }
+}";
+
+                var expected = @"
+class C
+{
+    int _field;
+
+    int M(C p)
+    {
+        int x = p._field;
+        return x;
+    }
+}";
+
+                Verify(text, expected);
+            }
         }
 
         private sealed class VisualBasicFields : PrivateFieldNamingRuleTests
@@ -220,6 +286,32 @@ Class C
 End Class";
 
                 Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void Issue69()
+            {
+                var text = @"
+Class C1
+    Private Field As Integer
+
+    Function M(p As C1) As Integer
+        Dim x = p.Field
+        Return x
+    End Function
+End Class";
+
+                var expected = @"
+Class C1
+    Private _field As Integer
+
+    Function M(p As C1) As Integer
+        Dim x = p._field
+        Return x
+    End Function
+End Class";
+
+                Verify(text, expected, languageName: LanguageNames.VisualBasic);
             }
         }
     }

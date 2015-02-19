@@ -134,7 +134,7 @@
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRule.cs" />
     <Compile Include="Rules\HasNoCustomCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.cs" />
-    <Compile Include="Rules\HasUsingsOutsideOfNamespaceFormattingRule.cs" />
+    <Compile Include="Rules\UsingLocationRule.cs" />
     <Compile Include="Rules\FormatDocumentFormattingRule.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
     <Compile Include="Rules\ExplicitThisRule.cs" />

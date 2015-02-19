@@ -390,6 +390,32 @@ internal class C
 
                 Verify(text, expected, runFormatter: false);
             }
+
+            [Fact]
+            public void Issue70()
+            {
+                var source = @"
+public class MyClass
+{
+    enum MyEnum { }
+    struct MyStruct
+    {
+        public MyStruct(MyEnum e) { }
+    }
+}";
+
+                var expected = @"
+public class MyClass
+{
+    private enum MyEnum { }
+    private struct MyStruct
+    {
+        public MyStruct(MyEnum e) { }
+    }
+}";
+
+                Verify(source, expected);
+            }
         }
 
         public sealed class VisualBasicTests : ExplicitVisibilityRuleTests
