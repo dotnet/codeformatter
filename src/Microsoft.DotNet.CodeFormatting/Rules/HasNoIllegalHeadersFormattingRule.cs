@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             newTrivia = newTrivia.RemoveAt(index);
 
             // Remove end of line after trivia
-            if (index < newTrivia.Count && newTrivia.ElementAt(index).CSharpKind() == SyntaxKind.EndOfLineTrivia)
+            if (index < newTrivia.Count && newTrivia.ElementAt(index).Kind() == SyntaxKind.EndOfLineTrivia)
             {
                 newTrivia = newTrivia.RemoveAt(index);
             }

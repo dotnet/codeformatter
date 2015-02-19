@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node)
             {
-                switch (node.CSharpKind())
+                switch (node.Kind())
                 {
                     case SyntaxKind.StringLiteralExpression:
                         return RewriteStringLiteralExpression(node);
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             private static SyntaxNode RewriteStringLiteralExpression(LiteralExpressionSyntax node)
             {
-                Debug.Assert(node.CSharpKind() == SyntaxKind.StringLiteralExpression);
+                Debug.Assert(node.Kind() == SyntaxKind.StringLiteralExpression);
 
                 if (node.Token.IsVerbatimStringLiteral())
                 {
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             private static SyntaxNode RewriteCharacterLiteralExpression(LiteralExpressionSyntax node)
             {
-                Debug.Assert(node.CSharpKind() == SyntaxKind.CharacterLiteralExpression);
+                Debug.Assert(node.Kind() == SyntaxKind.CharacterLiteralExpression);
 
                 if (HasNonAsciiCharacters(node.Token.Text))
                 {

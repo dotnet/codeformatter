@@ -28,14 +28,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             protected override bool IsLineComment(SyntaxTrivia trivia)
             {
-                return trivia.VBKind() == SyntaxKind.CommentTrivia;
+                return trivia.Kind() == SyntaxKind.CommentTrivia;
             }
 
             protected override bool IsWhiteSpaceOrNewLine(SyntaxTrivia trivia)
             {
                 return
-                    trivia.VBKind() == SyntaxKind.WhitespaceTrivia ||
-                    trivia.VBKind() == SyntaxKind.EndOfLineTrivia;
+                    trivia.Kind() == SyntaxKind.WhitespaceTrivia ||
+                    trivia.Kind() == SyntaxKind.EndOfLineTrivia;
             }
 
             protected override SyntaxTrivia CreateLineComment(string commentText)

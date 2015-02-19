@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             string fileExtension = language == LanguageNames.CSharp ? CSharpFileExtension : VBFileExtension;
             var projectId = ProjectId.CreateNewId(TestProjectName);
 
-            var solution = new CustomWorkspace()
+            var solution = new AdhocWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
                 .AddMetadataReferences(projectId, GetSolutionMetadataReferences());
