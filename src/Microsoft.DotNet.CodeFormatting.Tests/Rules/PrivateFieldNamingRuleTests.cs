@@ -147,6 +147,38 @@ class C
                 Verify(text, expected, runFormatter: false);
             }
 
+            [Fact]
+            public void Issue68()
+            {
+                var text = @"
+delegate void Action();
+class C
+{
+    Action someAction;
+    void M(C p)
+    {
+        someAction();
+        this.someAction();
+        p.someAction();
+    }
+}";
+
+                var expected = @"
+delegate void Action();
+class C
+{
+    Action _someAction;
+    void M(C p)
+    {
+        _someAction();
+        this._someAction();
+        p._someAction();
+    }
+}";
+
+                Verify(text, expected);
+            }
+
             /// <summary>
             /// Ensure that Roslyn properly renames private fields when accessed through a non-this
             /// instance within the same type.
