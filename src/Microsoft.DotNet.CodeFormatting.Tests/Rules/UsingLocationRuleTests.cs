@@ -36,6 +36,30 @@ namespace NS2
             Verify(source, expected);
         }
 
+        /// <summary>
+        /// There is no safe way to move a using outside a namespace when there are
+        /// multiple namespaces.  The rule should punt on this scenario. 
+        /// </summary>
+        [Fact]
+        public void SimpleMoveMultipleNamespaces()
+        {
+            var source = @"
+using NS1;
+namespace NS2
+{
+    using NS3;
+    class C1 { }
+}
+
+namespace NS3
+{
+    using NS4;
+    class C1 { }
+}";
+
+            Verify(source, source);
+        }
+
         [Fact]
         public void SimpleMoveWithComment()
         {
