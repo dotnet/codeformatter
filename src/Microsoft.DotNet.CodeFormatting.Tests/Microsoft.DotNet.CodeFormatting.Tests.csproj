@@ -128,6 +128,7 @@
     <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
+    <Compile Include="Rules\UsingLocationRuleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

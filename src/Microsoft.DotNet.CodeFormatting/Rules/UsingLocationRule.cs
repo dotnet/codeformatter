@@ -13,7 +13,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRuleOrder(SyntaxRuleOrder.HasUsingsOutsideOfNamespaceFormattingRule)]
+    /// <summary>
+    /// This will ensure that using directives are placed outside of the namespace.
+    /// </summary>
+    [SyntaxRuleOrder(SyntaxRuleOrder.UsingLocationFormattingRule)]
     internal sealed class UsingLocationRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         public SyntaxNode Process(SyntaxNode syntaxNode, string languageName)
@@ -22,48 +25,46 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             if (root == null)
                 return syntaxNode;
 
-            var newRoot = root;
-            while (true)
+            // This rule can only be done safely as a syntax transformation when there is a single namespace
+            // declaration in the file.  Once there is more than one it opens up the possibility of introducing
+            // ambiguities to essentially make using directives global which were previously local.
+            var namespaceDeclarationList = root.Members.OfType<NamespaceDeclarationSyntax>().ToList();
+            if (namespaceDeclarationList.Count != 1)
             {
-                var namespaceWithUsings = newRoot.Members.OfType<NamespaceDeclarationSyntax>().FirstOrDefault(n => n.Usings.Any());
-                if (namespaceWithUsings == null)
-                    break;
-
-                // Moving a using with an alias out of a namespace is an operation which requires
-                // semantic knowledge to get correct.
-                if (namespaceWithUsings.Usings.Any(x => x.Alias != null))
-                    return syntaxNode;
-
-                // Remove nested usings
-
-                var emptyUsingList = SyntaxFactory.List<UsingDirectiveSyntax>();
-                var namespaceWithoutUsings = namespaceWithUsings.WithUsings(emptyUsingList);
-                newRoot = newRoot.ReplaceNode(namespaceWithUsings, namespaceWithoutUsings);
-
-                // Add usings to compilation unit
-
-                var usings = namespaceWithUsings.Usings.ToArray();
-
-                if (!newRoot.Usings.Any())
-                {
-                    // Specialize the case where there are no usings yet.
-                    //
-                    // We want to make sure that leading triviva becomes leading trivia
-                    // of the first using. 
-
-                    usings[0] = usings.First().WithLeadingTrivia(newRoot.GetLeadingTrivia());
-                    newRoot = newRoot.WithLeadingTrivia(Enumerable.Empty<SyntaxTrivia>());
-
-                    // We want the last using to be separated from the namespace keyword
-                    // by a blank line.
-
-                    var trailingTrivia = usings.Last().GetTrailingTrivia();
-                    var linebreak = new[] { SyntaxFactory.CarriageReturnLineFeed };
-                    usings[usings.Length - 1] = usings.Last().WithTrailingTrivia(trailingTrivia.Concat(linebreak));
-                }
-
-                newRoot = newRoot.AddUsings(usings);
+                return syntaxNode;
             }
+
+            var namespaceDeclaration = namespaceDeclarationList.Single();
+            var usingList = namespaceDeclaration.Usings;
+            if (usingList.Count == 0)
+            {
+                return syntaxNode;
+            }
+
+            // Moving a using with an alias out of a namespace is an operation which requires
+            // semantic knowledge to get correct.
+            if (usingList.Any(x => x.Alias != null))
+            {
+                return syntaxNode;
+            }
+
+            // We don't have the capability to safely move usings which are embedded inside an #if
+            // directive.  
+            //
+            //  #if COND
+            //  using NS1;
+            //  #endif
+            //
+            // At the time there isn't a great way (that we know of) for detecting this particular 
+            // case.  Instead we simply don't do this rewrite if the file contains any #if directives.
+            if (root.DescendantTrivia().Any(x => x.Kind() == SyntaxKind.IfDirectiveTrivia))
+            {
+                return syntaxNode;
+            }
+
+            var newRoot = root;
+            newRoot = newRoot.ReplaceNode(namespaceDeclaration, namespaceDeclaration.WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>()));
+            newRoot = newRoot.WithUsings(newRoot.Usings.AddRange(namespaceDeclaration.Usings));
 
             return newRoot;
         }
