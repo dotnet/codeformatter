@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
@@ -12,10 +13,12 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             get { return new Rules.PrivateFieldNamingRule(); }
         }
 
-        [Fact]
-        public void TestUnderScoreInPrivateFields()
+        private sealed class CSharpFields : PrivateFieldNamingRuleTests
         {
-            var text = @"
+            [Fact]
+            public void TestUnderScoreInPrivateFields()
+            {
+                var text = @"
 using System;
 class T
 {
@@ -29,7 +32,7 @@ class T
     [ThreadStatic] static int r;
     [ThreadStaticAttribute] static int b_r;
 }";
-            var expected = @"
+                var expected = @"
 using System;
 class T
 {
@@ -45,13 +48,13 @@ class T
     [ThreadStaticAttribute]
     static int t_r;
 }";
-            Verify(text, expected);
-        }
+                Verify(text, expected);
+            }
 
-        [Fact]
-        public void CornerCaseNames()
-        {
-            var text = @"
+            [Fact]
+            public void CornerCaseNames()
+            {
+                var text = @"
 class C
 {
     private int x_;
@@ -61,7 +64,7 @@ class C
     private int field2_;
 ";
 
-            var expected = @"
+                var expected = @"
 class C
 {
     private int _x;
@@ -71,13 +74,13 @@ class C
     private int _field2;
 ";
 
-            Verify(text, expected, runFormatter: false);
-        }
+                Verify(text, expected, runFormatter: false);
+            }
 
-        [Fact]
-        public void MultipleDeclarators()
-        {
-            var text = @"
+            [Fact]
+            public void MultipleDeclarators()
+            {
+                var text = @"
 class C1
 {
     private int field1, field2, field3;
@@ -94,7 +97,7 @@ class C3
 }
 ";
 
-            var expected = @"
+                var expected = @"
 class C1
 {
     private int _field1, _field2, _field3;
@@ -111,17 +114,17 @@ class C3
 }
 ";
 
-            Verify(text, expected, runFormatter: true);
-        }
+                Verify(text, expected, runFormatter: true);
+            }
 
-        /// <summary>
-        /// If the name is pascal cased make it camel cased during the rewrite.  If it is not
-        /// pascal cased then do not change the casing.
-        /// </summary>
-        [Fact]
-        public void NameCasingField()
-        {
-            var text = @"
+            /// <summary>
+            /// If the name is pascal cased make it camel cased during the rewrite.  If it is not
+            /// pascal cased then do not change the casing.
+            /// </summary>
+            [Fact]
+            public void NameCasingField()
+            {
+                var text = @"
 class C
 {
     int Field;
@@ -131,7 +134,7 @@ class C
 }
 ";
 
-            var expected = @"
+                var expected = @"
 class C
 {
     int _field;
@@ -141,8 +144,83 @@ class C
 }
 ";
 
-            Verify(text, expected, runFormatter: false);
+                Verify(text, expected, runFormatter: false);
+            }
+        }
 
+        private sealed class VisualBasicFields : PrivateFieldNamingRuleTests
+        {
+            [Fact]
+            public void Simple()
+            {
+                var text = @"
+Class C 
+    Private Field As Integer
+End Class";
+
+                var expected = @"
+Class C 
+    Private _field As Integer
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void ModuleFieldsAreShared()
+            {
+                var text = @"
+Module C
+    Private Field As Integer
+End Module";
+
+                var expected = @"
+Module C
+    Private s_field As Integer
+End Module";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void MultipleDeclarations()
+            {
+                var text = @"
+Class C 
+    Private Field1, Field2 As Integer
+End Class";
+
+                var expected = @"
+Class C 
+    Private _field1,_field2 As Integer
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void FieldAndUse()
+            {
+                var text = @"
+Class C 
+    Private Field As Integer
+
+    Sub M()
+        Console.WriteLine(Field)
+    End Sub
+End Class";
+
+                var expected = @"
+Class C 
+    Private _field As Integer
+
+    Sub M()
+        Console.WriteLine(_field)
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
         }
     }
 }

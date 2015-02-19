@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     internal static class SyntaxRuleOrder
     {
         public const int HasNoCustomCopyrightHeaderFormattingRule = 1;
-        public const int HasCopyrightHeaderFormattingRule = 2;
+        public const int CopyrightHeaderRule = 2;
         public const int HasUsingsOutsideOfNamespaceFormattingRule = 3;
         public const int HasNewLineBeforeFirstUsingFormattingRule = 4;
         public const int HasNewLineBeforeFirstNamespaceFormattingRule = 5;

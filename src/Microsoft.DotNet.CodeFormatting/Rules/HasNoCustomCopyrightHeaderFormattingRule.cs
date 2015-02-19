@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [SyntaxRuleOrder(SyntaxRuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
-    internal sealed class HasNoCustomCopyrightHeaderFormattingRule : ISyntaxFormattingRule
+    internal sealed class HasNoCustomCopyrightHeaderFormattingRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         private static string RulerMarker { get; set; }
         private static string StartMarker { get; set; }
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             _options = options;
         }
 
-        public SyntaxNode Process(SyntaxNode syntaxNode)
+        public SyntaxNode Process(SyntaxNode syntaxNode, string languageName)
         {
             // SetHeaders
             if (!SetHeaders())

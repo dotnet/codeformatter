@@ -14,9 +14,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [SyntaxRuleOrder(SyntaxRuleOrder.HasUsingsOutsideOfNamespaceFormattingRule)]
-    internal sealed class HasUsingsOutsideOfNamespaceFormattingRule : ISyntaxFormattingRule
+    internal sealed class HasUsingsOutsideOfNamespaceFormattingRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
-        public SyntaxNode Process(SyntaxNode syntaxNode)
+        public SyntaxNode Process(SyntaxNode syntaxNode, string languageName)
         {
             var root = syntaxNode as CompilationUnitSyntax;
             if (root == null)

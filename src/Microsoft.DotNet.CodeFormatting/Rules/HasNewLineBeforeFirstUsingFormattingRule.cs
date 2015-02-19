@@ -16,11 +16,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
     [SyntaxRuleOrder(SyntaxRuleOrder.HasNewLineBeforeFirstUsingFormattingRule)]
-    internal sealed class HasNewLineBeforeFirstUsingFormattingRule : ISyntaxFormattingRule
+    internal sealed class HasNewLineBeforeFirstUsingFormattingRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         private const string FormatError = "Could not format using";
 
-        public SyntaxNode Process(SyntaxNode syntaxRoot)
+        public SyntaxNode Process(SyntaxNode syntaxRoot, string languageName)
         {
             var firstUsing = syntaxRoot.DescendantNodesAndSelf().OfType<UsingDirectiveSyntax>().FirstOrDefault();
             if (firstUsing == null)

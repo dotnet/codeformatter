@@ -21,6 +21,10 @@ namespace Microsoft.DotNet.CodeFormatting
     [Export(typeof(IFormattingEngine))]
     internal sealed class FormattingEngineImplementation : IFormattingEngine
     {
+        /// <summary>
+        /// Developers who want to opt out of the code formatter for items like unicode
+        /// tables can surround them with #if !DOTNET_FORMATTER.  
+        /// </summary>
         internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
 
         private readonly Options _options;
@@ -150,6 +154,16 @@ namespace Microsoft.DotNet.CodeFormatting
             return document.GetSyntaxRootAsync(cancellationToken);
         }
 
+        private Task<SyntaxNode> GetSyntaxRootAndFilter(IFormattingRule formattingRule, Document document, CancellationToken cancellationToken)
+        {
+            if (!formattingRule.SupportsLanguage(document.Project.Language))
+            {
+                return Task.FromResult<SyntaxNode>(null);
+            }
+
+            return GetSyntaxRootAndFilter(document, cancellationToken);
+        }
+
         private void StartDocument()
         {
             _watch.Restart();
@@ -182,7 +196,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
 
                 StartDocument();
-                var newRoot = RunSyntaxPass(syntaxRoot);
+                var newRoot = RunSyntaxPass(syntaxRoot, document.Project.Language);
                 EndDocument(document);
 
                 if (newRoot != syntaxRoot)
@@ -194,11 +208,14 @@ namespace Microsoft.DotNet.CodeFormatting
             return currentSolution;
         }
 
-        private SyntaxNode RunSyntaxPass(SyntaxNode root)
+        private SyntaxNode RunSyntaxPass(SyntaxNode root, string languageName)
         {
             foreach (var rule in _syntaxRules)
             {
-                root = rule.Process(root);
+                if (rule.SupportsLanguage(languageName))
+                {
+                    root = rule.Process(root, languageName);
+                }
             }
 
             return root;
@@ -222,7 +239,7 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var documentId in documentIds)
             {
                 var document = originalSolution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                var syntaxRoot = await GetSyntaxRootAndFilter(localSemanticRule, document, cancellationToken);
                 if (syntaxRoot == null)
                 {
                     continue;
@@ -258,7 +275,7 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var documentId in documentIds)
             {
                 var document = solution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
+                var syntaxRoot = await GetSyntaxRootAndFilter(globalSemanticRule, document, cancellationToken);
                 if (syntaxRoot == null)
                 {
                     continue;

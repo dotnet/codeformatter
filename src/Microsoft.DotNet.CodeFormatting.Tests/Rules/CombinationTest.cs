@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 
         public CombinationTest()
         {
-            s_formattingEngine.CopyrightHeader = ImmutableArray.Create("", "// header");
+            s_formattingEngine.CopyrightHeader = ImmutableArray.Create("// header");
             s_formattingEngine.FormatLogger = new EmptyFormatLogger();
             s_formattingEngine.PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
         }
@@ -50,8 +50,7 @@ class C {
     }
 }";
 
-            var expected = @"
-// header
+            var expected = @"// header
 
 internal class C
 {
@@ -79,8 +78,7 @@ class C {
     }
 }";
 
-            var expected = @"
-// header
+            var expected = @"// header
 
 internal class C
 {
@@ -106,8 +104,7 @@ class C
 #endif 
 }";
 
-            var expected = @"
-// header
+            var expected = @"// header
 
 internal class C
 {
@@ -131,8 +128,7 @@ internal class C
 #endif 
 }";
 
-            var expected = @"
-// header
+            var expected = @"// header
 
 internal class C
 {
@@ -163,8 +159,7 @@ class C
 #endif 
 }";
 
-            var expected = @"
-// header
+            var expected = @"// header
 
 internal class C
 {
@@ -202,8 +197,7 @@ class C
 #endif 
 }";
 
-            var expected = @"
-// header
+            var expected = @"// header
 
 internal class C
 {
