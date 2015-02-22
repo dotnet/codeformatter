@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.CodeFormatting
             FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
         }
 
-        internal Solution AddTablePreprocessorSymbol(Solution solution)
+        private Solution AddTablePreprocessorSymbol(Solution solution)
         {
             var projectIds = solution.ProjectIds;
             foreach (var projectId in projectIds)
@@ -122,6 +122,24 @@ namespace Microsoft.DotNet.CodeFormatting
             return solution;
         }
 
+        /// <summary>
+        /// Remove the added table preprocessor symbol.  Don't want that saved into the project
+        /// file as a change. 
+        /// </summary>
+        private Solution RemoveTablePreprocessorSymbol(Solution newSolution, Solution oldSolution)
+        {
+            var solution = newSolution;
+            var projectIds = solution.ProjectIds;
+            foreach (var projectId in projectIds)
+            {
+                var oldProject = oldSolution.GetProject(projectId);
+                var newProject = newSolution.GetProject(projectId);
+                solution = newProject.WithParseOptions(oldProject.ParseOptions).Solution;
+            }
+
+            return solution;
+        }
+
         internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             var solution = originalSolution;
@@ -129,6 +147,7 @@ namespace Microsoft.DotNet.CodeFormatting
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
+            solution = RemoveTablePreprocessorSymbol(solution, originalSolution);
             return solution;
         }
 
