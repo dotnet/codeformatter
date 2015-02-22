@@ -128,16 +128,15 @@ namespace Microsoft.DotNet.CodeFormatting
         /// </summary>
         private Solution RemoveTablePreprocessorSymbol(Solution newSolution, Solution oldSolution)
         {
-            var solution = newSolution;
-            var projectIds = solution.ProjectIds;
+            var projectIds = newSolution.ProjectIds;
             foreach (var projectId in projectIds)
             {
                 var oldProject = oldSolution.GetProject(projectId);
                 var newProject = newSolution.GetProject(projectId);
-                solution = newProject.WithParseOptions(oldProject.ParseOptions).Solution;
+                newSolution = newProject.WithParseOptions(oldProject.ParseOptions).Solution;
             }
 
-            return solution;
+            return newSolution;
         }
 
         internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
