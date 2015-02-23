@@ -37,6 +37,25 @@ class C
         }
 
         [Fact]
+        public void CSharpSimpleMultiline()
+        {
+            _options.CopyrightHeader = ImmutableArray.Create("test1", "test2");
+            var source = @"
+class C
+{
+}";
+
+            var expected = @"// test1
+// test2
+
+class C
+{
+}";
+            Verify(source, expected);
+
+        }
+
+        [Fact]
         public void CSharpPreserveExisting()
         {
             _options.CopyrightHeader = ImmutableArray.Create("test");
@@ -47,6 +66,62 @@ class C
 }";
 
             var expected = @"// test
+
+class C
+{
+}";
+            Verify(source, expected);
+
+        }
+
+        [Fact]
+        public void CSharpPreserveExistingMultiline()
+        {
+            _options.CopyrightHeader = ImmutableArray.Create("test1", "test2");
+            var source = @"// test1
+// test2
+
+class C
+{
+}";
+
+            var expected = @"// test1
+// test2
+
+class C
+{
+}";
+            Verify(source, expected);
+
+        }
+
+        [Fact]
+        public void CSharpPreserveExistingWithCommentMultiline()
+        {
+            _options.CopyrightHeader = ImmutableArray.Create("test1", "test2");
+            var source = @"// test1
+// test2
+
+
+
+
+
+// test3
+
+
+class C
+{
+}";
+
+            var expected = @"// test1
+// test2
+
+
+
+
+
+// test3
+
 
 class C
 {

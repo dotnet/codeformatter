@@ -31,11 +31,14 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return trivia.Kind() == SyntaxKind.CommentTrivia;
             }
 
-            protected override bool IsWhiteSpaceOrNewLine(SyntaxTrivia trivia)
+            protected override bool IsWhitespace(SyntaxTrivia trivia)
             {
-                return
-                    trivia.Kind() == SyntaxKind.WhitespaceTrivia ||
-                    trivia.Kind() == SyntaxKind.EndOfLineTrivia;
+                return trivia.Kind() == SyntaxKind.WhitespaceTrivia;
+            }
+
+            protected override bool IsNewLine(SyntaxTrivia trivia)
+            {
+                return trivia.Kind() == SyntaxKind.EndOfLineTrivia;
             }
 
             protected override SyntaxTrivia CreateLineComment(string commentText)
