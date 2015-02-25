@@ -189,6 +189,14 @@ namespace DeadRegions
         {
             if (s_edit)
             {
+                var fileInfo = new FileInfo(info.Document.FilePath);
+                if (fileInfo.IsReadOnly || !fileInfo.Exists)
+                {
+                    Console.WriteLine("warning: skipping document '{0}' because it {1}.",
+                        info.Document.FilePath, fileInfo.IsReadOnly ? "is read-only" : "does not exist");
+                    return;
+                }
+
                 var document = await s_engine.RemoveUnnecessaryRegions(info, cancellationToken);
 
                 var text = await document.GetTextAsync(cancellationToken);
