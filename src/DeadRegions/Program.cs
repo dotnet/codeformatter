@@ -22,6 +22,7 @@ namespace DeadRegions
         private static IEnumerable<string> s_definedSymbols = null;
         private static IEnumerable<string> s_disabledSymbols = null;
         private static List<IEnumerable<string>> s_symbolConfigurations = new List<IEnumerable<string>>();
+        private static Tristate s_undefinedSymbolValue = Tristate.Varying;
 
         private static readonly char[] symbolSeparatorChars = new[] { ';', ',', ' ', '\t', '\n' };
 
@@ -52,7 +53,8 @@ namespace DeadRegions
                 symbolConfigurations: s_symbolConfigurations,
                 alwaysDefinedSymbols: s_definedSymbols,
                 alwaysDisabledSymbols: s_disabledSymbols,
-                alwaysIgnoredSymbols: s_ignoredSymbols);
+                alwaysIgnoredSymbols: s_ignoredSymbols,
+                undefinedSymbolValue: s_undefinedSymbolValue);
 
             try
             {
@@ -129,6 +131,17 @@ namespace DeadRegions
                             return false;
                         }
                     }
+                    else if (argName.Equals("default", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (++i < args.Length)
+                        {
+                            s_undefinedSymbolValue = Tristate.Parse(args[i]);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
                     else if (argName.Equals("printdisabled", StringComparison.InvariantCultureIgnoreCase))
                     {
                         s_printDisabled = true;
@@ -196,11 +209,12 @@ SYNTAX
   DeadRegions [<project> ...] [options]
   DeadRegions [<source file> ...] [options]
 
-PARAMETERS
+OPTIONS
   /config  <symbol list>
   /ignore  <symbol list>
   /define  <symbol list>
   /disable <symbol list>
+  /default <false|true|varying>
   /printenabled
   /printdisabled
   /printvarying

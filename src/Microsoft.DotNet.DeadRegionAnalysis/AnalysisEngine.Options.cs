@@ -15,9 +15,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     {
         public class Options
         {
-            public IEnumerable<Document> Documents { get; private set; }
+            private IEnumerable<IReadOnlyDictionary<string, Tristate>> m_symbolConfigurations;
+            private Tristate m_undefinedSymbolValue;
 
-            public IEnumerable<IReadOnlyDictionary<string, Tristate>> SymbolConfigurations { get; private set; }
+            public IEnumerable<Document> Documents { get; private set; }
 
             internal Options(
                 IEnumerable<Project> projects = null,
@@ -26,7 +27,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 IEnumerable<IEnumerable<string>> symbolConfigurations = null,
                 IEnumerable<string> alwaysIgnoredSymbols = null,
                 IEnumerable<string> alwaysDefinedSymbols = null,
-                IEnumerable<string> alwaysDisabledSymbols = null)
+                IEnumerable<string> alwaysDisabledSymbols = null,
+                Tristate undefinedSymbolValue = default(Tristate))
             {
                 if (projectPaths != null)
                 {
@@ -56,11 +58,18 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     Documents = solution.Projects.Single().Documents;
                 }
 
-                SymbolConfigurations = CalculateSymbolConfigurations(
+                m_symbolConfigurations = CalculateSymbolConfigurations(
                     alwaysDisabledSymbols,
                     alwaysDefinedSymbols,
                     alwaysIgnoredSymbols,
                     symbolConfigurations);
+
+                m_undefinedSymbolValue = undefinedSymbolValue;
+            }
+
+            internal IEnumerable<PreprocessorExpressionEvaluator> GetPreprocessorExpressionEvaluators()
+            {
+                return m_symbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config, m_undefinedSymbolValue));
             }
 
             private static IEnumerable<Document> GetSharedDocuments(IEnumerable<Project> projects)
@@ -84,7 +93,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 return projects.First().Documents.Where(d => filePathSet.Contains(d.FilePath));
             }
 
-            internal static IEnumerable<IReadOnlyDictionary<string, Tristate>> CalculateSymbolConfigurations(
+            private static IEnumerable<IReadOnlyDictionary<string, Tristate>> CalculateSymbolConfigurations(
                 IEnumerable<string> alwaysDisabledSymbols,
                 IEnumerable<string> alwaysDefinedSymbols,
                 IEnumerable<string> alwaysIgnoredSymbols,

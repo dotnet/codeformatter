@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                     kind: SourceCodeKind.Interactive);
 
         private static readonly PreprocessorExpressionEvaluator s_evaluator = new PreprocessorExpressionEvaluator(
-            new Dictionary<string, Tristate>() { { "varying", Tristate.Varying } });
+            new Dictionary<string, Tristate>() { { "varying", Tristate.Varying } }, Tristate.False);
 
         private static Tristate EvaluateExpression(string expression)
         {

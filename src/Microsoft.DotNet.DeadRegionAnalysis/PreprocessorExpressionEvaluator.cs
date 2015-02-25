@@ -12,11 +12,13 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     internal class PreprocessorExpressionEvaluator : CSharpSyntaxVisitor<Tristate>
     {
         private IReadOnlyDictionary<string, Tristate> m_symbolStates;
+        private Tristate m_undefinedSymbolValue;
 
-        public PreprocessorExpressionEvaluator(IReadOnlyDictionary<string, Tristate> symbolStates)
+        public PreprocessorExpressionEvaluator(IReadOnlyDictionary<string, Tristate> symbolStates, Tristate undefinedSymbolValue)
         {
             Debug.Assert(symbolStates != null);
             m_symbolStates = symbolStates;
+            m_undefinedSymbolValue = undefinedSymbolValue;
         }
 
         public override Tristate VisitLiteralExpression(LiteralExpressionSyntax node)

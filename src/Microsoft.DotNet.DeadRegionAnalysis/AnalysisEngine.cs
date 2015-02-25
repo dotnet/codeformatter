@@ -17,7 +17,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     public partial class AnalysisEngine
     {
         private Options m_options;
-
         private IEnumerable<PreprocessorExpressionEvaluator> m_expressionEvaluators;
 
         public event Func<DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
@@ -27,7 +26,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             IEnumerable<IEnumerable<string>> symbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
-            IEnumerable<string> alwaysDisabledSymbols = null)
+            IEnumerable<string> alwaysDisabledSymbols = null,
+            Tristate undefinedSymbolValue = default(Tristate))
         {
             if (filePaths == null || !filePaths.Any())
             {
@@ -53,7 +53,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 symbolConfigurations: symbolConfigurations,
                 alwaysIgnoredSymbols: alwaysIgnoredSymbols,
                 alwaysDefinedSymbols: alwaysDefinedSymbols,
-                alwaysDisabledSymbols: alwaysDisabledSymbols);
+                alwaysDisabledSymbols: alwaysDisabledSymbols,
+                undefinedSymbolValue: undefinedSymbolValue);
 
             return new AnalysisEngine(options);
         }
@@ -63,7 +64,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             IEnumerable<IEnumerable<string>> additionalSymbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
-            IEnumerable<string> alwaysDisabledSymbols = null)
+            IEnumerable<string> alwaysDisabledSymbols = null,
+            Tristate undefinedSymbolValue = default(Tristate))
         {
             if (projects != null && !projects.Any())
             {
@@ -81,7 +83,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 symbolConfigurations: symbolConfigurations,
                 alwaysIgnoredSymbols: alwaysIgnoredSymbols,
                 alwaysDefinedSymbols: alwaysDefinedSymbols,
-                alwaysDisabledSymbols: alwaysDisabledSymbols);
+                alwaysDisabledSymbols: alwaysDisabledSymbols,
+                undefinedSymbolValue: undefinedSymbolValue);
 
             return new AnalysisEngine(options);
         }
@@ -89,7 +92,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         private AnalysisEngine(Options options)
         {
             m_options = options;
-            m_expressionEvaluators = options.SymbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config));
+            m_expressionEvaluators = options.GetPreprocessorExpressionEvaluators();
         }
 
         /// <summary>

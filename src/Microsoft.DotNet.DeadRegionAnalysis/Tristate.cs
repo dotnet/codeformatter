@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     {
         private byte _value;
 
-        public static readonly Tristate False = new Tristate(0);
+        public static Tristate False = new Tristate(0);
         public static readonly Tristate True = new Tristate(1);
         public static readonly Tristate Varying = new Tristate(2);
 
@@ -103,6 +103,31 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 default:
                     Debug.Assert(false);
                     return string.Empty;
+            }
+        }
+
+        public static Tristate Parse(string s)
+        {
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            if (s.Equals("false", StringComparison.OrdinalIgnoreCase))
+            {
+                return False;
+            }
+            else if (s.Equals("true", StringComparison.OrdinalIgnoreCase))
+            {
+                return True;
+            }
+            else if (s.Equals("varying", StringComparison.OrdinalIgnoreCase))
+            {
+                return Varying;
+            }
+            else
+            {
+                throw new FormatException("Input string was not in a correct format");
             }
         }
     }
