@@ -34,21 +34,72 @@ namespace DeadRegions
 
         public static int Main(string[] args)
         {
-            s_options.Add("config", arg => s_symbolConfigurations.Add(ParseSymbolList(arg)), allowMultiple: true);
-            s_options.Add("ignore", arg => s_ignoredSymbols.AddRange(ParseSymbolList(arg)), allowMultiple: true);
-            s_options.Add("define", arg => s_definedSymbols.AddRange(ParseSymbolList(arg)), allowMultiple: true);
-            s_options.Add("disable", arg => s_disabledSymbols.AddRange(ParseSymbolList(arg)), allowMultiple: true);
-            s_options.Add("default", arg => s_undefinedSymbolValue = Tristate.Parse(arg));
-            s_options.Add("printdisabled", () => s_printDisabled = true);
-            s_options.Add("printenabled", () => s_printEnabled = true);
-            s_options.Add("printvarying", () => s_printVarying = true);
-            s_options.Add("printsymbols", () => s_printSymbolInfo = true);
-            s_options.Add("print", () => s_printDisabled = s_printEnabled = s_printVarying = s_printSymbolInfo = true);
-            s_options.Add("edit", () => s_edit = true);
+            s_options.Add(
+                "config",
+                arg => s_symbolConfigurations.Add(ParseSymbolList(arg)),
+                parameterUsage: "<symbol list>",
+                description: "Specify a complete symbol configuration",
+                allowMultiple: true);
+
+            s_options.Add(
+                "ignore",
+                arg => s_ignoredSymbols.AddRange(ParseSymbolList(arg)),
+                parameterUsage: "<symbol list>",
+                description: "Ignore a list of symbols (treat as varying)",
+                allowMultiple: true);
+
+            s_options.Add(
+                "define",
+                arg => s_definedSymbols.AddRange(ParseSymbolList(arg)),
+                parameterUsage: "<symbol list>",
+                description: "Define a list of symbols (treat as always true)",
+                allowMultiple: true);
+
+            s_options.Add(
+                "disable",
+                arg => s_disabledSymbols.AddRange(ParseSymbolList(arg)),
+                parameterUsage: "<symbol list>",
+                description: "Disable a list of symbols (treat as always disabled)",
+                allowMultiple: true);
+
+            s_options.Add(
+                "default",
+                arg => s_undefinedSymbolValue = Tristate.Parse(arg),
+                parameterUsage: "<false|true|varying>",
+                description: "Set the default value for symbols which do not have a specified value (defaults to varying)");
+
+            s_options.Add(
+                "printdisabled",
+                () => s_printDisabled = true,
+                description: "Print the list of always disabled conditional regions");
+
+            s_options.Add(
+                "printenabled",
+                () => s_printEnabled = true,
+                description: "Print the list of always enabled conditional regions");
+
+            s_options.Add(
+                "printvarying",
+                () => s_printVarying = true,
+                description: "Print the list of varying conditional regions");
+
+            s_options.Add(
+                "printsymbols",
+                () => s_printSymbolInfo = true,
+                description: "Print the lists of uniquely specified preprocessor symbols, symbols visited during analysis, and symbols not encountered during analysis");
+
+            s_options.Add(
+                "print",
+                () => s_printDisabled = s_printEnabled = s_printVarying = s_printSymbolInfo = true,
+                description: "Print the entire list of conditional regions and the lists of preprocessor symbols (combination of printenabled, printdisabled, printvarying, and printsymbols)");
+
+            s_options.Add(
+                "edit",
+                () => s_edit = true,
+                "Perform edits to remove always enabled and always disabled conditional regions from source files, and simplify preprocessor expressions which evaluate to 'varying'");
 
             try
             {
-                Console.WriteLine(Environment.CommandLine);
                 s_filePaths = s_options.Parse(Environment.CommandLine);
             }
             catch (OptionParseException e)
@@ -209,12 +260,12 @@ SYNTAX
 
                 if (s_disabledCount > 0)
                 {
-                    Console.WriteLine("  {0,5} disabled", s_disabledCount);
+                    Console.WriteLine("  {0,5} always disabled", s_disabledCount);
                 }
 
                 if (s_enabledCount > 0)
                 {
-                    Console.WriteLine("  {0,5} enabled", s_enabledCount);
+                    Console.WriteLine("  {0,5} always enabled", s_enabledCount);
                 }
 
                 if (s_varyingCount > 0)

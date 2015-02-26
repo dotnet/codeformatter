@@ -22,7 +22,7 @@ namespace DeadRegions
 
                 foreach (var option in _options.Values)
                 {
-                    sb.Append(option.Usage);
+                    sb.AppendLine(option.Usage);
                 }
 
                 return sb.ToString();
@@ -41,7 +41,7 @@ namespace DeadRegions
         public void Add(string name, Action action, string description = null)
         {
             _options.Add(name, new Option(name, action,
-                requiresValue: true,
+                requiresValue: false,
                 parameterUsage: null,
                 description: description,
                 allowMultiple: false));
@@ -166,8 +166,7 @@ namespace DeadRegions
                     sb.Append(Environment.NewLine);
                     if (_description != null)
                     {
-                        sb.Append("    ");
-                        sb.AppendLine(_description);
+                        sb.Append(WrapStringAtColumn(80, "    ", _description));
                     }
                     if (AllowMultiple)
                     {
@@ -175,6 +174,25 @@ namespace DeadRegions
                     }
                     return sb.ToString();
                 }
+            }
+
+            private static string WrapStringAtColumn(int column, string linePrefix, string s)
+            {
+                var sb = new StringBuilder();
+                do
+                {
+                    sb.Append(linePrefix);
+
+                    int i;
+                    for (i = Math.Min(column, s.Length); i > 0 && i < s.Length && s[i - 1] != ' '; --i) ;
+
+                    string segment = s.Substring(0, i);
+                    sb.AppendLine(segment);
+                    s = s.Substring(segment.Length);
+                }
+                while (s.Length > 0);
+
+                return sb.ToString();
             }
         }
     }
