@@ -23,6 +23,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public override Tristate VisitLiteralExpression(LiteralExpressionSyntax node)
         {
+            Tristate state;
+            if (m_symbolStates.TryGetValue(node.ToString(), out state))
+            {
+                return state;
+            }
+
             switch (node.CSharpKind())
             {
                 case SyntaxKind.TrueLiteralExpression:

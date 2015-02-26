@@ -64,6 +64,21 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
             VerifyInvalid("1");
         }
 
+        [Fact]
+        public void OverrideLiteralExpressions()
+        {
+            var evaluator = new PreprocessorExpressionEvaluator(
+                new Dictionary<string, Tristate>()
+                {
+                    { "true", Tristate.False },
+                    { "false", Tristate.True }
+                },
+                Tristate.Varying);
+
+            Assert.Equal(Tristate.False, EvaluateExpression("true", evaluator));
+            Assert.Equal(Tristate.True, EvaluateExpression("false", evaluator));
+        }
+
         private static readonly CSharpParseOptions s_expressionParseOptions = new CSharpParseOptions(
                     documentationMode: DocumentationMode.None,
                     kind: SourceCodeKind.Interactive);
@@ -71,13 +86,18 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
         private static readonly PreprocessorExpressionEvaluator s_evaluator = new PreprocessorExpressionEvaluator(
             new Dictionary<string, Tristate>() { { "varying", Tristate.Varying } }, Tristate.False);
 
-        private static Tristate EvaluateExpression(string expression)
+        private static Tristate EvaluateExpression(string expression, PreprocessorExpressionEvaluator evaluator = null)
         {
+            if (evaluator == null)
+            {
+                evaluator = s_evaluator;
+            }
+
             var expressionSyntax = SyntaxFactory.ParseExpression(
                 expression,
                 options: s_expressionParseOptions);
 
-            return expressionSyntax.Accept(s_evaluator);
+            return expressionSyntax.Accept(evaluator);
         }
 
         private static void Verify(string expression, Tristate expectedValue)
