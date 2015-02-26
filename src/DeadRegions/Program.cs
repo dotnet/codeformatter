@@ -239,32 +239,32 @@ NOTES
                 {
                     foreach (var region in chain.Regions)
                     {
-                        switch (region.State)
+                        if (region.State == Tristate.False)
                         {
-                            case ConditionalRegionState.AlwaysDisabled:
-                                s_disabledCount++;
-                                Console.ForegroundColor = ConsoleColor.Blue;
-                                if (s_printDisabled)
-                                {
-                                    Console.WriteLine(region);
-                                }
-                                break;
-                            case ConditionalRegionState.AlwaysEnabled:
-                                s_enabledCount++;
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                if (s_printEnabled)
-                                {
-                                    Console.WriteLine(region);
-                                }
-                                break;
-                            case ConditionalRegionState.Varying:
-                                s_varyingCount++;
-                                Console.ForegroundColor = ConsoleColor.DarkGray;
-                                if (s_printVarying)
-                                {
-                                    Console.WriteLine(region);
-                                }
-                                break;
+                            s_disabledCount++;
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            if (s_printDisabled)
+                            {
+                                Console.WriteLine(region);
+                            }
+                        }
+                        else if (region.State == Tristate.True)
+                        {
+                            s_enabledCount++;
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            if (s_printEnabled)
+                            {
+                                Console.WriteLine(region);
+                            }
+                        }
+                        else
+                        {
+                            s_varyingCount++;
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                            if (s_printVarying)
+                            {
+                                Console.WriteLine(region);
+                            }
                         }
                     }
                 }

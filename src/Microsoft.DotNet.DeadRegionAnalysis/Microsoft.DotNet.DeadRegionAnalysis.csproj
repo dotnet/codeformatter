@@ -71,7 +71,6 @@
     <Compile Include="AnalysisEngine.RegionRemoval.cs" />
     <Compile Include="ConditionalRegion.cs" />
     <Compile Include="ConditionalRegionChain.cs" />
-    <Compile Include="ConditionalRegionState.cs" />
     <Compile Include="DirectiveTriviaSyntaxExtensions.cs" />
     <Compile Include="DocumentConditionalRegionInfo.cs" />
     <Compile Include="PreprocessorExpressionEvaluator.cs" />

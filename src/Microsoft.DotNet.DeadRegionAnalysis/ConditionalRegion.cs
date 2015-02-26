@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp;
-using System.Collections.Generic;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public Location Location { get; private set; }
 
-        public ConditionalRegionState State { get; set; }
+        public Tristate State { get; private set; }
 
         public ConditionalRegion(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective, IReadOnlyList<ConditionalRegion> chain, int indexInChain, Tristate state)
         {
@@ -32,19 +32,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             SpanStart = CalculateSpanStart(startDirective);
             SpanEnd = endDirective.FullSpan.End;
             Location = Location.Create(startDirective.SyntaxTree, new TextSpan(SpanStart, SpanEnd - SpanStart));
-
-            if (state == Tristate.False)
-            {
-                State = ConditionalRegionState.AlwaysDisabled;
-            }
-            else if (state == Tristate.True)
-            {
-                State = ConditionalRegionState.AlwaysEnabled;
-            }
-            else
-            {
-                State = ConditionalRegionState.Varying;
-            }
+            State = state;
         }
 
         private static int CalculateSpanStart(DirectiveTriviaSyntax startDirective)
@@ -119,11 +107,16 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public override string ToString()
         {
+            string stateString =
+                State == Tristate.False ? "Always Disabled" :
+                State == Tristate.True ? "Always Enabled" :
+                "Varying";
+
             return string.Format("{0}({1}): \"{2}\" : {3}",
                 StartDirective.SyntaxTree.FilePath,
                 Location.GetLineSpan().StartLinePosition.Line,
                 StartDirective.ToString(),
-                State);
+                stateString);
         }
     }
 }

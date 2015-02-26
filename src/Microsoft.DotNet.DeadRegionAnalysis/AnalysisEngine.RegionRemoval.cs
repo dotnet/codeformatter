@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 return info.Document;
             }
 
-            // Remove the unnecessary spans from the end of the document to the beginning to preserve character positions
             var newText = await info.Document.GetTextAsync(cancellationToken);
 
             try
@@ -72,7 +71,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             for (int i = 0; i < chain.Regions.Count; i++)
             {
                 var region = chain.Regions[i];
-                if (region.State != ConditionalRegionState.Varying)
+                if (region.State != Tristate.Varying)
                 {
                     var startDirective = region.StartDirective;
                     var endDirective = region.EndDirective;
@@ -81,7 +80,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     // Remove the start directive
                     changes.Add(new TextChange(new TextSpan(region.SpanStart, region.StartDirective.FullSpan.End - region.SpanStart), string.Empty));
 
-                    if (region.State == ConditionalRegionState.AlwaysDisabled)
+                    if (region.State == Tristate.False)
                     {
                         // Remove the contents of the region
                         changes.Add(new TextChange(new TextSpan(region.StartDirective.FullSpan.End, region.EndDirective.FullSpan.Start - region.StartDirective.FullSpan.End), string.Empty));
@@ -90,7 +89,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                         for (int j = i + 1; j < chain.Regions.Count; j++)
                         {
                             var nextRegion = chain.Regions[j];
-                            if (nextRegion.State == ConditionalRegionState.AlwaysDisabled)
+                            if (nextRegion.State == Tristate.False)
                             {
                                 endDirective = nextRegion.EndDirective;
                                 region = nextRegion;
@@ -103,7 +102,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                             else
                             {
                                 // If the next region is varying, then the end directive needs replacement
-                                if (nextRegion.State == ConditionalRegionState.Varying)
+                                if (nextRegion.State == Tristate.Varying)
                                 {
                                     endDirectiveReplacementText = GetReplacementText(startDirective, endDirective);
                                     changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), endDirectiveReplacementText));

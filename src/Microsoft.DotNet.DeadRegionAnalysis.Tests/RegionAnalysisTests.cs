@@ -19,8 +19,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysEnabled,
-                ConditionalRegionState.Varying
+                Tristate.True,
+                Tristate.Varying
             };
 
             Verify(source, expectedStates);
@@ -39,9 +39,9 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysEnabled,
-                ConditionalRegionState.Varying
+                Tristate.False,
+                Tristate.True,
+                Tristate.Varying
             };
 
             Verify(source, expectedStates);
@@ -60,9 +60,9 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysEnabled,
-                ConditionalRegionState.AlwaysDisabled
+                Tristate.False,
+                Tristate.True,
+                Tristate.False
             };
 
             Verify(source, expectedStates);
@@ -84,10 +84,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysEnabled,
-                ConditionalRegionState.AlwaysEnabled,
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysDisabled
+                Tristate.True,
+                Tristate.True,
+                Tristate.False,
+                Tristate.False
             };
 
             Verify(source, expectedStates);
@@ -110,12 +110,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 ";
             var expectedStates = new[]
             {
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysDisabled,
-                ConditionalRegionState.AlwaysEnabled,
-                ConditionalRegionState.Varying,
-                ConditionalRegionState.Varying,
-                ConditionalRegionState.Varying
+                Tristate.False,
+                Tristate.False,
+                Tristate.True,
+                Tristate.Varying,
+                Tristate.Varying,
+                Tristate.Varying
             };
 
             Verify(source, expectedStates);
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
         private static readonly string[] s_defaultPreprocessorSymbolsA = new[] { "A" };
         private static readonly string[] s_defaultPreprocessorSymbolsB = new[] { "B" };
 
-        private void Verify(string source, ConditionalRegionState[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
+        private void Verify(string source, Tristate[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
         {
             if (preprocessorSymbolsA == null)
             {
