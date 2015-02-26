@@ -15,6 +15,7 @@ namespace DeadRegions
         private static bool s_printDisabled;
         private static bool s_printEnabled;
         private static bool s_printVarying;
+        private static bool s_printSymbolInfo;
         private static bool s_edit;
 
         private static List<string> s_filePaths = new List<string>();
@@ -39,7 +40,7 @@ namespace DeadRegions
                 return -1;
             }
 
-            if (!ParseArguments(args))
+            if (!ParseOptions(args))
             {
                 PrintUsage();
                 return -1;
@@ -71,9 +72,9 @@ namespace DeadRegions
             return 0;
         }
 
-        private static bool ParseArguments(string[] args)
+        private static bool ParseOptions(string[] args)
         {
-            Dictionary<string, Action<string>> actions = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
+            Dictionary<string, Action<string>> options = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
             {
                 { "config", arg => s_symbolConfigurations.Add(ParseSymbolList(arg)) },
                 { "ignore", arg => s_ignoredSymbols.AddRange(ParseSymbolList(arg)) },
@@ -83,6 +84,8 @@ namespace DeadRegions
                 { "printdisabled", arg => s_printDisabled = true },
                 { "printenabled", arg => s_printEnabled = true },
                 { "printvarying", arg => s_printVarying = true },
+                { "printsymbols", arg => s_printSymbolInfo = true },
+                { "print", arg => s_printDisabled = s_printEnabled = s_printVarying = s_printSymbolInfo = true },
                 { "edit", arg => s_edit = true }
             };
 
@@ -96,30 +99,34 @@ namespace DeadRegions
                     // TODO: Better tokenization of arguments (e.g. allow single/double quotes)
                     // Could parse Environment.CommandLine with a big regex
                     string[] responseFileArgs = File.ReadAllText(responseFilePath).Replace("\r", string.Empty).Split(' ', '\t', '\n');
-                    return ParseArguments(responseFileArgs);
+                    return ParseOptions(responseFileArgs);
                 }
                 else if (arg[0] == '/' || arg[0] == '-')
                 {
                     string optionName = arg.Substring(1);
-                    int separatorIndex = optionName.IndexOfAny(s_valueIndicatorChars);
-                    if (separatorIndex == -1)
-                    {
-                        if (++i >= args.Length)
-                        {
-                            Console.WriteLine("error: missing argument for option: " + optionName);
-                            return false;
-                        }
-
-                        arg = args[i];
-                    }
-                    else
-                    {
-                        arg = optionName.Substring(separatorIndex + 1);
-                        optionName = optionName.Substring(0, separatorIndex);
-                    }
 
                     Action<string> action;
-                    if (actions.TryGetValue(optionName, out action))
+                    if (!options.TryGetValue(optionName, out action))
+                    {
+                        int separatorIndex = optionName.IndexOfAny(s_valueIndicatorChars);
+                        if (separatorIndex == -1)
+                        {
+                            if (++i >= args.Length)
+                            {
+                                Console.WriteLine("error: missing argument for option: " + optionName);
+                                return false;
+                            }
+
+                            arg = args[i];
+                        }
+                        else
+                        {
+                            arg = optionName.Substring(separatorIndex + 1);
+                            optionName = optionName.Substring(0, separatorIndex);
+                        }
+                    }
+
+                    if (options.TryGetValue(optionName, out action))
                     {
                         try
                         {
@@ -166,6 +173,12 @@ namespace DeadRegions
         {
             var regionInfos = await s_engine.GetConditionalRegionInfo(cancellationToken);
             PrintConditionalRegionInfo(regionInfos);
+
+            if (s_printSymbolInfo)
+            {
+                Console.WriteLine();
+                PrintSymbolInfo();
+            }
         }
 
         private static async Task OnDocumentAnalyzed(DocumentConditionalRegionInfo info, CancellationToken cancellationToken)
@@ -265,8 +278,8 @@ OPTIONS
             }
             else
             {
-                Console.WriteLine("Found");
-                Console.WriteLine("  {0,5} conditional regions total", totalRegionCount);
+                Console.WriteLine("Conditional Regions");
+                Console.WriteLine("  {0,5} found in total", totalRegionCount);
 
                 if (s_disabledCount > 0)
                 {
@@ -286,6 +299,14 @@ OPTIONS
 
             // TODO: Lines of dead code.  A chain struct might be useful because there are many operations on a chain.
             // This involves calculating unnecessary regions, converting those to line spans
+        }
+
+        private static void PrintSymbolInfo()
+        {
+            Console.WriteLine("Symbols");
+            Console.WriteLine("  {0,5} unique symbol(s) specified: {1}", s_engine.SpecifiedSymbols.Count(), string.Join(";", s_engine.SpecifiedSymbols));
+            Console.WriteLine("  {0,5} unique symbol(s) visited: {1}", s_engine.VisitedSymbols.Count(), string.Join(";", s_engine.VisitedSymbols));
+            Console.WriteLine("  {0,5} specified symbol(s) unvisited: {1}", s_engine.UnvisitedSymbols.Count(), string.Join(";", s_engine.UnvisitedSymbols));
         }
     }
 }

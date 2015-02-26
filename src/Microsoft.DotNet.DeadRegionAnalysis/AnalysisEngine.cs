@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     {
         private Options m_options;
         private IEnumerable<PreprocessorExpressionEvaluator> m_expressionEvaluators;
+        private PreprocessorSymbolTracker m_symbolTracker;
 
         public event Func<DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
 
@@ -93,6 +94,22 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         {
             m_options = options;
             m_expressionEvaluators = options.GetPreprocessorExpressionEvaluators();
+            m_symbolTracker = options.GetPreprocessorSymbolTracker();
+        }
+
+        public IEnumerable<string> SpecifiedSymbols
+        {
+            get { return m_symbolTracker.SpecifiedSymbols; }
+        }
+
+        public IEnumerable<string> UnvisitedSymbols
+        {
+            get { return m_symbolTracker.UnvisitedSymbols; }
+        }
+
+        public IEnumerable<string> VisitedSymbols
+        {
+            get { return m_symbolTracker.VisitedSymbols; }
         }
 
         /// <summary>
@@ -224,6 +241,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     return Tristate.Varying;
                 }
             }
+
+            expression.Accept(m_symbolTracker);
 
             return result;
         }

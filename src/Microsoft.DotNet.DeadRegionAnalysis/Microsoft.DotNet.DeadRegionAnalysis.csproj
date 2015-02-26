@@ -75,6 +75,7 @@
     <Compile Include="DirectiveTriviaSyntaxExtensions.cs" />
     <Compile Include="DocumentConditionalRegionInfo.cs" />
     <Compile Include="PreprocessorExpressionEvaluator.cs" />
+    <Compile Include="PreprocessorSymbolTracker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tristate.cs" />
   </ItemGroup>

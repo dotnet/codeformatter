@@ -72,6 +72,21 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 return m_symbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config, m_undefinedSymbolValue));
             }
 
+            internal PreprocessorSymbolTracker GetPreprocessorSymbolTracker()
+            {
+                var specifiedSymbols = new HashSet<string>();
+
+                foreach (var config in m_symbolConfigurations)
+                {
+                    foreach (string symbol in config.Keys)
+                    {
+                        specifiedSymbols.Add(symbol);
+                    }
+                }
+
+                return new PreprocessorSymbolTracker(specifiedSymbols);
+            }
+
             private static IEnumerable<Document> GetSharedDocuments(IEnumerable<Project> projects)
             {
                 var it = projects.GetEnumerator();
