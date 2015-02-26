@@ -67,9 +67,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 m_undefinedSymbolValue = undefinedSymbolValue;
             }
 
-            internal IEnumerable<PreprocessorExpressionEvaluator> GetPreprocessorExpressionEvaluators()
+            internal CompositePreprocessorExpressionEvaluator GetPreprocessorExpressionEvaluator()
             {
-                return m_symbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config, m_undefinedSymbolValue));
+                var evaluators = m_symbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config, m_undefinedSymbolValue));
+                return new CompositePreprocessorExpressionEvaluator(evaluators);
             }
 
             internal PreprocessorSymbolTracker GetPreprocessorSymbolTracker()

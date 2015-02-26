@@ -1,23 +1,21 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public partial class AnalysisEngine
     {
         private Options m_options;
-        private IEnumerable<PreprocessorExpressionEvaluator> m_expressionEvaluators;
+        private CompositePreprocessorExpressionEvaluator m_expressionEvaluator;
+        private PreprocessorExpressionSimplifier m_expressionSimplifier;
         private PreprocessorSymbolTracker m_symbolTracker;
 
         public event Func<DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
@@ -93,7 +91,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         private AnalysisEngine(Options options)
         {
             m_options = options;
-            m_expressionEvaluators = options.GetPreprocessorExpressionEvaluators();
+            m_expressionEvaluator = options.GetPreprocessorExpressionEvaluator();
+            m_expressionSimplifier = new PreprocessorExpressionSimplifier(m_expressionEvaluator);
             m_symbolTracker = options.GetPreprocessorSymbolTracker();
         }
 
@@ -113,6 +112,31 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         }
 
         /// <summary>
+        /// Returns a new document in which all preprocessor expressions which evaluate to "Varying"
+        /// have been simplified.
+        /// </summary>
+        public async Task<Document> SimplifyVaryingPreprocessorExpressions(Document document, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var chains = await GetConditionalRegionChains(document, cancellationToken);
+
+            var syntaxTree = await document.GetSyntaxTreeAsync(cancellationToken) as CSharpSyntaxTree;
+            var root = await syntaxTree.GetRootAsync(cancellationToken);
+
+            foreach (var chain in chains)
+            {
+                foreach (var region in chain.Regions)
+                {
+                    if (region.State == Tristate.Varying)
+                    {
+                        root = root.ReplaceNode(region.StartDirective, SimplifyDirectiveExpression(region.StartDirective));
+                    }
+                }
+            }
+
+            return document.WithSyntaxRoot(root);
+        }
+
+        /// <summary>
         /// Returns a sorted collection of <see cref="DocumentConditionalRegionInfo"/>
         /// </summary>
         public async Task<IEnumerable<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
@@ -127,6 +151,19 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         }
 
         private async Task<DocumentConditionalRegionInfo> GetConditionalRegionInfo(Document document, CancellationToken cancellationToken)
+        {
+            var chains = await GetConditionalRegionChains(document, cancellationToken);
+
+            var info = new DocumentConditionalRegionInfo(document, chains);
+            if (DocumentAnalyzed != null)
+            {
+                await DocumentAnalyzed(info, cancellationToken);
+            }
+
+            return info;
+        }
+
+        private async Task<List<ConditionalRegionChain>> GetConditionalRegionChains(Document document, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -156,13 +193,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 }
             }
 
-            var info = new DocumentConditionalRegionInfo(document, chains);
-            if (DocumentAnalyzed != null)
-            {
-                await DocumentAnalyzed(info, cancellationToken);
-            }
-
-            return info;
+            return chains;
         }
 
         private List<ConditionalRegion> ParseConditionalRegionChain(List<DirectiveTriviaSyntax> directives, HashSet<DirectiveTriviaSyntax> visitedDirectives)
@@ -224,29 +255,30 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private Tristate EvaluateExpression(ExpressionSyntax expression)
         {
-            var it = m_expressionEvaluators.GetEnumerator();
-            if (!it.MoveNext())
-            {
-                Debug.Assert(false, "We should have at least one expression evaluator");
-            }
-
-            Tristate result = expression.Accept(it.Current);
-            if (result == Tristate.Varying)
-            {
-                return Tristate.Varying;
-            }
-
-            while (it.MoveNext())
-            {
-                if (expression.Accept(it.Current) != result)
-                {
-                    return Tristate.Varying;
-                }
-            }
-
             expression.Accept(m_symbolTracker);
+            return m_expressionEvaluator.EvaluateExpression(expression);
+        }
 
-            return result;
+        private DirectiveTriviaSyntax SimplifyDirectiveExpression(DirectiveTriviaSyntax directive)
+        {
+            switch (directive.CSharpKind())
+            {
+                case SyntaxKind.IfDirectiveTrivia:
+                    {
+                        var ifDirective = (IfDirectiveTriviaSyntax)directive;
+                        return ifDirective.WithCondition((ExpressionSyntax)ifDirective.Condition.Accept(m_expressionSimplifier));
+                    }
+                case SyntaxKind.ElifDirectiveTrivia:
+                    {
+                        var elifDirective = (ElifDirectiveTriviaSyntax)directive;
+                        return elifDirective.WithCondition((ExpressionSyntax)elifDirective.Condition.Accept(m_expressionSimplifier));
+                    }
+                case SyntaxKind.ElseDirectiveTrivia:
+                    return directive;
+                default:
+                    Debug.Assert(false);
+                    return null;
+            }
         }
 
         private static bool IsBranchingDirective(DirectiveTriviaSyntax directive)

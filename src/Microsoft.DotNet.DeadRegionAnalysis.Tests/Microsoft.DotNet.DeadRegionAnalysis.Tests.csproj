@@ -84,6 +84,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DocumentSimplificationTests.cs" />
     <Compile Include="PreprocessorExpressionEvaluatorTests.cs" />
     <Compile Include="PreprocessorExpressionSimplifierTests.cs" />
     <Compile Include="RegionAnalysisTests.cs" />

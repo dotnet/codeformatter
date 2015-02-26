@@ -193,6 +193,7 @@ namespace DeadRegions
                 }
 
                 var document = await s_engine.RemoveUnnecessaryRegions(info, cancellationToken);
+                document = await s_engine.SimplifyVaryingPreprocessorExpressions(document, cancellationToken);
 
                 var text = await document.GetTextAsync(cancellationToken);
                 using (var file = File.Open(document.FilePath, FileMode.Truncate, FileAccess.Write))
