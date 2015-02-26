@@ -80,8 +80,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
         }
 
         private static readonly CSharpParseOptions s_expressionParseOptions = new CSharpParseOptions(
-                    documentationMode: DocumentationMode.None,
-                    kind: SourceCodeKind.Interactive);
+            documentationMode: DocumentationMode.None,
+            kind: SourceCodeKind.Interactive);
 
         private static readonly PreprocessorExpressionEvaluator s_evaluator = new PreprocessorExpressionEvaluator(
             new Dictionary<string, Tristate>() { { "varying", Tristate.Varying } }, Tristate.False);

@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PreprocessorExpressionEvaluatorTests.cs" />
+    <Compile Include="PreprocessorExpressionSimplifierTests.cs" />
     <Compile Include="RegionAnalysisTests.cs" />
     <Compile Include="RegionRemovalTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -91,4 +91,45 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         {
         }
     }
+
+    internal class CompositePreprocessorExpressionEvaluator
+    {
+        private IEnumerable<PreprocessorExpressionEvaluator> m_expressionEvaluators;
+
+        public CompositePreprocessorExpressionEvaluator(IEnumerable<PreprocessorExpressionEvaluator> expressionEvaluators)
+        {
+            if (expressionEvaluators == null)
+            {
+                throw new ArgumentNullException("expressionEvaluators");
+            }
+
+            m_expressionEvaluators = expressionEvaluators;
+        }
+
+
+        public Tristate EvaluateExpression(CSharpSyntaxNode expression)
+        {
+            var it = m_expressionEvaluators.GetEnumerator();
+            if (!it.MoveNext())
+            {
+                Debug.Assert(false, "We should have at least one expression evaluator");
+            }
+
+            Tristate result = expression.Accept(it.Current);
+            if (result == Tristate.Varying)
+            {
+                return Tristate.Varying;
+            }
+
+            while (it.MoveNext())
+            {
+                if (expression.Accept(it.Current) != result)
+                {
+                    return Tristate.Varying;
+                }
+            }
+
+            return result;
+        }
+    }
 }
