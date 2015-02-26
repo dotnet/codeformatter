@@ -56,8 +56,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         {
             var changes = new List<TextChange>();
 
-            // TODO: A chain struct could have a GetUnnecessarySpans() method
-
             foreach (var chain in chains)
             {
                 CalculateTextChanges(chain, changes);

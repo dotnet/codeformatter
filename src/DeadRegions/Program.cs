@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.DeadRegionAnalysis;
 using System.Threading;
 using System.IO;
@@ -300,8 +299,7 @@ NOTES
                 }
             }
 
-            // TODO: Lines of dead code.  A chain struct might be useful because there are many operations on a chain.
-            // This involves calculating unnecessary regions, converting those to line spans
+            // TODO: Lines of disabled/enabled/varying code. This involves calculating unnecessary regions, converting those to line spans.
         }
 
         private static void PrintSymbolInfo()

@@ -121,9 +121,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
             Verify(source, expectedStates);
         }
 
-        // TODO: Add a test case which would fail if nested regions were AFTER the outer region.  Probably a removal test because it would screw up the spans.
-        // TODO: Test case to make sure regions which are not shared are not included
-
         private static readonly string[] s_defaultPreprocessorSymbolsA = new[] { "A" };
         private static readonly string[] s_defaultPreprocessorSymbolsB = new[] { "B" };
 

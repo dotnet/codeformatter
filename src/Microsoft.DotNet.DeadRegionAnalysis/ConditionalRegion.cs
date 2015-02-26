@@ -10,7 +10,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public class ConditionalRegion : IComparable<ConditionalRegion>, IEquatable<ConditionalRegion>
     {
-        // TODO: These should be syntax references because we only use the span after initialization?
         public DirectiveTriviaSyntax StartDirective { get; private set; }
 
         public DirectiveTriviaSyntax EndDirective { get; private set; }
