@@ -128,6 +128,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private async Task<DocumentConditionalRegionInfo> GetConditionalRegionInfo(Document document, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var chains = new List<ConditionalRegionChain>();
             var regions = new List<ConditionalRegion>();
 

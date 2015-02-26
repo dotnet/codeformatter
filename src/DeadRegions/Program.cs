@@ -25,7 +25,7 @@ namespace DeadRegions
         private static List<IEnumerable<string>> s_symbolConfigurations = new List<IEnumerable<string>>();
         private static Tristate s_undefinedSymbolValue = Tristate.Varying;
 
-        private static readonly char[] s_symbolSeparatorChars = new[] { ';', ',', ' ', '\t', '\n' };
+        private static readonly char[] s_symbolSeparatorChars = new[] { ';', ',' };
         private static readonly char[] s_valueIndicatorChars = new[] { '=', ':' };
 
         private static int s_disabledCount = 0;
@@ -224,7 +224,10 @@ OPTIONS
   /printvarying
   /print
   /edit
-  @<response file>");
+  @<response file>
+
+NOTES
+  <symbol list> is a comma or semi-colon separated list of preprocessor symbols");
         }
 
         private static void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfos)
