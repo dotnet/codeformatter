@@ -10,22 +10,23 @@ namespace DeadRegions
 {
     internal class DeadRegions
     {
-        private static AnalysisEngine s_engine;
-        private static bool s_printDisabled;
-        private static bool s_printEnabled;
-        private static bool s_printVarying;
-        private static bool s_printSymbolInfo;
-        private static bool s_edit;
+        private static readonly char[] s_symbolSeparatorChars = new[] { ';', ',' };
 
-        private static List<string> s_filePaths = new List<string>();
+        private static OptionParser s_options = new OptionParser();
+        private static AnalysisEngine s_engine;
+
+        private static IList<string> s_filePaths;
         private static List<string> s_ignoredSymbols = new List<string>();
         private static List<string> s_definedSymbols = new List<string>();
         private static List<string> s_disabledSymbols = new List<string>();
         private static List<IEnumerable<string>> s_symbolConfigurations = new List<IEnumerable<string>>();
         private static Tristate s_undefinedSymbolValue = Tristate.Varying;
 
-        private static readonly char[] s_symbolSeparatorChars = new[] { ';', ',' };
-        private static readonly char[] s_valueIndicatorChars = new[] { '=', ':' };
+        private static bool s_printDisabled;
+        private static bool s_printEnabled;
+        private static bool s_printVarying;
+        private static bool s_printSymbolInfo;
+        private static bool s_edit;
 
         private static int s_disabledCount = 0;
         private static int s_enabledCount = 0;
@@ -33,21 +34,35 @@ namespace DeadRegions
 
         public static int Main(string[] args)
         {
-            if (args.Length < 1)
+            s_options.Add("config", arg => s_symbolConfigurations.Add(ParseSymbolList(arg)), allowMultiple: true);
+            s_options.Add("ignore", arg => s_ignoredSymbols.AddRange(ParseSymbolList(arg)), allowMultiple: true);
+            s_options.Add("define", arg => s_definedSymbols.AddRange(ParseSymbolList(arg)), allowMultiple: true);
+            s_options.Add("disable", arg => s_disabledSymbols.AddRange(ParseSymbolList(arg)), allowMultiple: true);
+            s_options.Add("default", arg => s_undefinedSymbolValue = Tristate.Parse(arg));
+            s_options.Add("printdisabled", () => s_printDisabled = true);
+            s_options.Add("printenabled", () => s_printEnabled = true);
+            s_options.Add("printvarying", () => s_printVarying = true);
+            s_options.Add("printsymbols", () => s_printSymbolInfo = true);
+            s_options.Add("print", () => s_printDisabled = s_printEnabled = s_printVarying = s_printSymbolInfo = true);
+            s_options.Add("edit", () => s_edit = true);
+
+            try
             {
+                Console.WriteLine(Environment.CommandLine);
+                s_filePaths = s_options.Parse(Environment.CommandLine);
+            }
+            catch (OptionParseException e)
+            {
+                Console.WriteLine("error: " + e.Message);
                 PrintUsage();
                 return -1;
             }
 
-            if (!ParseOptions(args))
+            if (s_filePaths.Count < 1)
             {
                 PrintUsage();
                 return -1;
             }
-
-            var cts = new CancellationTokenSource();
-            var ct = cts.Token;
-            Console.CancelKeyPress += delegate { cts.Cancel(); };
 
             s_engine = AnalysisEngine.FromFilePaths(
                 s_filePaths,
@@ -56,6 +71,10 @@ namespace DeadRegions
                 alwaysDisabledSymbols: s_disabledSymbols,
                 alwaysIgnoredSymbols: s_ignoredSymbols,
                 undefinedSymbolValue: s_undefinedSymbolValue);
+
+            var cts = new CancellationTokenSource();
+            var ct = cts.Token;
+            Console.CancelKeyPress += delegate { cts.Cancel(); };
 
             try
             {
@@ -71,91 +90,20 @@ namespace DeadRegions
             return 0;
         }
 
-        private static bool ParseOptions(string[] args)
+        private static void PrintUsage()
         {
-            Dictionary<string, Action<string>> options = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "config", arg => s_symbolConfigurations.Add(ParseSymbolList(arg)) },
-                { "ignore", arg => s_ignoredSymbols.AddRange(ParseSymbolList(arg)) },
-                { "define", arg => s_definedSymbols.AddRange(ParseSymbolList(arg)) },
-                { "disable", arg => s_disabledSymbols.AddRange(ParseSymbolList(arg)) },
-                { "default", arg => s_undefinedSymbolValue = Tristate.Parse(arg) },
-                { "printdisabled", arg => s_printDisabled = true },
-                { "printenabled", arg => s_printEnabled = true },
-                { "printvarying", arg => s_printVarying = true },
-                { "printsymbols", arg => s_printSymbolInfo = true },
-                { "print", arg => s_printDisabled = s_printEnabled = s_printVarying = s_printSymbolInfo = true },
-                { "edit", arg => s_edit = true }
-            };
+            Console.WriteLine(
+@"
+SYNTAX
+  DeadRegions [<project> ...] [options]
+  DeadRegions [<source file> ...] [options]
+");
 
-            for (int i = 0; i < args.Length; i++)
-            {
-                string arg = args[i];
+            Console.WriteLine(s_options.Usage);
 
-                if (arg[0] == '@')
-                {
-                    string responseFilePath = arg.Substring(1);
-                    // TODO: Better tokenization of arguments (e.g. allow single/double quotes)
-                    // Could parse Environment.CommandLine with a big regex
-                    string[] responseFileArgs = File.ReadAllText(responseFilePath).Replace("\r", string.Empty).Split(' ', '\t', '\n');
-                    return ParseOptions(responseFileArgs);
-                }
-                else if (arg[0] == '/' || arg[0] == '-')
-                {
-                    string optionName = arg.Substring(1);
-
-                    Action<string> action;
-                    if (!options.TryGetValue(optionName, out action))
-                    {
-                        int separatorIndex = optionName.IndexOfAny(s_valueIndicatorChars);
-                        if (separatorIndex == -1)
-                        {
-                            if (++i >= args.Length)
-                            {
-                                Console.WriteLine("error: missing argument for option: " + optionName);
-                                return false;
-                            }
-
-                            arg = args[i];
-                        }
-                        else
-                        {
-                            arg = optionName.Substring(separatorIndex + 1);
-                            optionName = optionName.Substring(0, separatorIndex);
-                        }
-                    }
-
-                    if (options.TryGetValue(optionName, out action))
-                    {
-                        try
-                        {
-                            action(arg);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("error: failed to parse option: {0}: {1}", optionName, e.Message);
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("error: unrecognized option: " + optionName);
-                        return false;
-                    }
-                }
-                else
-                {
-                    s_filePaths.Add(arg);
-                }
-            }
-
-            if (s_filePaths.Count == 0)
-            {
-                Console.WriteLine("error: must specify at least one project file or source file");
-                return false;
-            }
-
-            return true;
+            Console.WriteLine(
+@"NOTES
+  <symbol list> is a comma or semi-colon separated list of preprocessor symbols");
         }
 
         private static string[] ParseSymbolList(string s)
@@ -203,31 +151,6 @@ namespace DeadRegions
                     await writer.FlushAsync();
                 }
             }
-        }
-
-        private static void PrintUsage()
-        {
-            Console.WriteLine(
-@"
-SYNTAX
-  DeadRegions [<project> ...] [options]
-  DeadRegions [<source file> ...] [options]
-
-OPTIONS
-  /config  <symbol list>
-  /ignore  <symbol list>
-  /define  <symbol list>
-  /disable <symbol list>
-  /default <false|true|varying>
-  /printenabled
-  /printdisabled
-  /printvarying
-  /print
-  /edit
-  @<response file>
-
-NOTES
-  <symbol list> is a comma or semi-colon separated list of preprocessor symbols");
         }
 
         private static void PrintConditionalRegionInfo(IEnumerable<DocumentConditionalRegionInfo> regionInfos)
