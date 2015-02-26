@@ -18,13 +18,14 @@ namespace DeadRegions
         private static bool s_edit;
 
         private static List<string> s_filePaths = new List<string>();
-        private static IEnumerable<string> s_ignoredSymbols = null;
-        private static IEnumerable<string> s_definedSymbols = null;
-        private static IEnumerable<string> s_disabledSymbols = null;
+        private static List<string> s_ignoredSymbols = new List<string>();
+        private static List<string> s_definedSymbols = new List<string>();
+        private static List<string> s_disabledSymbols = new List<string>();
         private static List<IEnumerable<string>> s_symbolConfigurations = new List<IEnumerable<string>>();
         private static Tristate s_undefinedSymbolValue = Tristate.Varying;
 
-        private static readonly char[] symbolSeparatorChars = new[] { ';', ',', ' ', '\t', '\n' };
+        private static readonly char[] s_symbolSeparatorChars = new[] { ';', ',', ' ', '\t', '\n' };
+        private static readonly char[] s_valueIndicatorChars = new[] { '=', ':' };
 
         private static int s_disabledCount = 0;
         private static int s_enabledCount = 0;
@@ -72,6 +73,19 @@ namespace DeadRegions
 
         private static bool ParseArguments(string[] args)
         {
+            Dictionary<string, Action<string>> actions = new Dictionary<string, Action<string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "config", arg => s_symbolConfigurations.Add(ParseSymbolList(arg)) },
+                { "ignore", arg => s_ignoredSymbols.AddRange(ParseSymbolList(arg)) },
+                { "define", arg => s_definedSymbols.AddRange(ParseSymbolList(arg)) },
+                { "disable", arg => s_disabledSymbols.AddRange(ParseSymbolList(arg)) },
+                { "default", arg => s_undefinedSymbolValue = Tristate.Parse(arg) },
+                { "printdisabled", arg => s_printDisabled = true },
+                { "printenabled", arg => s_printEnabled = true },
+                { "printvarying", arg => s_printVarying = true },
+                { "edit", arg => s_edit = true }
+            };
+
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
@@ -80,89 +94,47 @@ namespace DeadRegions
                 {
                     string responseFilePath = arg.Substring(1);
                     // TODO: Better tokenization of arguments (e.g. allow single/double quotes)
+                    // Could parse Environment.CommandLine with a big regex
                     string[] responseFileArgs = File.ReadAllText(responseFilePath).Replace("\r", string.Empty).Split(' ', '\t', '\n');
                     return ParseArguments(responseFileArgs);
                 }
                 else if (arg[0] == '/' || arg[0] == '-')
                 {
-                    string argName = arg.Substring(1);
-                    if (argName.Equals("ignore", StringComparison.InvariantCultureIgnoreCase))
+                    string optionName = arg.Substring(1);
+                    int separatorIndex = optionName.IndexOfAny(s_valueIndicatorChars);
+                    if (separatorIndex == -1)
                     {
-                        if (++i < args.Length)
+                        if (++i >= args.Length)
                         {
-                            s_ignoredSymbols = args[i].Split(symbolSeparatorChars);
+                            Console.WriteLine("error: missing argument for option: " + optionName);
+                            return false;
                         }
-                        else
+
+                        arg = args[i];
+                    }
+                    else
+                    {
+                        arg = optionName.Substring(separatorIndex + 1);
+                        optionName = optionName.Substring(0, separatorIndex);
+                    }
+
+                    Action<string> action;
+                    if (actions.TryGetValue(optionName, out action))
+                    {
+                        try
                         {
+                            action(arg);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("error: failed to parse option: {0}: {1}", optionName, e.Message);
                             return false;
                         }
                     }
-                    else if (argName.Equals("define", StringComparison.InvariantCultureIgnoreCase))
+                    else
                     {
-                        if (++i < args.Length)
-                        {
-                            s_definedSymbols = args[i].Split(symbolSeparatorChars);
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    else if (argName.Equals("disable", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (++i < args.Length)
-                        {
-                            s_disabledSymbols = args[i].Split(symbolSeparatorChars);
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    else if (argName.Equals("config", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (++i < args.Length)
-                        {
-                            var config = args[i].Split(symbolSeparatorChars);
-                            s_symbolConfigurations.Add(config);
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    else if (argName.Equals("default", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (++i < args.Length)
-                        {
-                            s_undefinedSymbolValue = Tristate.Parse(args[i]);
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                    else if (argName.Equals("printdisabled", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        s_printDisabled = true;
-                    }
-                    else if (argName.Equals("printenabled", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        s_printEnabled = true;
-                    }
-                    else if (argName.Equals("printvarying", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        s_printVarying = true;
-                    }
-                    else if (argName.Equals("print", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        s_printDisabled = true;
-                        s_printEnabled = true;
-                        s_printVarying = true;
-                    }
-                    else if (argName.Equals("edit", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        s_edit = true;
+                        Console.WriteLine("error: unrecognized option: " + optionName);
+                        return false;
                     }
                 }
                 else
@@ -173,10 +145,21 @@ namespace DeadRegions
 
             if (s_filePaths.Count == 0)
             {
+                Console.WriteLine("error: must specify at least one project file or source file");
                 return false;
             }
 
             return true;
+        }
+
+        private static string[] ParseSymbolList(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s))
+            {
+                throw new FormatException("Symbol list must not be empty");
+            }
+
+            return s.Split(s_symbolSeparatorChars);
         }
 
         private static async Task RunAsync(CancellationToken cancellationToken)

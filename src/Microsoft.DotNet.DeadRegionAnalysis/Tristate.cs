@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             }
             else
             {
-                throw new FormatException("Input string was not in a correct format");
+                throw new FormatException(string.Format("Input string '{0}' was not in a correct format", s));
             }
         }
     }
