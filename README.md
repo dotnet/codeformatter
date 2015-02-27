@@ -17,49 +17,52 @@ SYNTAX
   DeadRegions [<source file> ...] [options]
 
 OPTIONS
-  config <symbol list>
+  /config <symbol list>
     Specify a complete symbol configuration
     [multiple specifications allowed]
 
-  ignore <symbol list>
+  /ignore <symbol list>
     Ignore a list of symbols (treat as varying)
     [multiple specifications allowed]
 
-  define <symbol list>
+  /define <symbol list>
     Define a list of symbols (treat as always true)
     [multiple specifications allowed]
 
-  disable <symbol list>
+  /disable <symbol list>
     Disable a list of symbols (treat as always disabled)
     [multiple specifications allowed]
 
-  default <false|true|varying>
+  /default <false|true|varying>
     Set the default value for symbols which do not have a specified value (defaults
     to varying)
 
-  printdisabled
+  /printdisabled
     Print the list of always disabled conditional regions
 
-  printenabled
+  /printenabled
     Print the list of always enabled conditional regions
 
-  printvarying
+  /printvarying
     Print the list of varying conditional regions
 
-  printsymbols
+  /printsymbols
     Print the lists of uniquely specified preprocessor symbols, symbols visited
     during analysis, and symbols not encountered during analysis
 
-  print
+  /print
     Print the entire list of conditional regions and the lists of preprocessor
     symbols (combination of printenabled, printdisabled, printvarying, and
     printsymbols)
 
-  edit
+  /edit
     Perform edits to remove always enabled and always disabled conditional regions
     from source files, and simplify preprocessor expressions which evaluate to
     'varying'
 
+  @<response file>
+    Use the contents of the specified file as additional command line input
+    [multiple specifications allowed]
 
 NOTES
   <symbol list> is a comma or semi-colon separated list of preprocessor symbols
@@ -94,7 +97,7 @@ Symbols
 
 There are a few things going on here. As you would expect, the `#if true` region is determined to be always enabled, and the corresponding `#else` is always disabled.  You'll also notice that you get a summary of information about the conditional regions found in the project, as well as the preprocessor symbols that were specified on the command line, found in the project.
 
-One interesting thing to note is that the `#if ZERO` and `#if DEBUG` regions are determined to be varying. That is because unlike the C# preprocessor, this tool evaluates symbols which do not have a specified value as "varying" by default. The rational behind this is that most of the time, you'll be using this tool to remove dead conditional regions, but you won't necessarily specify or even have all the data about all possible build configurations. So in order to avoid removing regions which are determined to be always disabled simply because you didn't specify a value for a symbol, the tool defaults the value to varying, which causes the region to be ignored in the clean-up pass.
+One interesting thing to note is that the `#if ZERO` and `#if DEBUG` regions are determined to be varying. That is because unlike the C# preprocessor, this tool evaluates symbols which do not have a specified value as "varying" by default. The rationale behind this is that most of the time, you'll be using this tool to remove dead conditional regions, but you won't necessarily specify or even have all the data about all possible build configurations. So in order to avoid removing regions which are determined to be always disabled simply because you didn't specify a value for a symbol, the tool defaults the value to varying, which causes the region to be ignored in the clean-up pass.
 
 If you would like to get the same behavior as the C# preprocessor (default undefined symbols to `false`), just pass `/default false`
 

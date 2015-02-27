@@ -28,6 +28,10 @@ namespace DeadRegions
                     sb.AppendLine(option.Usage);
                 }
 
+                sb.AppendLine("  @<response file>");
+                sb.AppendLine("    Use the contents of the specified file as additional command line input");
+                sb.AppendLine("    [multiple specifications allowed]");
+
                 return sb.ToString();
             }
         }
@@ -159,7 +163,7 @@ namespace DeadRegions
                 get
                 {
                     var sb = new StringBuilder();
-                    sb.Append("  ");
+                    sb.Append("  /");
                     sb.Append(Name);
                     sb.Append(' ');
                     if (_parameterUsage != null)
