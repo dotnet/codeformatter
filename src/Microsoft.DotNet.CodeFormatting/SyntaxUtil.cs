@@ -27,6 +27,18 @@ namespace Microsoft.DotNet.CodeFormatting
             return defaultNewLineTrivia ?? SyntaxFactory.CarriageReturnLineFeed;
         }
 
+        internal static SyntaxTrivia GetBestNewLineTrivia(SyntaxToken token, SyntaxTrivia? defaultNewLineTrivia = null)
+        {
+            SyntaxTrivia trivia;
+            if (TryGetExistingNewLine(token.LeadingTrivia, out trivia) ||
+                TryGetExistingNewLine(token.TrailingTrivia, out trivia))
+            {
+                return trivia;
+            }
+
+            return defaultNewLineTrivia ?? SyntaxFactory.CarriageReturnLineFeed;
+        }
+
         internal static SyntaxTrivia GetBestNewLineTrivia(SyntaxTriviaList list, SyntaxTrivia? defaultNewLineTrivia = null)
         {
             SyntaxTrivia trivia;

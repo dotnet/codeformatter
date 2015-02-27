@@ -123,7 +123,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 else
                 {
                     // new line and we are done. 
-                    triviaList = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed);
+                    triviaList = SyntaxFactory.TriviaList(SyntaxUtil.GetBestNewLineTrivia(token));
                 }
             }
             else
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             var list = new List<SyntaxTrivia>(triviaList.Count);
-            list.Add(SyntaxFactory.CarriageReturnLineFeed);
+            list.Add(SyntaxUtil.GetBestNewLineTrivia(triviaList));
 
             var index = MovePastSimpleNewLines(triviaList, 0);
             while (index < triviaList.Count)
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             // A directive has an implicit new line after it.
             if (!list[index].IsDirective)
             {
-                list.Add(SyntaxFactory.CarriageReturnLineFeed);
+                list.Add(SyntaxUtil.GetBestNewLineTrivia(triviaList));
             }
 
             if (triviaList.Last().IsKind(SyntaxKind.WhitespaceTrivia))
