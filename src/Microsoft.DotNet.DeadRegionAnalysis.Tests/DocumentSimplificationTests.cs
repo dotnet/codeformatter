@@ -19,10 +19,16 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 #if true && varying // To be simplified
 #endif
 
+#if false || varying // To be simplified
+#endif
+
 #if true && false // Left alone
 #endif
 ";
             string expected = @"
+#if varying // To be simplified
+#endif
+
 #if varying // To be simplified
 #endif
 

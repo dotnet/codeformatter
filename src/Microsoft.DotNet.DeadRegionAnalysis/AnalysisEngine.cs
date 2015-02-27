@@ -125,16 +125,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             var syntaxTree = await document.GetSyntaxTreeAsync(cancellationToken) as CSharpSyntaxTree;
             var root = await syntaxTree.GetRootAsync(cancellationToken);
 
-            foreach (var chain in chains)
-            {
-                foreach (var region in chain.Regions)
-                {
-                    if (region.State == Tristate.Varying)
-                    {
-                        root = root.ReplaceNode(region.StartDirective, SimplifyDirectiveExpression(region.StartDirective));
-                    }
-                }
-            }
+            var directivesToReplace = chains
+                .SelectMany(c => c.Regions)
+                .Where(r => r.State == Tristate.Varying)
+                .Select(r => r.StartDirective);
+
+            root = root.ReplaceNodes(directivesToReplace, (original, rewritten) => SimplifyDirectiveExpression(rewritten));
 
             return document.WithSyntaxRoot(root);
         }
