@@ -56,7 +56,7 @@ namespace DeadRegions
             Debug.Assert(exeName.Success);
             int index = exeName.Length;
 
-            var optionRegex = new Regex(@"\G[/-](?<name>[^:^=^\s]+)([:=]|\s+)", RegexOptions.ExplicitCapture);
+            var optionRegex = new Regex(@"\G[/-](?<name>[^:^=^\s]+)([:=]|\s+)?", RegexOptions.ExplicitCapture);
             var valueRegex = new Regex(@"\G\s*((""(?<value>[^""]+)"")|(?<value>[^""^/^-^\s]+))\s*", RegexOptions.ExplicitCapture);
             var responseFileRegex = new Regex(@"\G@((""(?<file>[^""]+)"")|(?<file>\S+))\s*", RegexOptions.ExplicitCapture);
 
