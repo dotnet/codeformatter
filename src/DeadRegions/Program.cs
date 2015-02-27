@@ -144,8 +144,7 @@ namespace DeadRegions
         private static void PrintUsage()
         {
             Console.WriteLine(
-@"
-SYNTAX
+@"SYNTAX
   DeadRegions [<project> ...] [options]
   DeadRegions [<source file> ...] [options]
 ");
