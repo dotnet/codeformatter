@@ -24,13 +24,14 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <project or solution> [/file:<filename>] [/nocopyright] [/nounicode] [/tables] [/c:<config1,config2> [/copyright:file]");
+                Console.WriteLine("CodeFormatter <project or solution> [/file:<filename>] [/nocopyright] [/nounicode] [/tables] [/c:<config1,config2> [/copyright:file] [/verbose]");
                 Console.WriteLine("    <filename>   - Only apply changes to files with specified name.");
                 Console.WriteLine("    <configs>    - Additional preprocessor configurations the formatter");
                 Console.WriteLine("                   should run under.");
                 Console.WriteLine("    <copyright>  - Specifies file containing copyright header.");
                 Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
                 Console.WriteLine("    <tables>     - Let tables opt out of formatting by defining DOTNET_FORMATTER");
+                Console.WriteLine("    <verbose>    - Verbose output");
                 Console.WriteLine("    <nounicode>  - Do not convert unicode strings to escape sequences");
                 Console.WriteLine("    <nocopyright>- Do not update the copyright message.");
                 return -1;
@@ -49,6 +50,7 @@ namespace CodeFormatter
             var copyrightHeader = FormattingConstants.DefaultCopyrightHeader;
             var convertUnicode = true;
             var allowTables = false;
+            var verbose = false;
             var comparer = StringComparer.OrdinalIgnoreCase;
 
             for (int i = 1; i < args.Length; i++)
@@ -88,6 +90,10 @@ namespace CodeFormatter
                 {
                     convertUnicode = false;
                 }
+                else if (comparer.Equals(arg, "/verbose"))
+                {
+                    verbose = true;
+                }
                 else if (comparer.Equals(arg, "/tables"))
                 {
                     allowTables = true;
@@ -113,6 +119,7 @@ namespace CodeFormatter
                     copyrightHeader,
                     allowTables,
                     convertUnicode,
+                    verbose,
                     ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
                 return 0;
@@ -140,6 +147,7 @@ namespace CodeFormatter
             ImmutableArray<string> copyrightHeader,
             bool allowTables,
             bool convertUnicode,
+            bool verbose,
             CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
@@ -149,7 +157,9 @@ namespace CodeFormatter
             engine.CopyrightHeader = copyrightHeader;
             engine.AllowTables = allowTables;
             engine.ConvertUnicodeCharacters = convertUnicode;
+            engine.Verbose = verbose;
 
+            Console.WriteLine(Path.GetFileName(projectOrSolutionPath));
             string extension = Path.GetExtension(projectOrSolutionPath);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
             {

@@ -17,6 +17,7 @@ namespace Microsoft.DotNet.CodeFormatting
         ImmutableArray<string> FileNames { get; set; }
         bool AllowTables { get; set; }
         bool ConvertUnicodeCharacters { get; set; }
+        bool Verbose { get; set; }
         Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project porject, CancellationToken cancellationToken);
     }

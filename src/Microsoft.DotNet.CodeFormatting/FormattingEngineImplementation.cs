@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
         private bool _allowTables;
+        private bool _verbose;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -63,6 +64,12 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             get { return _allowTables; }
             set { _allowTables = value; }
+        }
+
+        public bool Verbose
+        {
+            get { return _verbose; }
+            set { _verbose = value; }
         }
         
         public bool ConvertUnicodeCharacters
@@ -213,7 +220,10 @@ namespace Microsoft.DotNet.CodeFormatting
         private void EndDocument(Document document)
         {
             _watch.Stop();
-            FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
+            if (_verbose)
+            {
+                FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
+            }
         }
 
         /// <summary>
@@ -224,7 +234,7 @@ namespace Microsoft.DotNet.CodeFormatting
         /// </summary>
         private async Task<Solution> RunSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            FormatLogger.WriteLine("Syntax Pass");
+            FormatLogger.WriteLine("\tSyntax Pass");
 
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
@@ -264,7 +274,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunLocalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            FormatLogger.WriteLine("Local Semantic Pass");
+            FormatLogger.WriteLine("\tLocal Semantic Pass");
             foreach (var localSemanticRule in _localSemanticRules)
             {
                 solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
@@ -275,7 +285,11 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, ILocalSemanticFormattingRule localSemanticRule, CancellationToken cancellationToken)
         {
-            FormatLogger.WriteLine("  {0}", localSemanticRule.GetType().Name);
+            if (_verbose)
+            {
+                FormatLogger.WriteLine("  {0}", localSemanticRule.GetType().Name);
+            }
+
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
             {
@@ -301,7 +315,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
-            FormatLogger.WriteLine("Global Semantic Pass");
+            FormatLogger.WriteLine("\tGlobal Semantic Pass");
             foreach (var globalSemanticRule in _globalSemanticRules)
             {
                 solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
@@ -312,7 +326,11 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, IGlobalSemanticFormattingRule globalSemanticRule, CancellationToken cancellationToken)
         {
-            FormatLogger.WriteLine("  {0}", globalSemanticRule.GetType().Name);
+            if (_verbose)
+            {
+                FormatLogger.WriteLine("  {0}", globalSemanticRule.GetType().Name);
+            }
+
             foreach (var documentId in documentIds)
             {
                 var document = solution.GetDocument(documentId);
