@@ -31,34 +31,64 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             public override SyntaxNode VisitClassBlock(ClassBlockSyntax originalNode)
             {
                 var node = (ClassBlockSyntax)base.VisitClassBlock(originalNode);
-                var begin = (ClassStatementSyntax)EnsureVisibility(node.ClassStatement, node.ClassStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                var begin = (ClassStatementSyntax)EnsureVisibility(
+                    node.ClassStatement, 
+                    node.ClassStatement.ClassKeyword,
+                    node.ClassStatement.Modifiers, 
+                    (x, k) => x.WithClassKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => GetTypeDefaultVisibility(originalNode));
                 return node.WithClassStatement(begin);
             }
 
             public override SyntaxNode VisitStructureBlock(StructureBlockSyntax originalNode)
             {
                 var node = (StructureBlockSyntax)base.VisitStructureBlock(originalNode);
-                var begin = (StructureStatementSyntax)EnsureVisibility(node.StructureStatement, node.StructureStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                var begin = (StructureStatementSyntax)EnsureVisibility(
+                    node.StructureStatement, 
+                    node.StructureStatement.StructureKeyword,
+                    node.StructureStatement.Modifiers, 
+                    (x, k) => x.WithStructureKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => GetTypeDefaultVisibility(originalNode));
                 return node.WithStructureStatement(begin);
             }
 
             public override SyntaxNode VisitInterfaceBlock(InterfaceBlockSyntax originalNode)
             {
                 var node = (InterfaceBlockSyntax)base.VisitInterfaceBlock(originalNode);
-                var begin = (InterfaceStatementSyntax)EnsureVisibility(node.InterfaceStatement, node.InterfaceStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                var begin = (InterfaceStatementSyntax)EnsureVisibility(
+                    node.InterfaceStatement, 
+                    node.InterfaceStatement.InterfaceKeyword,
+                    node.InterfaceStatement.Modifiers, 
+                    (x, k) => x.WithInterfaceKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => GetTypeDefaultVisibility(originalNode));
                 return node.WithInterfaceStatement(begin);
             }
 
             public override SyntaxNode VisitModuleBlock(ModuleBlockSyntax node)
             {
                 node = (ModuleBlockSyntax)base.VisitModuleBlock(node);
-                var begin = (ModuleStatementSyntax)EnsureVisibility(node.ModuleStatement, node.ModuleStatement.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.FriendKeyword);
+                var begin = (ModuleStatementSyntax)EnsureVisibility(
+                    node.ModuleStatement, 
+                    node.ModuleStatement.ModuleKeyword,
+                    node.ModuleStatement.Modifiers, 
+                    (x, k) => x.WithModuleKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => SyntaxKind.FriendKeyword);
                 return node.WithModuleStatement(begin);
             }
 
             public override SyntaxNode VisitEnumBlock(EnumBlockSyntax node)
             {
-                var enumStatement = (EnumStatementSyntax)EnsureVisibility(node.EnumStatement, node.EnumStatement.Modifiers, (x, l) => x.WithModifiers(l), () => GetDelegateTypeDefaultVisibility(node));
+                var enumStatement = (EnumStatementSyntax)EnsureVisibility(
+                    node.EnumStatement, 
+                    node.EnumStatement.EnumKeyword,
+                    node.EnumStatement.Modifiers, 
+                    (x, k) => x.WithEnumKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => GetDelegateTypeDefaultVisibility(node));
                 return node.WithEnumStatement(enumStatement);
             }
 
@@ -69,7 +99,13 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return node;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PublicKeyword);
+                return EnsureVisibility(
+                    node, 
+                    node.SubOrFunctionKeyword,
+                    node.Modifiers, 
+                    (x, k) => x.WithSubOrFunctionKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => SyntaxKind.PublicKeyword);
             }
 
             public override SyntaxNode VisitSubNewStatement(SubNewStatementSyntax node)
@@ -79,12 +115,22 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     return node;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PublicKeyword);
+                return EnsureVisibility(
+                    node, 
+                    node.SubKeyword,
+                    node.Modifiers, 
+                    (x, k) => x.WithSubKeyword(k),
+                    (x, l) => x.WithModifiers(l), 
+                    () => SyntaxKind.PublicKeyword);
             }
 
             public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
             {
-                node = (FieldDeclarationSyntax)EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                node = (FieldDeclarationSyntax)EnsureVisibility(
+                    node, 
+                    node.Modifiers, 
+                    (x, l) => x.WithModifiers(l), 
+                    () => SyntaxKind.PrivateKeyword);
 
                 // Now that the field has an explicit modifier remove any Dim modifiers on it 
                 // as it is now redundant
@@ -204,11 +250,59 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return false;
             }
 
+            private static SyntaxNode EnsureVisibility<T>(T node, SyntaxToken keyword, SyntaxTokenList originalModifiers, Func<T, SyntaxToken, T> withKeyword, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : SyntaxNode
+            {
+                Func<SyntaxKind, T> withFirstModifier = (visibilityKind) =>
+                    {
+                        var leadingTrivia = keyword.LeadingTrivia;
+                        node = withKeyword(node, keyword.WithLeadingTrivia());
+
+                        var visibilityToken = SyntaxFactory.Token(
+                            leadingTrivia,
+                            visibilityKind,
+                            SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
+
+                        var modifierList = SyntaxFactory.TokenList(visibilityToken);
+                        return withModifiers(node, modifierList);
+                    };
+
+                return EnsureVisibilityCore(
+                    node,
+                    originalModifiers,
+                    withFirstModifier,
+                    withModifiers,
+                    getDefaultVisibility);
+            }
+
+            private static SyntaxNode EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : SyntaxNode
+            {
+                Func<SyntaxKind, T> withFirstModifier = (visibilityKind) =>
+                    {
+                        var leadingTrivia = node.GetLeadingTrivia();
+                        node = node.WithLeadingTrivia();
+
+                        var visibilityToken = SyntaxFactory.Token(
+                            leadingTrivia,
+                            visibilityKind,
+                            SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
+
+                        var modifierList = SyntaxFactory.TokenList(visibilityToken);
+                        return withModifiers(node, modifierList);
+                    };
+
+                return EnsureVisibilityCore(
+                    node,
+                    originalModifiers,
+                    withFirstModifier,
+                    withModifiers,
+                    getDefaultVisibility);
+            }
+
             /// <summary>
             /// Return a node declaration that has a visibility modifier.  If one isn't present it will be added as the 
             /// first modifier.  Any trivia before the node will be added as leading trivia to the added <see cref="SyntaxToken"/>.
             /// </summary>
-            private static SyntaxNode EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : SyntaxNode
+            private static SyntaxNode EnsureVisibilityCore<T>(T node, SyntaxTokenList originalModifiers, Func<SyntaxKind, T> withFirstModifier, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : SyntaxNode
             {
                 if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.Kind())))
                 {
@@ -221,15 +315,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 SyntaxTokenList modifierList;
                 if (originalModifiers.Count == 0)
                 {
-                    var leadingTrivia = node.GetLeadingTrivia();
-                    node = node.WithLeadingTrivia();
-
-                    var visibilityToken = SyntaxFactory.Token(
-                        leadingTrivia,
-                        visibilityKind,
-                        SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
-
-                    modifierList = SyntaxFactory.TokenList(visibilityToken);
+                    return withFirstModifier(visibilityKind);
                 }
                 else
                 {
@@ -248,9 +334,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     }
 
                     modifierList = SyntaxFactory.TokenList(list);
+                    return withModifiers(node, modifierList);
                 }
 
-                return withModifiers(node, modifierList);
             }
         }
     }

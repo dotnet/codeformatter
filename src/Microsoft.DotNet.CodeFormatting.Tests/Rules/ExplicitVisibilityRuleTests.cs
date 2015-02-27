@@ -448,6 +448,42 @@ End Enum";
                 Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
             }
 
+            [Fact]
+            public void TypeWithCommentAndAttribute()
+            {
+                var text = @"
+' Hello
+<Attr>
+Class C
+End Class";
+
+                var expected = @"
+' Hello
+<Attr>
+Friend Class C
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void TypePartialWithCommentAndAttribute()
+            {
+                var text = @"
+' Hello
+<Attr>
+Partial Class C
+End Class";
+
+                var expected = @"
+' Hello
+<Attr>
+Friend Partial Class C
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
             /// <summary>
             /// It is interesting to note that nested typs in VB.Net default to public accessibility 
             /// instead of private as C# does.
@@ -507,6 +543,28 @@ End Class";
             }
 
             [Fact]
+            public void MethodWithCommentAndAttribute()
+            {
+                var text = @"
+Class C
+    ' A Comment
+    <Attr>
+    Sub M1()
+    End Sub
+End Class";
+
+                var expected = @"
+Friend Class C
+    ' A Comment
+    <Attr>
+    Public Sub M1()
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
             public void Fields()
             {
                 var text = @"
@@ -539,6 +597,36 @@ End Class";
 Friend Class C
     Public Sub New()
     End Sub
+    Shared Sub New()
+    End Sub
+End Class";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void ConstructorsWithCommentAndAttribute()
+            {
+                var text = @"
+Class C
+    ' Hello
+    <Attr>
+    Sub New()
+    End Sub
+    ' Hello
+    <Attr>
+    Shared Sub New()
+    End Sub
+End Class";
+
+                var expected = @"
+Friend Class C
+    ' Hello
+    <Attr>
+    Public Sub New()
+    End Sub
+    ' Hello
+    <Attr>
     Shared Sub New()
     End Sub
 End Class";
