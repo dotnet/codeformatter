@@ -14,6 +14,11 @@ namespace DeadRegions
 {
     internal class OptionParser
     {
+        private static readonly Regex s_exeNameRegex = new Regex(@"^((""[^""]+"")|\S+)\s*", RegexOptions.ExplicitCapture);
+        private static readonly Regex s_optionRegex = new Regex(@"\G[/-](?<name>[^:^=^\s]+)([:=]|\s+)?", RegexOptions.ExplicitCapture);
+        private static readonly Regex s_valueRegex = new Regex(@"\G\s*((""(?<value>[^""]+)"")|(?<value>[^""^/^-^\s]+))\s*", RegexOptions.ExplicitCapture);
+        private static readonly Regex s_responseFileRegex = new Regex(@"\G@((""(?<file>[^""]+)"")|(?<file>\S+))\s*", RegexOptions.ExplicitCapture);
+
         private Dictionary<string, Option> _options = new Dictionary<string, Option>(StringComparer.OrdinalIgnoreCase);
 
         public string Usage
@@ -54,22 +59,21 @@ namespace DeadRegions
                 allowMultiple: false));
         }
 
-        public IList<string> Parse(string commandLine)
+        public IList<string> Parse(string commandLine, bool firstArgumentIsPathToExe = true)
         {
+            int index = 0;
             var unprocessedValues = new List<string>();
 
-            var exeNameRegex = new Regex(@"^((""[^""]+"")|\S+)\s*", RegexOptions.ExplicitCapture);
-            var exeName = exeNameRegex.Match(commandLine);
-            Debug.Assert(exeName.Success);
-            int index = exeName.Length;
-
-            var optionRegex = new Regex(@"\G[/-](?<name>[^:^=^\s]+)([:=]|\s+)?", RegexOptions.ExplicitCapture);
-            var valueRegex = new Regex(@"\G\s*((""(?<value>[^""]+)"")|(?<value>[^""^/^-^\s]+))\s*", RegexOptions.ExplicitCapture);
-            var responseFileRegex = new Regex(@"\G@((""(?<file>[^""]+)"")|(?<file>\S+))\s*", RegexOptions.ExplicitCapture);
+            if (firstArgumentIsPathToExe)
+            {
+                var exeName = s_exeNameRegex.Match(commandLine);
+                Debug.Assert(exeName.Success);
+                index = exeName.Length;
+            }
 
             while (index < commandLine.Length)
             {
-                var optionMatch = optionRegex.Match(commandLine, index);
+                var optionMatch = s_optionRegex.Match(commandLine, index);
                 if (optionMatch.Success)
                 {
                     index += optionMatch.Length;
@@ -80,7 +84,7 @@ namespace DeadRegions
                     {
                         if (option.RequiresValue)
                         {
-                            var valueMatch = valueRegex.Match(commandLine, index);
+                            var valueMatch = s_valueRegex.Match(commandLine, index);
                             if (valueMatch.Success)
                             {
                                 index += valueMatch.Length;
@@ -104,7 +108,7 @@ namespace DeadRegions
                     continue;
                 }
 
-                var responseFileMatch = responseFileRegex.Match(commandLine, index);
+                var responseFileMatch = s_responseFileRegex.Match(commandLine, index);
                 if (responseFileMatch.Success)
                 {
                     index += responseFileMatch.Length;
@@ -121,15 +125,15 @@ namespace DeadRegions
                         throw new OptionParseException("Failed to read response file: " + filePath);
                     }
 
-                    unprocessedValues.AddRange(Parse(text));
+                    unprocessedValues.AddRange(Parse(text, firstArgumentIsPathToExe: false));
                     continue;
                 }
 
-                var defaultValueMatch = valueRegex.Match(commandLine, index);
-                if (defaultValueMatch.Success)
+                var unprocessedValueMatch = s_valueRegex.Match(commandLine, index);
+                if (unprocessedValueMatch.Success)
                 {
-                    index += defaultValueMatch.Length;
-                    unprocessedValues.Add(defaultValueMatch.Groups["value"].Value);
+                    index += unprocessedValueMatch.Length;
+                    unprocessedValues.Add(unprocessedValueMatch.Groups["value"].Value);
                     continue;
                 }
             }
