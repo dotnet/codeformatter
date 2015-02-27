@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             }
             else
             {
-                return Tristate.False;
+                return m_undefinedSymbolValue;
             }
         }
 
