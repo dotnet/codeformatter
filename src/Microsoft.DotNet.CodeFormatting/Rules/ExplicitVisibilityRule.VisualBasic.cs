@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             private readonly Document _document;
             private readonly CancellationToken _cancellationToken;
             private SemanticModel _semanticModel;
+            private bool _inModule;
 
             internal VisualBasicVisibilityRewriter(Document document, CancellationToken cancellationToken)
             {
@@ -69,7 +70,17 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitModuleBlock(ModuleBlockSyntax node)
             {
-                node = (ModuleBlockSyntax)base.VisitModuleBlock(node);
+                var savedInModule = _inModule;
+                try
+                {
+                    _inModule = true;
+                    node = (ModuleBlockSyntax)base.VisitModuleBlock(node);
+                }
+                finally
+                {
+                    _inModule = savedInModule;
+                }
+
                 var begin = (ModuleStatementSyntax)EnsureVisibility(
                     node.ModuleStatement, 
                     node.ModuleStatement.ModuleKeyword,
@@ -110,7 +121,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitSubNewStatement(SubNewStatementSyntax node)
             {
-                if (node.Modifiers.Any(x => x.IsKind(SyntaxKind.SharedKeyword)))
+                if (node.Modifiers.Any(x => x.IsKind(SyntaxKind.SharedKeyword)) || _inModule)
                 {
                     return node;
                 }
