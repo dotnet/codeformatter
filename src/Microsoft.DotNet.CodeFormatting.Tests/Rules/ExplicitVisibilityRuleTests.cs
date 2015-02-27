@@ -634,6 +634,28 @@ End Class";
                 Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
             }
 
+            /// <summary>
+            /// Members of a Module are implicitly Shared hence New here is a static ctor and cannot have
+            /// any visibility modifiers.
+            /// </summary>
+            [Fact]
+            public void ConstructorOnModules()
+            {
+                var text = @"
+Module M
+    Sub New()
+    End Sub
+End Module";
+
+                var expected = @"
+Friend Module M
+    Sub New()
+    End Sub
+End Module";
+
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
             [Fact]
             public void InterfaceMembers()
             {
