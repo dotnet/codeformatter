@@ -123,9 +123,8 @@
     <Compile Include="Rules\CopyrightHeaderRuleTests.cs" />
     <Compile Include="Rules\ExplicitThisRuleTests.cs" />
     <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
-    <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
-    <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRuleTests.cs" />
+    <Compile Include="Rules\NewLineAboveRuleTests.cs" />
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\UsingLocationRuleTests.cs" />
