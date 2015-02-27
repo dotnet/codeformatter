@@ -79,6 +79,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 {
                     headerList.Add(GetCommentText(triviaList[i].ToFullString()));
                     i++;
+                    MoveToNextLineOrTrivia(triviaList, ref i);
                 }
 
                 return headerList;
@@ -113,7 +114,25 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             private void MovePastBlankLines(SyntaxTriviaList list, ref int index)
             {
-                while (index < list.Count && IsWhiteSpaceOrNewLine(list[index]))
+                while (index < list.Count && (IsWhitespace(list[index]) || IsNewLine(list[index])))
+                {
+                    index++;
+                }
+            }
+            
+            private void MoveToNextLineOrTrivia(SyntaxTriviaList list, ref int index)
+            {
+                MovePastWhitespaces(list, ref index);
+
+                if (index < list.Count && IsNewLine(list[index]))
+                {
+                    index++;
+                }
+            }
+
+            private void MovePastWhitespaces(SyntaxTriviaList list, ref int index)
+            {
+                while (index < list.Count && IsWhitespace(list[index]))
                 {
                     index++;
                 }
@@ -123,7 +142,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             protected abstract bool IsLineComment(SyntaxTrivia trivia);
 
-            protected abstract bool IsWhiteSpaceOrNewLine(SyntaxTrivia trivia);
+            protected abstract bool IsWhitespace(SyntaxTrivia trivia);
+            protected abstract bool IsNewLine(SyntaxTrivia trivia);
 
             protected abstract SyntaxTrivia CreateLineComment(string commentText);
 
