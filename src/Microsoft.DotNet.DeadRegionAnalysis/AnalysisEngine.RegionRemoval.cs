@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private static string GetReplacementText(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective)
         {
-            if (startDirective.CSharpKind() == SyntaxKind.IfDirectiveTrivia && endDirective.CSharpKind() == SyntaxKind.ElifDirectiveTrivia)
+            if (startDirective.Kind() == SyntaxKind.IfDirectiveTrivia && endDirective.Kind() == SyntaxKind.ElifDirectiveTrivia)
             {
                 var elifDirective = (ElifDirectiveTriviaSyntax)endDirective;
                 var elifKeyword = elifDirective.ElifKeyword;

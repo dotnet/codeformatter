@@ -1,14 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -32,7 +29,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 return state;
             }
 
-            switch (node.CSharpKind())
+            switch (node.Kind())
             {
                 case SyntaxKind.TrueLiteralExpression:
                     return Tristate.True;
@@ -58,7 +55,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public override Tristate VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
         {
-            if (node.CSharpKind() != SyntaxKind.LogicalNotExpression)
+            if (node.Kind() != SyntaxKind.LogicalNotExpression)
             {
                 throw new InvalidPreprocessorExpressionException("Expected logical not expression");
             }
@@ -71,7 +68,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             Tristate left = node.Left.Accept(this);
             Tristate right = node.Right.Accept(this);
 
-            switch (node.CSharpKind())
+            switch (node.Kind())
             {
                 case SyntaxKind.LogicalAndExpression:
                     return left & right;

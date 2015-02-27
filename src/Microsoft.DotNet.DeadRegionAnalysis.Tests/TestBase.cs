@@ -6,10 +6,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 {
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
             string fileExtension = language == LanguageNames.CSharp ? CSharpFileExtension : VBFileExtension;
             var projectId = ProjectId.CreateNewId(TestProjectName);
 
-            var solution = new CustomWorkspace()
+            var solution = new AdhocWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
                 .AddMetadataReferences(projectId, GetSolutionMetadataReferences());

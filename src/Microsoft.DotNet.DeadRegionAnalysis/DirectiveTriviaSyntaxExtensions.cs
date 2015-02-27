@@ -1,13 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -44,12 +40,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         private static DirectiveTriviaSyntax GetPreviousLinkedDirective(this DirectiveTriviaSyntax directive)
         {
             DirectiveTriviaSyntax d = directive.GetPreviousPossiblyLinkedDirective();
-            switch (directive.CSharpKind())
+            switch (directive.Kind())
             {
                 case SyntaxKind.EndIfDirectiveTrivia:
                     while (d != null)
                     {
-                        switch (d.CSharpKind())
+                        switch (d.Kind())
                         {
                             case SyntaxKind.IfDirectiveTrivia:
                             case SyntaxKind.ElifDirectiveTrivia:
@@ -63,7 +59,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 case SyntaxKind.ElifDirectiveTrivia:
                     while (d != null)
                     {
-                        switch (d.CSharpKind())
+                        switch (d.Kind())
                         {
                             case SyntaxKind.IfDirectiveTrivia:
                             case SyntaxKind.ElifDirectiveTrivia:
@@ -76,7 +72,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 case SyntaxKind.ElseDirectiveTrivia:
                     while (d != null)
                     {
-                        switch (d.CSharpKind())
+                        switch (d.Kind())
                         {
                             case SyntaxKind.IfDirectiveTrivia:
                             case SyntaxKind.ElifDirectiveTrivia:
@@ -100,10 +96,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 if (d != null)
                 {
                     // Skip matched sets of directives
-                    switch (d.CSharpKind())
+                    switch (d.Kind())
                     {
                         case SyntaxKind.EndIfDirectiveTrivia:
-                            while (d != null && d.CSharpKind() != SyntaxKind.IfDirectiveTrivia)
+                            while (d != null && d.Kind() != SyntaxKind.IfDirectiveTrivia)
                             {
                                 d = d.GetPreviousLinkedDirective();
                             }
@@ -120,13 +116,13 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         private static DirectiveTriviaSyntax GetNextLinkedDirective(this DirectiveTriviaSyntax directive)
         {
             DirectiveTriviaSyntax d = directive.GetNextPossiblyLinkedDirective();
-            switch (directive.CSharpKind())
+            switch (directive.Kind())
             {
                 case SyntaxKind.IfDirectiveTrivia:
                 case SyntaxKind.ElifDirectiveTrivia:
                     while (d != null)
                     {
-                        switch (d.CSharpKind())
+                        switch (d.Kind())
                         {
                             case SyntaxKind.ElifDirectiveTrivia:
                             case SyntaxKind.ElseDirectiveTrivia:
@@ -140,7 +136,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 case SyntaxKind.ElseDirectiveTrivia:
                     while (d != null)
                     {
-                        if (d.CSharpKind() == SyntaxKind.EndIfDirectiveTrivia)
+                        if (d.Kind() == SyntaxKind.EndIfDirectiveTrivia)
                         {
                             return d;
                         }
@@ -161,10 +157,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 if (d != null)
                 {
                     // Skip matched sets of directives
-                    switch (d.CSharpKind())
+                    switch (d.Kind())
                     {
                         case SyntaxKind.IfDirectiveTrivia:
-                            while (d != null && d.CSharpKind() != SyntaxKind.EndIfDirectiveTrivia)
+                            while (d != null && d.Kind() != SyntaxKind.EndIfDirectiveTrivia)
                             {
                                 d = d.GetNextLinkedDirective();
                             }

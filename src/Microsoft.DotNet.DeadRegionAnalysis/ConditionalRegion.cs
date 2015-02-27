@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             if (triviaIndex > 0)
             {
                 var previousTrivia = leadingTrivia[triviaIndex - 1];
-                if (previousTrivia.CSharpKind() == SyntaxKind.WhitespaceTrivia)
+                if (previousTrivia.Kind() == SyntaxKind.WhitespaceTrivia)
                 {
                     start = previousTrivia.FullSpan.Start;
                 }

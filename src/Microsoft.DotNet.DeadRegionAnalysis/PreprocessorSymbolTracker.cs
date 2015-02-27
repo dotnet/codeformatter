@@ -1,11 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -36,7 +32,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public override void VisitLiteralExpression(LiteralExpressionSyntax node)
         {
-            switch (node.CSharpKind())
+            switch (node.Kind())
             {
                 case SyntaxKind.TrueLiteralExpression:
                     VisitSymbol("true");
@@ -56,7 +52,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public override void VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
         {
-            if (node.CSharpKind() != SyntaxKind.LogicalNotExpression)
+            if (node.Kind() != SyntaxKind.LogicalNotExpression)
             {
                 throw new InvalidPreprocessorExpressionException("Expected logical not expression");
             }
@@ -69,7 +65,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             node.Left.Accept(this);
             node.Right.Accept(this);
 
-            switch (node.CSharpKind())
+            switch (node.Kind())
             {
                 case SyntaxKind.LogicalAndExpression:
                 case SyntaxKind.LogicalOrExpression:

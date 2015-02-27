@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private Tristate EvaluateDirectiveExpression(DirectiveTriviaSyntax directive, Tristate previousRegionState)
         {
-            switch (directive.CSharpKind())
+            switch (directive.Kind())
             {
                 case SyntaxKind.IfDirectiveTrivia:
                     return EvaluateExpression(((IfDirectiveTriviaSyntax)directive).Condition);
@@ -260,7 +260,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private DirectiveTriviaSyntax SimplifyDirectiveExpression(DirectiveTriviaSyntax directive)
         {
-            switch (directive.CSharpKind())
+            switch (directive.Kind())
             {
                 case SyntaxKind.IfDirectiveTrivia:
                     {
@@ -282,7 +282,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private static bool IsBranchingDirective(DirectiveTriviaSyntax directive)
         {
-            switch (directive.CSharpKind())
+            switch (directive.Kind())
             {
                 case SyntaxKind.IfDirectiveTrivia:
                 case SyntaxKind.ElifDirectiveTrivia:

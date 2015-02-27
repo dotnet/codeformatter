@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -60,7 +55,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
             ExpressionSyntax newExpression = null;
 
-            if (node.CSharpKind() == SyntaxKind.LogicalAndExpression)
+            if (node.Kind() == SyntaxKind.LogicalAndExpression)
             {
                 if (leftState == Tristate.True)
                 {
@@ -73,7 +68,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     newExpression = left;
                 }
             }
-            else if (node.CSharpKind() == SyntaxKind.LogicalOrExpression)
+            else if (node.Kind() == SyntaxKind.LogicalOrExpression)
             {
                 if (leftState == Tristate.False)
                 {
@@ -99,13 +94,13 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public override SyntaxNode VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
         {
-            if (node.CSharpKind() != SyntaxKind.LogicalNotExpression)
+            if (node.Kind() != SyntaxKind.LogicalNotExpression)
             {
                 throw new InvalidPreprocessorExpressionException("Expected logical not expression");
             }
 
             var newExpression = (ExpressionSyntax)node.Operand.Accept(this);
-            if (newExpression.CSharpKind() == SyntaxKind.LogicalNotExpression)
+            if (newExpression.Kind() == SyntaxKind.LogicalNotExpression)
             {
                 return ((PrefixUnaryExpressionSyntax)newExpression).Operand
                     .WithLeadingTrivia(node.GetLeadingTrivia())

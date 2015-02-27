@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 if (sourcePaths != null)
                 {
                     var projectId = ProjectId.CreateNewId("AnalysisProject");
-                    var solution = new CustomWorkspace()
+                    var solution = new AdhocWorkspace()
                         .CurrentSolution
                         .AddProject(projectId, "AnalysisProject", "AnalysisProject", LanguageNames.CSharp);
 
