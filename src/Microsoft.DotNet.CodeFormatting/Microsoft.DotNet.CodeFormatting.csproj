@@ -138,7 +138,6 @@
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
     <Compile Include="Rules\ExplicitThisRule.cs" />
     <Compile Include="Rules\RuleOrder.cs" />
-    <Compile Include="RuleTypeConstants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

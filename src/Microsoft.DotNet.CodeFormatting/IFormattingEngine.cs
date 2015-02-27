@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.CodeFormatting
         ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
         ImmutableArray<string> FileNames { get; set; }
         bool AllowTables { get; set; }
+        bool ConvertUnicodeCharacters { get; set; }
         Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project porject, CancellationToken cancellationToken);
     }

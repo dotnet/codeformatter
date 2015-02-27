@@ -64,6 +64,12 @@ namespace Microsoft.DotNet.CodeFormatting
             get { return _allowTables; }
             set { _allowTables = value; }
         }
+        
+        public bool ConvertUnicodeCharacters
+        {
+            get { return _options.ConvertUnicodeCharacters; }
+            set { _options.ConvertUnicodeCharacters = value; }
+        }
 
         [ImportingConstructor]
         internal FormattingEngineImplementation(

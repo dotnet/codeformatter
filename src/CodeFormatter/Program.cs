@@ -24,14 +24,15 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <project or solution> [<rule types>] [/file:<filename>] [/nocopyright] [/tables] [/c:<config1,config2> [/copyright:file]");
-                Console.WriteLine("    <rule types> - Rule types to use in addition to the default ones.");
-                Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
+                Console.WriteLine("CodeFormatter <project or solution> [/file:<filename>] [/nocopyright] [/nounicode] [/tables] [/c:<config1,config2> [/copyright:file]");
                 Console.WriteLine("    <filename>   - Only apply changes to files with specified name.");
                 Console.WriteLine("    <configs>    - Additional preprocessor configurations the formatter");
                 Console.WriteLine("                   should run under.");
                 Console.WriteLine("    <copyright>  - Specifies file containing copyright header.");
+                Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
                 Console.WriteLine("    <tables>     - Let tables opt out of formatting by defining DOTNET_FORMATTER");
+                Console.WriteLine("    <nounicode>  - Do not convert unicode strings to escape sequences");
+                Console.WriteLine("    <nocopyright>- Do not update the copyright message.");
                 return -1;
             }
 
@@ -46,6 +47,7 @@ namespace CodeFormatter
             var ruleTypeBuilder = ImmutableArray.CreateBuilder<string>();
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             var copyrightHeader = FormattingConstants.DefaultCopyrightHeader;
+            var convertUnicode = true;
             var allowTables = false;
             var comparer = StringComparer.OrdinalIgnoreCase;
 
@@ -82,6 +84,10 @@ namespace CodeFormatter
                 {
                     copyrightHeader = ImmutableArray<string>.Empty;
                 }
+                else if (comparer.Equals(arg, "/nounicode"))
+                {
+                    convertUnicode = false;
+                }
                 else if (comparer.Equals(arg, "/tables"))
                 {
                     allowTables = true;
@@ -106,6 +112,7 @@ namespace CodeFormatter
                     configBuilder.ToImmutableArray(),
                     copyrightHeader,
                     allowTables,
+                    convertUnicode,
                     ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
                 return 0;
@@ -132,6 +139,7 @@ namespace CodeFormatter
             ImmutableArray<string[]> preprocessorConfigurations, 
             ImmutableArray<string> copyrightHeader,
             bool allowTables,
+            bool convertUnicode,
             CancellationToken cancellationToken)
         {
             var workspace = MSBuildWorkspace.Create();
@@ -140,6 +148,7 @@ namespace CodeFormatter
             engine.FileNames = fileNames;
             engine.CopyrightHeader = copyrightHeader;
             engine.AllowTables = allowTables;
+            engine.ConvertUnicodeCharacters = convertUnicode;
 
             string extension = Path.GetExtension(projectOrSolutionPath);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))

@@ -18,8 +18,21 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [SyntaxRuleOrder(SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiCharactersAreEscapedInLiterals : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
+        private readonly Options _options;
+
+        [ImportingConstructor]
+        internal NonAsciiCharactersAreEscapedInLiterals(Options options)
+        {
+            _options = options;
+        }
+
         public SyntaxNode Process(SyntaxNode root, string languageName)
         {
+            if (!_options.ConvertUnicodeCharacters)
+            {
+                return root;
+            }
+
             return UnicodeCharacterEscapingSyntaxRewriter.Rewriter.Visit(root);
         }
 

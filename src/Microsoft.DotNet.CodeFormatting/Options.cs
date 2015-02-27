@@ -24,6 +24,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         internal IFormatLogger FormatLogger { get; set; }
 
+        internal bool ConvertUnicodeCharacters { get; set; }
+
         [ImportingConstructor]
         internal Options()
         {
@@ -31,6 +33,7 @@ namespace Microsoft.DotNet.CodeFormatting
             FileNames = ImmutableArray<string>.Empty;
             PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
             FormatLogger = new ConsoleFormatLogger();
+            ConvertUnicodeCharacters = true;
         }
     }
 }
