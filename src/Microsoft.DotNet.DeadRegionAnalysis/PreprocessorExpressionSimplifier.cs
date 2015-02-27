@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,17 +28,17 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     /// </summary>
     internal class PreprocessorExpressionSimplifier : CSharpSyntaxRewriter
     {
-        CompositePreprocessorExpressionEvaluator m_expressionEvaluator;
+        private CompositePreprocessorExpressionEvaluator _expressionEvaluator;
 
         public PreprocessorExpressionSimplifier(CompositePreprocessorExpressionEvaluator expressionEvaluator)
         {
-            m_expressionEvaluator = expressionEvaluator;
+            _expressionEvaluator = expressionEvaluator;
         }
 
         public override SyntaxNode VisitBinaryExpression(BinaryExpressionSyntax node)
         {
-            Tristate leftState = m_expressionEvaluator.EvaluateExpression(node.Left);
-            Tristate rightState = m_expressionEvaluator.EvaluateExpression(node.Right);
+            Tristate leftState = _expressionEvaluator.EvaluateExpression(node.Left);
+            Tristate rightState = _expressionEvaluator.EvaluateExpression(node.Right);
 
             var left = (ExpressionSyntax)node.Left.Accept(this);
             var right = (ExpressionSyntax)node.Right.Accept(this);
@@ -118,7 +121,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         public override SyntaxNode VisitParenthesizedExpression(ParenthesizedExpressionSyntax node)
         {
             var newExpression = (ExpressionSyntax)node.Expression.Accept(this);
-            
+
             // Remove unnecessary parentheses around non-binary expressions
             if (!(newExpression is BinaryExpressionSyntax))
             {

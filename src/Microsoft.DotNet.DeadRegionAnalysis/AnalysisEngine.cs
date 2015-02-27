@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,10 +16,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public partial class AnalysisEngine
     {
-        private Options m_options;
-        private CompositePreprocessorExpressionEvaluator m_expressionEvaluator;
-        private PreprocessorExpressionSimplifier m_expressionSimplifier;
-        private PreprocessorSymbolTracker m_symbolTracker;
+        private Options _options;
+        private CompositePreprocessorExpressionEvaluator _expressionEvaluator;
+        private PreprocessorExpressionSimplifier _expressionSimplifier;
+        private PreprocessorSymbolTracker _symbolTracker;
 
         public event Func<DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
 
@@ -90,25 +93,25 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private AnalysisEngine(Options options)
         {
-            m_options = options;
-            m_expressionEvaluator = options.GetPreprocessorExpressionEvaluator();
-            m_expressionSimplifier = new PreprocessorExpressionSimplifier(m_expressionEvaluator);
-            m_symbolTracker = options.GetPreprocessorSymbolTracker();
+            _options = options;
+            _expressionEvaluator = options.GetPreprocessorExpressionEvaluator();
+            _expressionSimplifier = new PreprocessorExpressionSimplifier(_expressionEvaluator);
+            _symbolTracker = options.GetPreprocessorSymbolTracker();
         }
 
         public IEnumerable<string> SpecifiedSymbols
         {
-            get { return m_symbolTracker.SpecifiedSymbols; }
+            get { return _symbolTracker.SpecifiedSymbols; }
         }
 
         public IEnumerable<string> UnvisitedSymbols
         {
-            get { return m_symbolTracker.UnvisitedSymbols; }
+            get { return _symbolTracker.UnvisitedSymbols; }
         }
 
         public IEnumerable<string> VisitedSymbols
         {
-            get { return m_symbolTracker.VisitedSymbols; }
+            get { return _symbolTracker.VisitedSymbols; }
         }
 
         /// <summary>
@@ -142,7 +145,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         public async Task<IEnumerable<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
             var documentInfos = await Task.WhenAll(
-                from document in m_options.Documents
+                from document in _options.Documents
                 select GetConditionalRegionInfo(document, cancellationToken));
 
             Array.Sort(documentInfos);
@@ -255,8 +258,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private Tristate EvaluateExpression(ExpressionSyntax expression)
         {
-            expression.Accept(m_symbolTracker);
-            return m_expressionEvaluator.EvaluateExpression(expression);
+            expression.Accept(_symbolTracker);
+            return _expressionEvaluator.EvaluateExpression(expression);
         }
 
         private DirectiveTriviaSyntax SimplifyDirectiveExpression(DirectiveTriviaSyntax directive)
@@ -266,12 +269,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 case SyntaxKind.IfDirectiveTrivia:
                     {
                         var ifDirective = (IfDirectiveTriviaSyntax)directive;
-                        return ifDirective.WithCondition((ExpressionSyntax)ifDirective.Condition.Accept(m_expressionSimplifier));
+                        return ifDirective.WithCondition((ExpressionSyntax)ifDirective.Condition.Accept(_expressionSimplifier));
                     }
                 case SyntaxKind.ElifDirectiveTrivia:
                     {
                         var elifDirective = (ElifDirectiveTriviaSyntax)directive;
-                        return elifDirective.WithCondition((ExpressionSyntax)elifDirective.Condition.Accept(m_expressionSimplifier));
+                        return elifDirective.WithCondition((ExpressionSyntax)elifDirective.Condition.Accept(_expressionSimplifier));
                     }
                 case SyntaxKind.ElseDirectiveTrivia:
                     return directive;

@@ -1,4 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 using System;
@@ -15,8 +18,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     {
         public class Options
         {
-            private IEnumerable<IReadOnlyDictionary<string, Tristate>> m_symbolConfigurations;
-            private Tristate m_undefinedSymbolValue;
+            private IEnumerable<IReadOnlyDictionary<string, Tristate>> _symbolConfigurations;
+            private Tristate _undefinedSymbolValue;
 
             public IEnumerable<Document> Documents { get; private set; }
 
@@ -58,18 +61,18 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     Documents = solution.Projects.Single().Documents;
                 }
 
-                m_symbolConfigurations = CalculateSymbolConfigurations(
+                _symbolConfigurations = CalculateSymbolConfigurations(
                     alwaysDisabledSymbols,
                     alwaysDefinedSymbols,
                     alwaysIgnoredSymbols,
                     symbolConfigurations);
 
-                m_undefinedSymbolValue = undefinedSymbolValue;
+                _undefinedSymbolValue = undefinedSymbolValue;
             }
 
             internal CompositePreprocessorExpressionEvaluator GetPreprocessorExpressionEvaluator()
             {
-                var evaluators = m_symbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config, m_undefinedSymbolValue));
+                var evaluators = _symbolConfigurations.Select(config => new PreprocessorExpressionEvaluator(config, _undefinedSymbolValue));
                 return new CompositePreprocessorExpressionEvaluator(evaluators);
             }
 
@@ -77,7 +80,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             {
                 var specifiedSymbols = new HashSet<string>();
 
-                foreach (var config in m_symbolConfigurations)
+                foreach (var config in _symbolConfigurations)
                 {
                     foreach (string symbol in config.Keys)
                     {
@@ -142,7 +145,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     configurationStateMaps.Add(stateMap);
                 }
 
-                return configurationStateMaps;   
+                return configurationStateMaps;
             }
 
             private static void AddExplicitSymbolStates(Dictionary<string, Tristate> symbolStates, IEnumerable<string> symbols, Tristate explicitState)

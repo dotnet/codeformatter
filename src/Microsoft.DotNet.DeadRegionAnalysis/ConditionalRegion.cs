@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
@@ -85,7 +88,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             return base.GetHashCode();
         }
 
-        public static bool operator== (ConditionalRegion x, ConditionalRegion y)
+        public static bool operator ==(ConditionalRegion x, ConditionalRegion y)
         {
             if (object.Equals(x, y))
             {
@@ -95,7 +98,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             return x.Equals(y);
         }
 
-        public static bool operator!= (ConditionalRegion x, ConditionalRegion y)
+        public static bool operator !=(ConditionalRegion x, ConditionalRegion y)
         {
             if (object.Equals(x, y))
             {

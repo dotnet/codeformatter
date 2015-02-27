@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,25 +13,25 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     internal class PreprocessorSymbolTracker : CSharpSyntaxVisitor
     {
-        private readonly IEnumerable<string> m_specifiedSymbols;
-        private readonly HashSet<string> m_unvisitedSymbols;
-        private readonly HashSet<string> m_visitedSymbols;
+        private readonly IEnumerable<string> _specifiedSymbols;
+        private readonly HashSet<string> _unvisitedSymbols;
+        private readonly HashSet<string> _visitedSymbols;
 
-        public IEnumerable<string> SpecifiedSymbols { get { return m_specifiedSymbols; } }
-        public IEnumerable<string> UnvisitedSymbols { get { return m_unvisitedSymbols; } }
-        public IEnumerable<string> VisitedSymbols { get { return m_visitedSymbols; } }
+        public IEnumerable<string> SpecifiedSymbols { get { return _specifiedSymbols; } }
+        public IEnumerable<string> UnvisitedSymbols { get { return _unvisitedSymbols; } }
+        public IEnumerable<string> VisitedSymbols { get { return _visitedSymbols; } }
 
         public PreprocessorSymbolTracker(IEnumerable<string> specifiedSymbols)
         {
-            m_specifiedSymbols = specifiedSymbols;
-            m_unvisitedSymbols = new HashSet<string>(specifiedSymbols);
-            m_visitedSymbols = new HashSet<string>();
+            _specifiedSymbols = specifiedSymbols;
+            _unvisitedSymbols = new HashSet<string>(specifiedSymbols);
+            _visitedSymbols = new HashSet<string>();
         }
 
         private void VisitSymbol(string symbol)
         {
-            m_unvisitedSymbols.Remove(symbol);
-            m_visitedSymbols.Add(symbol);
+            _unvisitedSymbols.Remove(symbol);
+            _visitedSymbols.Add(symbol);
         }
 
         public override void VisitLiteralExpression(LiteralExpressionSyntax node)

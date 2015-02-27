@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,7 +23,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             _value = value;
         }
 
-        public static Tristate operator! (Tristate state)
+        public static Tristate operator !(Tristate state)
         {
             if (state == Varying)
             {
@@ -32,17 +35,17 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             }
         }
 
-        public static bool operator== (Tristate x, Tristate y)
+        public static bool operator ==(Tristate x, Tristate y)
         {
             return x._value == y._value;
         }
 
-        public static bool operator!= (Tristate x, Tristate y)
+        public static bool operator !=(Tristate x, Tristate y)
         {
             return x._value != y._value;
         }
 
-        public static Tristate operator& (Tristate x, Tristate y)
+        public static Tristate operator &(Tristate x, Tristate y)
         {
             if (x == False || y == False)
             {
@@ -58,7 +61,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             return Varying;
         }
 
-        public static Tristate operator| (Tristate x, Tristate y)
+        public static Tristate operator |(Tristate x, Tristate y)
         {
             if (x == True || y == True)
             {
