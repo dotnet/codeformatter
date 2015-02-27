@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             catch (Exception)
             {
                 var changesString = new StringBuilder();
-                var syntaxTree = await info.Document.GetSyntaxTreeAsync(cancellationToken);
+                var syntaxTree = info.Document.GetSyntaxTreeAsync(cancellationToken).Result;
 
                 foreach (var change in changes)
                 {

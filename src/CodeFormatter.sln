@@ -18,6 +18,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitConverter", "XUnitConv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitConverter.Tests", "XUnitConverter.Tests\XUnitConverter.Tests.csproj", "{BA4C1700-8A72-4F33-AF67-0E60F324E521}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadRegionAnalysis", "Microsoft.DotNet.DeadRegionAnalysis\Microsoft.DotNet.DeadRegionAnalysis.csproj", "{27F04393-37FD-4D02-B574-0084BB7F6A59}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadRegionAnalysis.Tests", "Microsoft.DotNet.DeadRegionAnalysis.Tests\Microsoft.DotNet.DeadRegionAnalysis.Tests.csproj", "{7C57FD95-030E-48B2-B369-6694BB922C8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadRegions", "DeadRegions\DeadRegions.csproj", "{B65D5F61-64BF-4219-863C-74C2744AE8FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +50,18 @@ Global
 		{BA4C1700-8A72-4F33-AF67-0E60F324E521}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA4C1700-8A72-4F33-AF67-0E60F324E521}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA4C1700-8A72-4F33-AF67-0E60F324E521}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27F04393-37FD-4D02-B574-0084BB7F6A59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27F04393-37FD-4D02-B574-0084BB7F6A59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27F04393-37FD-4D02-B574-0084BB7F6A59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27F04393-37FD-4D02-B574-0084BB7F6A59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C57FD95-030E-48B2-B369-6694BB922C8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C57FD95-030E-48B2-B369-6694BB922C8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C57FD95-030E-48B2-B369-6694BB922C8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C57FD95-030E-48B2-B369-6694BB922C8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

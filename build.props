@@ -4,10 +4,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-	  <OutputPath Condition="'$(OutputPath)' == ''">$(MsBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MsBuildThisFileDirectory)bin\obj\$(Configuration)\</IntermediateOutputPath>
+	  <OutDir Condition="'$(OutDir)' == ''">$(MsBuildThisFileDirectory)bin\</OutDir>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MsBuildThisFileDirectory)obj\$(MsBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(IntermediateOutputPath)</OutputPath>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   
   <!-- Configuration specific properties -->
