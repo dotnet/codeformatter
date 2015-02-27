@@ -103,7 +103,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions.cs" />
+    <Compile Include="SyntaxUtil.cs" />
     <Compile Include="Filters\FilenameFilter.cs" />
     <Compile Include="Filters\UsableFileFilter.cs" />
     <Compile Include="FormattingConstants.cs" />
@@ -129,8 +129,7 @@
     <Compile Include="Rules\CSharpOnlyFormattingRule.cs" />
     <Compile Include="Rules\ExplicitVisibilityRule.cs" />
     <Compile Include="Rules\CopyrightHeaderRule.cs" />
-    <Compile Include="Rules\HasNewLineBeforeFirstNamespaceFormattingRule.cs" />
-    <Compile Include="Rules\HasNewLineBeforeFirstUsingFormattingRule.cs" />
+    <Compile Include="Rules\NewLineAboveRule.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRule.cs" />
     <Compile Include="Rules\HasNoCustomCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.cs" />
