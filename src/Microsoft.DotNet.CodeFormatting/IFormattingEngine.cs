@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.CodeFormatting
         ImmutableArray<string> CopyrightHeader { get; set; }
         ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
         ImmutableArray<string> FileNames { get; set; }
+        bool AllowTables { get; set; }
         Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project porject, CancellationToken cancellationToken);
     }

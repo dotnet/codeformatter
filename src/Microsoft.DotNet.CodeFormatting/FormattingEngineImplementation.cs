@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
         private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
+        private bool _allowTables;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -56,6 +57,12 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             get { return _options.FormatLogger; }
             set { _options.FormatLogger = value; }
+        }
+
+        public bool AllowTables
+        {
+            get { return _allowTables; }
+            set { _allowTables = value; }
         }
 
         [ImportingConstructor]
@@ -142,11 +149,21 @@ namespace Microsoft.DotNet.CodeFormatting
         internal async Task<Solution> FormatCoreAsync(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             var solution = originalSolution;
-            solution = AddTablePreprocessorSymbol(originalSolution);
+
+            if (_allowTables)
+            {
+                solution = AddTablePreprocessorSymbol(originalSolution);
+            }
+
             solution = await RunSyntaxPass(solution, documentIds, cancellationToken);
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken);
-            solution = RemoveTablePreprocessorSymbol(solution, originalSolution);
+
+            if (_allowTables)
+            {
+                solution = RemoveTablePreprocessorSymbol(solution, originalSolution);
+            }
+
             return solution;
         }
 
