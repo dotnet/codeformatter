@@ -75,6 +75,46 @@ using System;";
         }
 
         [Fact]
+        public void StandardCombination()
+        {
+            var text = @"// copyright
+using System;
+using System.Collections;
+namespace NS1
+{
+
+}";
+
+            var expected = @"// copyright
+
+using System;
+using System.Collections;
+
+namespace NS1
+{
+
+}";
+
+            Verify(text, expected);
+        }
+
+        [Fact]
+        public void StandardCombinationNoWork()
+        {
+            var text = @"// copyright
+
+using System;
+using System.Collections;
+
+namespace NS1
+{
+
+}";
+
+            Verify(text, text);
+        }
+
+        [Fact]
         public void TestNewLineBeforeFirstUsing01()
         {
             var text = @"

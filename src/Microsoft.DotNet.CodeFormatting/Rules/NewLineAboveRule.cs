@@ -47,7 +47,25 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return syntaxRoot;
             }
 
-            return ProcessCore(syntaxRoot, firstNamespace);
+            var list = firstNamespace.GetLeadingTrivia();
+            if (list.Count == 0)
+            {
+                var newLine = SyntaxUtil.GetBestNewLineTrivia(firstNamespace);
+                list = list.Add(newLine);
+                return syntaxRoot.ReplaceNode(firstNamespace, firstNamespace.WithLeadingTrivia(list));
+            }
+            else if (list.Count == 1 && list[0].IsKind(SyntaxKind.EndOfLineTrivia))
+            {
+                // The namespace node is typically preceeded by a using node.  In thate case the trivia will
+                // be split between the two nodes.  If the namespace already has a newline leading trivia then
+                // there is at least a single blank between the nodes as the using will have a trailing new
+                // line as well (in case of a single on it will be on the using).  
+                return syntaxRoot;
+            }
+            else
+            {
+                return ProcessCore(syntaxRoot, firstNamespace);
+            }
         }
 
         private SyntaxNode ProcessCore<TNode>(SyntaxNode syntaxRoot, TNode node) where TNode: SyntaxNode
