@@ -17,45 +17,9 @@ namespace Microsoft.DotNet.CodeFormatting
         public static IFormattingEngine Create(ImmutableArray<string> ruleTypes)
         {
             var catalog = new AssemblyCatalog(typeof(FormattingEngine).Assembly);
-
-            var ruleTypesHash = new HashSet<string>(ruleTypes, StringComparer.InvariantCultureIgnoreCase);
-            var notFoundRuleTypes = new HashSet<string>(ruleTypes, StringComparer.InvariantCultureIgnoreCase);
-
-            var filteredCatalog = new FilteredCatalog(catalog, cpd =>
-            {
-                if (cpd.ExportDefinitions.Any(em =>
-                    em.ContractName == AttributedModelServices.GetContractName(typeof(ISyntaxFormattingRule)) ||
-                    em.ContractName == AttributedModelServices.GetContractName(typeof(ILocalSemanticFormattingRule)) ||
-                    em.ContractName == AttributedModelServices.GetContractName(typeof(IGlobalSemanticFormattingRule)) ||
-                    em.ContractName == AttributedModelServices.GetContractName(typeof(IFormattingFilter))))
-                {
-                    object ruleType;
-                    if (cpd.Metadata.TryGetValue(RuleTypeConstants.PartMetadataKey, out ruleType))
-                    {
-                        if (ruleType is string)
-                        {
-                            notFoundRuleTypes.Remove((string)ruleType);
-                            if (!ruleTypesHash.Contains((string)ruleType))
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-
-                return true;
-            });
-
-            var container = new CompositionContainer(filteredCatalog);
+            var container = new CompositionContainer(catalog);
             var engine = container.GetExportedValue<IFormattingEngine>();
             var consoleFormatLogger = new ConsoleFormatLogger();
-
-            //  Need to do this after the catalog is queried, otherwise the lambda won't have been run
-            foreach (var notFoundRuleType in notFoundRuleTypes)
-            {
-                consoleFormatLogger.WriteErrorLine("The specified rule type was not found: {0}", notFoundRuleType);
-            }
-
             return engine;
         }
     }

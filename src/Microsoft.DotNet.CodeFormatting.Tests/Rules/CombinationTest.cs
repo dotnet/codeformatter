@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     /// <summary>
     /// A test which runs all rules on a given piece of code 
     /// </summary>
-    public sealed class CombinationTest : CodeFormattingTestBase
+    public sealed class CombinationTest : CodeFormattingTestBase, IDisposable
     {
         private static FormattingEngineImplementation s_formattingEngine;
 
@@ -25,8 +25,14 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         public CombinationTest()
         {
             s_formattingEngine.CopyrightHeader = ImmutableArray.Create("// header");
+            s_formattingEngine.AllowTables = true;
             s_formattingEngine.FormatLogger = new EmptyFormatLogger();
             s_formattingEngine.PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
+        }
+
+        public void Dispose()
+        {
+            s_formattingEngine.AllowTables = false;
         }
 
         protected override async Task<Document> RewriteDocumentAsync(Document document)
