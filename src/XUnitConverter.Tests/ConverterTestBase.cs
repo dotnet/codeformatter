@@ -52,7 +52,7 @@ namespace XUnitConverter.Tests
                     s_XunitReference
                 };
 
-            var solution = new CustomWorkspace()
+            var solution = new AdhocWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, testProjectName, testProjectName, LanguageNames.CSharp)
                 .AddMetadataReferences(projectId, references);
