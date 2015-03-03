@@ -233,7 +233,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             /// <summary>
-            /// Ensure a visibility modifier is specified on the given type node.  
+            /// Ensure a visibility modifier is specified on the given type node.
             /// </summary>
             private static T EnsureTypeVisibility<T>(T originalNode, Func<T, SyntaxToken, T> withKeyword, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : TypeDeclarationSyntax
             {
@@ -247,8 +247,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             /// <summary>
-            /// Ensure a visibility modifier is specified on the given node where first modifier is 
-            /// inserted before a keyword token.
+            /// Ensure a visibility modifier is specified.  If this is the first modifier it will be
+            /// inserted directly before the returned token.
             /// </summary>
             private static T EnsureVisibilityBeforeToken<T>(T originalNode, SyntaxTokenList originalModifierList, Func<T, SyntaxToken> getToken, Func<T, SyntaxToken, T> withToken, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : CSharpSyntaxNode
             {
@@ -269,6 +269,10 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     getDefaultVisibility);
             }
 
+            /// <summary>
+            /// Ensure a visibility modifier is specified.  If this is the first modifier it will be
+            /// inserted directly before the specified type node.  
+            /// </summary>
             private static T EnsureVisibilityBeforeType<T>(T originalNode, SyntaxTokenList originalModifierList, Func<T, TypeSyntax> getTypeSyntax, Func<T, TypeSyntax, T> withTypeSyntax, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : CSharpSyntaxNode
             {
                 Func<T, SyntaxKind, T> withFirstModifier = (node, visibilityKind) =>

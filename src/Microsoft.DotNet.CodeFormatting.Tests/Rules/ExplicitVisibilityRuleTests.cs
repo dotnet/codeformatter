@@ -455,6 +455,41 @@ internal class C
             }
 
             [Fact]
+            public void CommentAttributeAndMethod2()
+            {
+                var text = @"
+class C
+{
+    // Hello
+    [Attr]
+    // World
+    void M1() { }
+
+    // Hello
+    [Attr]
+    // World
+    override void M2() { }
+};";
+
+                var expected = @"
+internal class C
+{
+    // Hello
+    [Attr]
+    // World
+    private void M1() { }
+
+    // Hello
+    [Attr]
+    // World
+    private override void M2() { }
+};";
+
+                Verify(text, expected);
+
+            }
+
+            [Fact]
             public void CommentAttributeAndProperty()
             {
                 var text = @"
