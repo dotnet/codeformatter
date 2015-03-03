@@ -31,78 +31,126 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax originalNode)
             {
                 var node = (ClassDeclarationSyntax)base.VisitClassDeclaration(originalNode);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                return EnsureTypeVisibility(node, (x, t) => x.WithKeyword(t),  (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
             }
 
             public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
+                return EnsureTypeVisibility(node, (x, t) => x.WithKeyword(t), (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitStructDeclaration(StructDeclarationSyntax originalNode)
             {
                 var node = (StructDeclarationSyntax)base.VisitStructDeclaration(originalNode);
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                return EnsureTypeVisibility(node, (x, t) => x.WithKeyword(t), (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
             }
 
-            public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax node)
+            public override SyntaxNode VisitDelegateDeclaration(DelegateDeclarationSyntax originalNode)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetDelegateTypeDefaultVisibility(node));
+                return EnsureVisibilityBeforeToken(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.DelegateKeyword,
+                    (n, k) => n.WithDelegateKeyword(k),
+                    (n, l) => n.WithModifiers(l),
+                    () => GetDelegateTypeDefaultVisibility(originalNode));
             }
 
-            public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node)
+            public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax originalNode)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(node));
+                return EnsureVisibilityBeforeToken(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.EnumKeyword,
+                    (n, k) => n.WithEnumKeyword(k),
+                    (n, l) => n.WithModifiers(l),
+                    () => GetTypeDefaultVisibility(originalNode));
             }
 
-            public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+            public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax originalNode)
             {
-                if (node.Modifiers.Any(x => x.Kind() == SyntaxKind.StaticKeyword))
+                if (originalNode.Modifiers.Any(x => x.Kind() == SyntaxKind.StaticKeyword))
                 {
-                    return node;
+                    return originalNode;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                return EnsureVisibilityBeforeToken(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.Identifier,
+                    (n, t) => n.WithIdentifier(t),
+                    (n, l) => n.WithModifiers(l),
+                    () => SyntaxKind.PrivateKeyword);
             }
 
-            public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+            public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax originalNode)
             {
-                if (node.ExplicitInterfaceSpecifier != null || node.Modifiers.Any(x => x.IsKind(SyntaxKind.PartialKeyword)))
+                if (originalNode.ExplicitInterfaceSpecifier != null || originalNode.Modifiers.Any(x => x.IsKind(SyntaxKind.PartialKeyword)))
                 {
-                    return node;
+                    return originalNode;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                return EnsureVisibilityBeforeType(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.ReturnType,
+                    (n, t) => n.WithReturnType(t),
+                    (n, l) => n.WithModifiers(l),
+                    () => SyntaxKind.PrivateKeyword);
             }
 
-            public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+            public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax originalNode)
             {
-                if (node.ExplicitInterfaceSpecifier != null)
+                if (originalNode.ExplicitInterfaceSpecifier != null)
                 {
-                    return node;
+                    return originalNode;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                return EnsureVisibilityBeforeType(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.Type,
+                    (n, t) => n.WithType(t),
+                    (n, l) => n.WithModifiers(l),
+                    () => SyntaxKind.PrivateKeyword);
             }
 
-            public override SyntaxNode VisitEventDeclaration(EventDeclarationSyntax node)
+            public override SyntaxNode VisitEventDeclaration(EventDeclarationSyntax originalNode)
             {
-                if (node.ExplicitInterfaceSpecifier != null)
+                if (originalNode.ExplicitInterfaceSpecifier != null)
                 {
-                    return node;
+                    return originalNode;
                 }
 
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                return EnsureVisibilityBeforeToken(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.EventKeyword,
+                    (n, t) => n.WithEventKeyword(t),
+                    (n, l) => n.WithModifiers(l),
+                    () => SyntaxKind.PrivateKeyword);
             }
 
-            public override SyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax node)
+            public override SyntaxNode VisitEventFieldDeclaration(EventFieldDeclarationSyntax originalNode)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                return EnsureVisibilityBeforeToken(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.EventKeyword,
+                    (n, t) => n.WithEventKeyword(t),
+                    (n, l) => n.WithModifiers(l),
+                    () => SyntaxKind.PrivateKeyword);
             }
 
-            public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
+            public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax originalNode)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PrivateKeyword);
+                return EnsureVisibilityBeforeType(
+                    originalNode,
+                    originalNode.Modifiers,
+                    (n) => n.Declaration.Type,
+                    (n, t) => n.WithDeclaration(n.Declaration.WithType(t)),
+                    (n, l) => n.WithModifiers(l),
+                    () => SyntaxKind.PrivateKeyword);
             }
 
             private SyntaxKind GetTypeDefaultVisibility(BaseTypeDeclarationSyntax originalDeclarationSyntax)
@@ -185,52 +233,106 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
 
             /// <summary>
-            /// Return a node declaration that has a visibility modifier.  If one isn't present it will be added as the 
-            /// first modifier.  Any trivia before the node will be added as leading trivia to the added <see cref="SyntaxToken"/>.
+            /// Ensure a visibility modifier is specified on the given type node.  
             /// </summary>
-            private static MemberDeclarationSyntax EnsureVisibility<T>(T node, SyntaxTokenList originalModifiers, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : MemberDeclarationSyntax
+            private static T EnsureTypeVisibility<T>(T originalNode, Func<T, SyntaxToken, T> withKeyword, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : TypeDeclarationSyntax
             {
-                if (originalModifiers.Any(x => SyntaxFacts.IsAccessibilityModifier(x.Kind())))
+                return EnsureVisibilityBeforeToken(
+                    originalNode,
+                    originalNode.Modifiers,
+                    n => n.Keyword,
+                    withKeyword,
+                    withModifiers,
+                    getDefaultVisibility);
+            }
+
+            /// <summary>
+            /// Ensure a visibility modifier is specified on the given node where first modifier is 
+            /// inserted before a keyword token.
+            /// </summary>
+            private static T EnsureVisibilityBeforeToken<T>(T originalNode, SyntaxTokenList originalModifierList, Func<T, SyntaxToken> getToken, Func<T, SyntaxToken, T> withToken, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : CSharpSyntaxNode
+            {
+                Func<T, SyntaxKind, T> withFirstModifier = (node, visibilityKind) =>
+                    {
+                        var token = getToken(node);
+                        var modifierList = CreateFirstModifierList(token.LeadingTrivia, visibilityKind);
+                        node = withToken(node, token.WithLeadingTrivia());
+                        node = withModifiers(node, modifierList);
+                        return node;
+                    };
+
+                return EnsureVisibilityCore(
+                    originalNode, 
+                    originalModifierList,
+                    withFirstModifier,
+                    withModifiers,
+                    getDefaultVisibility);
+            }
+
+            private static T EnsureVisibilityBeforeType<T>(T originalNode, SyntaxTokenList originalModifierList, Func<T, TypeSyntax> getTypeSyntax, Func<T, TypeSyntax, T> withTypeSyntax, Func<T, SyntaxTokenList, T> withModifiers, Func<SyntaxKind> getDefaultVisibility) where T : CSharpSyntaxNode
+            {
+                Func<T, SyntaxKind, T> withFirstModifier = (node, visibilityKind) =>
+                    {
+                        var typeSyntax = getTypeSyntax(node);
+                        var modifierList = CreateFirstModifierList(typeSyntax.GetLeadingTrivia(), visibilityKind);
+                        node = withTypeSyntax(node, typeSyntax.WithLeadingTrivia());
+                        node = withModifiers(node, modifierList);
+                        return node;
+                    };
+
+                return EnsureVisibilityCore(
+                    originalNode, 
+                    originalModifierList,
+                    withFirstModifier, 
+                    withModifiers, 
+                    getDefaultVisibility);
+            }
+
+            private static T EnsureVisibilityCore<T>(
+                T originalNode, 
+                SyntaxTokenList originalModifierList,
+                Func<T, SyntaxKind, T> withFirstModifier,
+                Func<T, SyntaxTokenList, T> withModifiers, 
+                Func<SyntaxKind> getDefaultVisibility) where T : CSharpSyntaxNode
+            {
+                if (originalModifierList.Any(x => SyntaxFacts.IsAccessibilityModifier(x.Kind())))
                 {
-                    return node;
+                    return originalNode;
                 }
 
                 SyntaxKind visibilityKind = getDefaultVisibility();
                 Debug.Assert(SyntaxFacts.IsAccessibilityModifier(visibilityKind));
 
-                SyntaxTokenList modifierList;
-                if (originalModifiers.Count == 0)
+                if (originalModifierList.Count == 0)
                 {
-                    var leadingTrivia = node.GetLeadingTrivia();
-                    node = node.WithLeadingTrivia();
-
-                    var visibilityToken = SyntaxFactory.Token(
-                        leadingTrivia,
-                        visibilityKind,
-                        SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
-
-                    modifierList = SyntaxFactory.TokenList(visibilityToken);
-                }
-                else
-                {
-                    var leadingTrivia = originalModifiers[0].LeadingTrivia;
-                    var visibilityToken = SyntaxFactory.Token(
-                        leadingTrivia,
-                        visibilityKind,
-                        SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
-
-                    var list = new List<SyntaxToken>();
-                    list.Add(visibilityToken);
-                    list.Add(originalModifiers[0].WithLeadingTrivia());
-                    for (int i = 1; i < originalModifiers.Count; i++)
-                    {
-                        list.Add(originalModifiers[i]);
-                    }
-
-                    modifierList = SyntaxFactory.TokenList(list);
+                    return withFirstModifier(originalNode, visibilityKind);
                 }
 
-                return withModifiers(node, modifierList);
+                var leadingTrivia = originalModifierList[0].LeadingTrivia;
+                var visibilityToken = SyntaxFactory.Token(
+                    leadingTrivia,
+                    visibilityKind,
+                    SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
+
+                var list = new List<SyntaxToken>();
+                list.Add(visibilityToken);
+                list.Add(originalModifierList[0].WithLeadingTrivia());
+                for (int i = 1; i < originalModifierList.Count; i++)
+                {
+                    list.Add(originalModifierList[i]);
+                }
+
+                return withModifiers(originalNode, SyntaxFactory.TokenList(list));
+            }
+
+            private static SyntaxTokenList CreateFirstModifierList(SyntaxTriviaList leadingTrivia, SyntaxKind visibilityKind)
+            {
+                var visibilityToken = SyntaxFactory.Token(
+                    leadingTrivia,
+                    visibilityKind,
+                    SyntaxFactory.TriviaList(SyntaxFactory.SyntaxTrivia(SyntaxKind.WhitespaceTrivia, " ")));
+
+                return SyntaxFactory.TokenList(visibilityToken);
             }
         }
     }

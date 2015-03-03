@@ -392,6 +392,162 @@ internal class C
             }
 
             [Fact]
+            public void CommentAttributeAndType()
+            {
+                var text = @"
+// Hello
+[Attr]
+// World
+class C1 { }
+
+// Hello
+[Attr]
+// World
+partial class C2 { }";
+
+                var expected = @"
+// Hello
+[Attr]
+// World
+internal class C1 { }
+
+// Hello
+[Attr]
+// World
+internal partial class C2 { }";
+
+                Verify(text, expected);
+            }
+
+            [Fact]
+            public void CommentAttributeAndMethod()
+            {
+                var text = @"
+class C
+{
+    // Hello
+    [Attr]
+    // World
+    void M1() { }
+
+    // Hello
+    [Attr]
+    // World
+    static void M2() { }
+};";
+
+                var expected = @"
+internal class C
+{
+    // Hello
+    [Attr]
+    // World
+    private void M1() { }
+
+    // Hello
+    [Attr]
+    // World
+    private static void M2() { }
+};";
+
+                Verify(text, expected);
+
+            }
+
+            [Fact]
+            public void CommentAttributeAndProperty()
+            {
+                var text = @"
+class C
+{
+    // Hello
+    [Attr]
+    // World
+    int P1 { get { return 0; } }
+
+    // Hello
+    [Attr]
+    // World
+    static int P2 { get { return 0; } }
+};";
+
+                var expected = @"
+internal class C
+{
+    // Hello
+    [Attr]
+    // World
+    private int P1 { get { return 0; } }
+
+    // Hello
+    [Attr]
+    // World
+    private static int P2 { get { return 0; } }
+};";
+
+                Verify(text, expected);
+
+            }
+
+            [Fact]
+            public void CommentAttributeAndConstructor()
+            {
+                var text = @"
+class C
+{
+    // Hello
+    [Attr]
+    // World
+    C(int p1) { }
+
+    // Hello
+    [Attr]
+    // World
+    unsafe C(int p1, int p2) { }
+};";
+
+                var expected = @"
+internal class C
+{
+    // Hello
+    [Attr]
+    // World
+    private C(int p1) { }
+
+    // Hello
+    [Attr]
+    // World
+    private unsafe C(int p1, int p2) { }
+};";
+
+                Verify(text, expected);
+
+            }
+
+            public void CommentAttributeAndMultipleField()
+            {
+                var text = @"
+class C 
+{
+    // Hello
+    [Attr]
+    // World
+    int x, y;
+};";
+
+                var expected = @"
+internal class C 
+{
+    // Hello
+    [Attr]
+    // World
+    private int x, y;
+};";
+
+                Verify(text, expected);
+            }
+
+            [Fact]
             public void Issue70()
             {
                 var source = @"
