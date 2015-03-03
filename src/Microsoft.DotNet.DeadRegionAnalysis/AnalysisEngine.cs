@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         private PreprocessorExpressionSimplifier _expressionSimplifier;
         private PreprocessorSymbolTracker _symbolTracker;
 
-        public event Func<DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
+        public event Func<AnalysisEngine, DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
 
         public static AnalysisEngine FromFilePaths(
             IEnumerable<string> filePaths,
@@ -156,7 +156,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             var info = new DocumentConditionalRegionInfo(document, chains);
             if (DocumentAnalyzed != null)
             {
-                await DocumentAnalyzed(info, cancellationToken);
+                await DocumentAnalyzed(this, info, cancellationToken);
             }
 
             return info;
