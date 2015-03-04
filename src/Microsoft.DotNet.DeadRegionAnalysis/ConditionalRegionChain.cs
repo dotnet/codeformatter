@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
-    public struct ConditionalRegionChain : IComparable<ConditionalRegionChain>, IEquatable<ConditionalRegionChain>
+    public struct ConditionalRegionChain : IComparable<ConditionalRegionChain>
     {
         private ImmutableArray<ConditionalRegion> _regions;
 
@@ -47,11 +47,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             }
 
             return result;
-        }
-
-        public bool Equals(ConditionalRegionChain other)
-        {
-            return CompareTo(other) == 0;
         }
     }
 }

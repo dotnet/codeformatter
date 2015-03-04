@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
-    public class ConditionalRegion : IComparable<ConditionalRegion>, IEquatable<ConditionalRegion>
+    public class ConditionalRegion : IComparable<ConditionalRegion>
     {
         public DirectiveTriviaSyntax StartDirective { get; private set; }
 
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         {
             if (other == null)
             {
-                return 1;
+                return -1;
             }
 
             int result = SpanStart - other.SpanStart;
@@ -71,41 +71,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             }
 
             return result;
-        }
-
-        public bool Equals(ConditionalRegion other)
-        {
-            return CompareTo(other) == 0;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as ConditionalRegion);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public static bool operator ==(ConditionalRegion x, ConditionalRegion y)
-        {
-            if (object.Equals(x, y))
-            {
-                return true;
-            }
-
-            return x.Equals(y);
-        }
-
-        public static bool operator !=(ConditionalRegion x, ConditionalRegion y)
-        {
-            if (object.Equals(x, y))
-            {
-                return false;
-            }
-
-            return !x.Equals(y);
         }
 
         public override string ToString()

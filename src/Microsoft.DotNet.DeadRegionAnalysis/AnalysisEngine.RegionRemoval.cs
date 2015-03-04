@@ -155,13 +155,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         private static int CompareTextChanges(TextChange x, TextChange y)
         {
-            int result = x.Span.End - y.Span.End;
-            if (result == 0)
-            {
-                return x.Span.Start - y.Span.Start;
-            }
-
-            return result;
+            return x.Span.CompareTo(y.Span);
         }
 
         private static List<TextChange> MergeOverlappingRegions(List<TextChange> changes)
