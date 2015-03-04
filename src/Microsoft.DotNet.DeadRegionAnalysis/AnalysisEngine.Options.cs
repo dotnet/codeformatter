@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,12 +17,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public partial class AnalysisEngine
     {
-        public class Options
+        internal class Options
         {
-            private IEnumerable<IReadOnlyDictionary<string, Tristate>> _symbolConfigurations;
+            private ImmutableArray<ImmutableDictionary<string, Tristate>> _symbolConfigurations;
             private Tristate _undefinedSymbolValue;
 
-            public IEnumerable<Document> Documents { get; private set; }
+            public ImmutableArray<Document> Documents { get; private set; }
 
             internal Options(
                 IEnumerable<Project> projects = null,
@@ -42,7 +43,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     Documents = GetSharedDocuments(projects);
                 }
 
-                if (sourcePaths != null)
+                if (projects == null && sourcePaths != null)
                 {
                     var projectId = ProjectId.CreateNewId("AnalysisProject");
                     var solution = new AdhocWorkspace()
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                             new FileTextLoader(path, Encoding.UTF8));
                     }
 
-                    Documents = solution.Projects.Single().Documents;
+                    Documents = solution.Projects.Single().Documents.ToImmutableArray();
                 }
 
                 _symbolConfigurations = CalculateSymbolConfigurations(
@@ -91,34 +92,38 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 return new PreprocessorSymbolTracker(specifiedSymbols);
             }
 
-            private static IEnumerable<Document> GetSharedDocuments(IEnumerable<Project> projects)
+            private static ImmutableArray<Document> GetSharedDocuments(IEnumerable<Project> projects)
             {
-                var it = projects.GetEnumerator();
-                if (!it.MoveNext())
+                using (var it = projects.GetEnumerator())
                 {
-                    return Enumerable.Empty<Document>();
+                    if (!it.MoveNext())
+                    {
+                        return ImmutableArray<Document>.Empty;
+                    }
+
+                    var first = it.Current;
+                    var filePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    do
+                    {
+                        foreach (var doc in it.Current.Documents)
+                        {
+                            filePaths.Add(doc.FilePath);
+                        }
+                    }
+                    while (it.MoveNext());
+
+                    return first.Documents.Where(d => filePaths.Contains(d.FilePath)).ToImmutableArray();
                 }
-
-                var filePaths = it.Current.Documents.Select(d => d.FilePath);
-
-                while (it.MoveNext())
-                {
-                    filePaths = filePaths.Intersect(
-                        it.Current.Documents.Select(d => d.FilePath),
-                        StringComparer.InvariantCultureIgnoreCase);
-                }
-
-                var filePathSet = new HashSet<string>(filePaths);
-                return projects.First().Documents.Where(d => filePathSet.Contains(d.FilePath));
             }
 
-            private static IEnumerable<IReadOnlyDictionary<string, Tristate>> CalculateSymbolConfigurations(
+            private static ImmutableArray<ImmutableDictionary<string, Tristate>> CalculateSymbolConfigurations(
                 IEnumerable<string> alwaysDisabledSymbols,
                 IEnumerable<string> alwaysDefinedSymbols,
                 IEnumerable<string> alwaysIgnoredSymbols,
                 IEnumerable<IEnumerable<string>> symbolConfigurations)
             {
-                var explicitStates = new Dictionary<string, Tristate>();
+                var explicitStates = ImmutableDictionary.CreateBuilder<string, Tristate>();
 
                 AddExplicitSymbolStates(explicitStates, alwaysDisabledSymbols, Tristate.False);
                 AddExplicitSymbolStates(explicitStates, alwaysDefinedSymbols, Tristate.True);
@@ -126,13 +131,18 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
                 if (symbolConfigurations == null || !symbolConfigurations.Any())
                 {
-                    return new[] { explicitStates };
+                    return ImmutableArray.Create(explicitStates.ToImmutable());
                 }
 
-                var configurationStateMaps = new List<Dictionary<string, Tristate>>();
+                var configurationStateMaps = ImmutableArray.CreateBuilder<ImmutableDictionary<string, Tristate>>();
                 foreach (var configuration in symbolConfigurations)
                 {
-                    var stateMap = new Dictionary<string, Tristate>(explicitStates);
+                    var stateMap = ImmutableDictionary.CreateBuilder<string, Tristate>();
+
+                    foreach (var item in explicitStates)
+                    {
+                        stateMap.Add(item);
+                    }
 
                     foreach (var symbol in configuration)
                     {
@@ -142,13 +152,13 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                         }
                     }
 
-                    configurationStateMaps.Add(stateMap);
+                    configurationStateMaps.Add(stateMap.ToImmutable());
                 }
 
-                return configurationStateMaps;
+                return configurationStateMaps.ToImmutable();
             }
 
-            private static void AddExplicitSymbolStates(Dictionary<string, Tristate> symbolStates, IEnumerable<string> symbols, Tristate explicitState)
+            private static void AddExplicitSymbolStates(ImmutableDictionary<string, Tristate>.Builder symbolStates, IEnumerable<string> symbols, Tristate explicitState)
             {
                 if (symbols == null)
                 {

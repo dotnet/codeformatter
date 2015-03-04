@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -54,7 +55,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             return info.Document.WithText(newText);
         }
 
-        private static List<TextChange> CalculateTextChanges(List<ConditionalRegionChain> chains)
+        private static List<TextChange> CalculateTextChanges(ImmutableArray<ConditionalRegionChain> chains)
         {
             var changes = new List<TextChange>();
 
@@ -71,7 +72,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         {
             bool removeEndif = true;
 
-            for (int i = 0; i < chain.Regions.Count; i++)
+            for (int i = 0; i < chain.Regions.Length; i++)
             {
                 var region = chain.Regions[i];
                 if (region.State != Tristate.Varying)
@@ -89,7 +90,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                         changes.Add(new TextChange(new TextSpan(region.StartDirective.FullSpan.End, region.EndDirective.FullSpan.Start - region.StartDirective.FullSpan.End), string.Empty));
 
                         // Grow the chain until we hit a region that is not always disabled
-                        for (int j = i + 1; j < chain.Regions.Count; j++)
+                        for (int j = i + 1; j < chain.Regions.Length; j++)
                         {
                             var nextRegion = chain.Regions[j];
                             if (nextRegion.State == Tristate.False)
@@ -124,7 +125,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             // Remove the final #endif all the other regions have been removed
             if (removeEndif)
             {
-                var region = chain.Regions[chain.Regions.Count - 1];
+                var region = chain.Regions[chain.Regions.Length - 1];
                 changes.Add(new TextChange(new TextSpan(region.EndDirective.FullSpan.Start, region.SpanEnd - region.EndDirective.FullSpan.Start), string.Empty));
             }
         }

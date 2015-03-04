@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -59,10 +60,10 @@ namespace DeadRegions
                 allowMultiple: false));
         }
 
-        public IList<string> Parse(string commandLine, bool firstArgumentIsPathToExe = true)
+        public ImmutableArray<string> Parse(string commandLine, bool firstArgumentIsPathToExe = true)
         {
             int index = 0;
-            var unprocessedValues = new List<string>();
+            var unprocessedValues = ImmutableArray.CreateBuilder<string>();
 
             if (firstArgumentIsPathToExe)
             {
@@ -138,7 +139,7 @@ namespace DeadRegions
                 }
             }
 
-            return unprocessedValues;
+            return unprocessedValues.ToImmutable();
         }
 
         private class Option

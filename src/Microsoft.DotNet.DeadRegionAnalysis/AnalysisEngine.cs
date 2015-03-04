@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.MSBuild;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -23,26 +25,27 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public event Func<AnalysisEngine, DocumentConditionalRegionInfo, CancellationToken, Task> DocumentAnalyzed;
 
-        public static AnalysisEngine FromFilePaths(
+        public static async Task<AnalysisEngine> FromFilePaths(
             IEnumerable<string> filePaths,
             IEnumerable<IEnumerable<string>> symbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
             IEnumerable<string> alwaysDisabledSymbols = null,
-            Tristate undefinedSymbolValue = default(Tristate))
+            Tristate undefinedSymbolValue = default(Tristate),
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             if (filePaths == null || !filePaths.Any())
             {
                 throw new ArgumentException("Must specify at least one file path");
             }
 
-            IEnumerable<string> projectPaths = null;
             IEnumerable<string> sourcePaths = null;
+            Project[] projects = null;
 
             var firstFileExt = Path.GetExtension(filePaths.First());
             if (firstFileExt.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
             {
-                projectPaths = filePaths;
+                projects = await Task.WhenAll(from path in filePaths select MSBuildWorkspace.Create().OpenProjectAsync(path, cancellationToken));
             }
             else
             {
@@ -50,7 +53,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             }
 
             var options = new Options(
-                projectPaths: projectPaths,
+                projects: projects,
                 sourcePaths: sourcePaths,
                 symbolConfigurations: symbolConfigurations,
                 alwaysIgnoredSymbols: alwaysIgnoredSymbols,
@@ -138,7 +141,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
         /// <summary>
         /// Returns a sorted collection of <see cref="DocumentConditionalRegionInfo"/>
         /// </summary>
-        public async Task<IEnumerable<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<ImmutableArray<DocumentConditionalRegionInfo>> GetConditionalRegionInfo(CancellationToken cancellationToken = default(CancellationToken))
         {
             var documentInfos = await Task.WhenAll(
                 from document in _options.Documents
@@ -146,7 +149,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
             Array.Sort(documentInfos);
 
-            return documentInfos;
+            return ImmutableArray.Create<DocumentConditionalRegionInfo>(documentInfos);
         }
 
         private async Task<DocumentConditionalRegionInfo> GetConditionalRegionInfo(Document document, CancellationToken cancellationToken)
@@ -162,12 +165,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             return info;
         }
 
-        private async Task<List<ConditionalRegionChain>> GetConditionalRegionChains(Document document, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<ConditionalRegionChain>> GetConditionalRegionChains(Document document, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var chains = new List<ConditionalRegionChain>();
-            var regions = new List<ConditionalRegion>();
+            var chains = ImmutableArray.CreateBuilder<ConditionalRegionChain>();
+            var regions = ImmutableArray.CreateBuilder<ConditionalRegion>();
 
             var syntaxTree = await document.GetSyntaxTreeAsync(cancellationToken) as CSharpSyntaxTree;
             var root = await syntaxTree.GetRootAsync(cancellationToken);
@@ -179,8 +182,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
                 while (currentDirective != null)
                 {
-                    var chain = ParseConditionalRegionChain(currentDirective.GetLinkedDirectives(), visitedDirectives);
-                    if (chain != null)
+                    var chain = ParseConditionalRegionChain(currentDirective.GetLinkedDirectives().ToImmutableArray(), visitedDirectives);
+                    if (!chain.IsDefault)
                     {
                         chains.Add(new ConditionalRegionChain(chain));
                     }
@@ -192,15 +195,15 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 }
             }
 
-            return chains;
+            return chains.ToImmutable();
         }
 
-        private List<ConditionalRegion> ParseConditionalRegionChain(List<DirectiveTriviaSyntax> directives, HashSet<DirectiveTriviaSyntax> visitedDirectives)
+        private ImmutableArray<ConditionalRegion> ParseConditionalRegionChain(IList<DirectiveTriviaSyntax> directives, HashSet<DirectiveTriviaSyntax> visitedDirectives)
         {
             DirectiveTriviaSyntax previousDirective = null;
             Tristate previousRegionState = Tristate.False;
             bool hasEnabledRegion = false;
-            var chain = new List<ConditionalRegion>();
+            var chain = ImmutableArray.CreateBuilder<ConditionalRegion>();
 
             for (int i = 0; i < directives.Count; i++)
             {
@@ -209,7 +212,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 if (visitedDirectives.Contains(directive))
                 {
                     // We've already visited this chain of linked directives
-                    return null;
+                    return default(ImmutableArray<ConditionalRegion>);
                 }
 
                 if (previousDirective != null)
@@ -224,7 +227,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                         hasEnabledRegion = true;
                     }
 
-                    var region = new ConditionalRegion(previousDirective, directive, chain, chain.Count, regionState);
+                    var region = new ConditionalRegion(previousDirective, directive, regionState);
                     chain.Add(region);
                 }
 
@@ -232,7 +235,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 visitedDirectives.Add(directive);
             }
 
-            return chain;
+            return chain.ToImmutable();
         }
 
         private Tristate EvaluateDirectiveExpression(DirectiveTriviaSyntax directive, Tristate previousRegionState)

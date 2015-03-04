@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public Tristate State { get; private set; }
 
-        public ConditionalRegion(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective, IReadOnlyList<ConditionalRegion> chain, int indexInChain, Tristate state)
+        public ConditionalRegion(DirectiveTriviaSyntax startDirective, DirectiveTriviaSyntax endDirective, Tristate state)
         {
             Debug.Assert(startDirective.SyntaxTree.FilePath == endDirective.SyntaxTree.FilePath);
 

@@ -3,24 +3,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
     public struct ConditionalRegionChain : IComparable<ConditionalRegionChain>, IEquatable<ConditionalRegionChain>
     {
-        private List<ConditionalRegion> _regions;
+        private ImmutableArray<ConditionalRegion> _regions;
 
         public bool IsDefault { get { return _regions == null; } }
 
-        public IReadOnlyList<ConditionalRegion> Regions { get { return _regions; } }
+        public ImmutableArray<ConditionalRegion> Regions { get { return _regions; } }
 
         public int SpanStart { get { return _regions != null ? _regions[0].SpanStart : -1; } }
 
-        public int SpanEnd { get { return _regions != null ? _regions[_regions.Count - 1].SpanEnd : -1; } }
+        public int SpanEnd { get { return _regions != null ? _regions[_regions.Length - 1].SpanEnd : -1; } }
 
-        internal ConditionalRegionChain(List<ConditionalRegion> regions)
+        internal ConditionalRegionChain(ImmutableArray<ConditionalRegion> regions)
         {
-            if (regions == null || regions.Count == 0)
+            if (regions.IsDefaultOrEmpty)
             {
                 throw new ArgumentException("regions");
             }
@@ -34,7 +35,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
             if (result == 0)
             {
-                result = Regions.Count - other.Regions.Count;
+                result = Regions.Length - other.Regions.Length;
                 if (result == 0)
                 {
                     result = SpanStart - other.SpanStart;

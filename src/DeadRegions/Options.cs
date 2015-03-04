@@ -1,9 +1,8 @@
-﻿using Microsoft.DotNet.DeadRegionAnalysis;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.Immutable;
 using System.Threading.Tasks;
+using Microsoft.DotNet.DeadRegionAnalysis;
 
 namespace DeadRegions
 {
@@ -12,18 +11,22 @@ namespace DeadRegions
         private static readonly char[] s_symbolSeparatorChars = new[] { ';', ',' };
 
         private OptionParser _parser;
+        private List<string> _ignoredSymbols;
+        private List<string> _definedSymbols;
+        private List<string> _disabledSymbols;
+        private List<IEnumerable<string>> _symbolConfigurations;
 
         public string Usage { get { return _parser.Usage; } }
 
-        public IList<string> FilePaths { get; private set; }
+        public ImmutableArray<string> FilePaths { get; private set; }
 
-        public readonly List<string> IgnoredSymbols = new List<string>();
+        public IEnumerable<string> IgnoredSymbols { get { return _ignoredSymbols; } }
 
-        public readonly List<string> DefinedSymbols = new List<string>();
+        public IEnumerable<string> DefinedSymbols { get { return _definedSymbols; } }
 
-        public readonly List<string> DisabledSymbols = new List<string>();
+        public IEnumerable<string> DisabledSymbols { get { return _disabledSymbols; } }
 
-        public readonly List<IEnumerable<string>> SymbolConfigurations = new List<IEnumerable<string>>();
+        public IEnumerable<IEnumerable<string>> SymbolConfigurations { get { return _symbolConfigurations; } }
 
         public Tristate UndefinedSymbolValue { get; private set; }
 
@@ -43,28 +46,28 @@ namespace DeadRegions
 
             _parser.Add(
                 "config",
-                arg => SymbolConfigurations.Add(ParseSymbolList(arg)),
+                arg => _symbolConfigurations.Add(ParseSymbolList(arg)),
                 parameterUsage: "<symbol list>",
                 description: "Specify a complete symbol configuration",
                 allowMultiple: true);
 
             _parser.Add(
                 "ignore",
-                arg => IgnoredSymbols.AddRange(ParseSymbolList(arg)),
+                arg => _ignoredSymbols.AddRange(ParseSymbolList(arg)),
                 parameterUsage: "<symbol list>",
                 description: "Ignore a list of symbols (treat as varying)",
                 allowMultiple: true);
 
             _parser.Add(
                 "define",
-                arg => DefinedSymbols.AddRange(ParseSymbolList(arg)),
+                arg => _definedSymbols.AddRange(ParseSymbolList(arg)),
                 parameterUsage: "<symbol list>",
                 description: "Define a list of symbols (treat as always true)",
                 allowMultiple: true);
 
             _parser.Add(
                 "disable",
-                arg => DisabledSymbols.AddRange(ParseSymbolList(arg)),
+                arg => _disabledSymbols.AddRange(ParseSymbolList(arg)),
                 parameterUsage: "<symbol list>",
                 description: "Disable a list of symbols (treat as always disabled)",
                 allowMultiple: true);
@@ -104,14 +107,17 @@ namespace DeadRegions
                 "edit",
                 () => Edit = true,
                 "Perform edits to remove always enabled and always disabled conditional regions from source files, and simplify preprocessor expressions which evaluate to 'varying'");
-
-            UndefinedSymbolValue = Tristate.Varying;
         }
 
         public bool Parse()
         {
             try
             {
+                _ignoredSymbols = new List<string>();
+                _definedSymbols = new List<string>();
+                _disabledSymbols = new List<string>();
+                _symbolConfigurations = new List<IEnumerable<string>>();
+                UndefinedSymbolValue = Tristate.Varying;
                 FilePaths = _parser.Parse(Environment.CommandLine);
             }
             catch (OptionParseException e)
@@ -120,7 +126,7 @@ namespace DeadRegions
                 return false;
             }
 
-            return FilePaths.Count > 0;
+            return FilePaths.Length > 0;
         }
 
         private static string[] ParseSymbolList(string s)

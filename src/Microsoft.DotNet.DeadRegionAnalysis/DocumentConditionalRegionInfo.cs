@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Immutable;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {
@@ -14,18 +16,18 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
     {
         public Document Document { get; private set; }
 
-        public List<ConditionalRegionChain> Chains { get; private set; }
+        public ImmutableArray<ConditionalRegionChain> Chains { get; private set; }
 
-        internal DocumentConditionalRegionInfo(Document document, List<ConditionalRegionChain> chains)
+        internal DocumentConditionalRegionInfo(Document document, ImmutableArray<ConditionalRegionChain> chains)
         {
             if (document == null)
             {
                 throw new ArgumentNullException("document");
             }
 
-            if (chains == null)
+            if (chains.IsDefault)
             {
-                throw new ArgumentNullException("chains");
+                throw new ArgumentException("chains");
             }
 
             Document = document;
@@ -42,7 +44,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             int result = string.Compare(Document.FilePath, other.Document.FilePath, StringComparison.InvariantCultureIgnoreCase);
             if (result == 0)
             {
-                return Chains.Count - other.Chains.Count;
+                return Chains.Length - other.Chains.Length;
             }
 
             return result;
