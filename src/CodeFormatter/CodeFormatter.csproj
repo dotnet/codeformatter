@@ -102,6 +102,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="CopyrightHeader.md" />
     <None Include="IllegalHeaders.md" />
     <None Include="packages.config" />
