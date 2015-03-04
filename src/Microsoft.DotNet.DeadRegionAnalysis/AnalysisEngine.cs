@@ -96,6 +96,12 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             _symbolTracker = options.GetPreprocessorSymbolTracker();
         }
 
+        public IAnalysisLogger Logger
+        {
+            get { return _options.Logger; }
+            set { _options.Logger = value; }
+        }
+
         public IEnumerable<string> SpecifiedSymbols
         {
             get { return _symbolTracker.SpecifiedSymbols; }

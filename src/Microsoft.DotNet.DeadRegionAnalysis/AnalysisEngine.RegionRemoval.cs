@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     changesString.AppendFormat("({0}-{1}): {2}", lineSpan.StartLinePosition.Line, lineSpan.EndLinePosition.Line, newText.GetSubText(change.Span).ToString());
                 }
 
-                Console.WriteLine(string.Format("Failed to remove regions from document '{0}':{1}{2}", info.Document.FilePath, Environment.NewLine, changesString.ToString()));
+                Logger.WriteErrorLine(string.Format("Failed to remove regions from document '{0}':{1}{2}", info.Document.FilePath, Environment.NewLine, changesString.ToString()));
                 return info.Document;
             }
 

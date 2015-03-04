@@ -24,6 +24,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
             public ImmutableArray<Document> Documents { get; private set; }
 
+            public IAnalysisLogger Logger { get; set; }
+
             internal Options(
                 IEnumerable<Project> projects = null,
                 IEnumerable<string> projectPaths = null,
@@ -32,7 +34,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                 IEnumerable<string> alwaysIgnoredSymbols = null,
                 IEnumerable<string> alwaysDefinedSymbols = null,
                 IEnumerable<string> alwaysDisabledSymbols = null,
-                Tristate undefinedSymbolValue = default(Tristate))
+                Tristate undefinedSymbolValue = default(Tristate),
+                IAnalysisLogger logger = null)
             {
                 if (projectPaths != null)
                 {
@@ -69,6 +72,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                     symbolConfigurations);
 
                 _undefinedSymbolValue = undefinedSymbolValue;
+
+                Logger = logger ?? new ConsoleAnalysisLogger();
             }
 
             internal CompositePreprocessorExpressionEvaluator GetPreprocessorExpressionEvaluator()
