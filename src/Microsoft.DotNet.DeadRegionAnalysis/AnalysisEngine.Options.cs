@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
             internal PreprocessorSymbolTracker GetPreprocessorSymbolTracker()
             {
-                var specifiedSymbols = new HashSet<string>();
+                var specifiedSymbols = new HashSet<string>(StringComparer.Ordinal);
 
                 foreach (var config in _symbolConfigurations)
                 {
