@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
                         solution = solution.AddDocument(
                             documentId,
                             Path.GetFileName(path),
-                            new FileTextLoader(path, Encoding.UTF8));
+                            new FileTextLoader(path, defaultEncoding: Encoding.UTF8));
                     }
 
                     Documents = solution.Projects.Single().Documents.ToImmutableArray();
