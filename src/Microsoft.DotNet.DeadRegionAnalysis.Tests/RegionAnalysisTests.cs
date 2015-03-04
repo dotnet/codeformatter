@@ -137,9 +137,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 preprocessorSymbolsB = s_defaultPreprocessorSymbolsB;
             }
 
-            var projectA = CreateSolution(new[] { source }, preprocessorSymbolsA).Projects.Single();
-            var projectB = CreateSolution(new[] { source }, preprocessorSymbolsB).Projects.Single();
-            var engine = AnalysisEngine.FromProjects(new[] { projectA, projectB });
+            var projectA = CreateSolution(new[] { source }).Projects.Single();
+            var engine = AnalysisEngine.FromProjects(
+                new[] { projectA },
+                symbolConfigurations: new[] { preprocessorSymbolsA, preprocessorSymbolsB });
 
             var regionInfo = engine.GetConditionalRegionInfo().Result.Single();
             var regions = regionInfo.Chains.SelectMany(c => c.Regions).ToArray();

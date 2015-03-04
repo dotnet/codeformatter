@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
 
         public static AnalysisEngine FromProjects(
             IEnumerable<Project> projects,
-            IEnumerable<IEnumerable<string>> additionalSymbolConfigurations = null,
+            IEnumerable<IEnumerable<string>> symbolConfigurations = null,
             IEnumerable<string> alwaysIgnoredSymbols = null,
             IEnumerable<string> alwaysDefinedSymbols = null,
             IEnumerable<string> alwaysDisabledSymbols = null,
@@ -75,12 +75,6 @@ namespace Microsoft.DotNet.DeadRegionAnalysis
             if (projects != null && !projects.Any())
             {
                 throw new ArgumentException("Must specify at least one project");
-            }
-
-            var symbolConfigurations = projects.Select(p => p.ParseOptions.PreprocessorSymbolNames).ToArray();
-            if (additionalSymbolConfigurations != null)
-            {
-                symbolConfigurations = symbolConfigurations.Concat(additionalSymbolConfigurations).ToArray();
             }
 
             var options = new Options(

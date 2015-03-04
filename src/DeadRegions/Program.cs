@@ -61,7 +61,16 @@ namespace DeadRegions
 
             Console.WriteLine(
 @"NOTES
-  <symbol list> is a comma or semi-colon separated list of preprocessor symbols");
+  * The (possibly) environment dependent set of preprocessor symbols for a
+    given project determined by MsBuild when loading an input project file will
+    be ignored; only explicitly specified build configurations will be used in
+    analysis.
+
+  * When multiple projects are specified as input, the intersection of the
+    files in all the projects will be analyzed.
+
+  * <symbol list> is a comma or semi-colon separated list of preprocessor
+    symbols.");
         }
 
         private static async Task RunAsync(AnalysisEngine engine, Options options, CancellationToken cancellationToken)

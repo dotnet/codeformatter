@@ -34,8 +34,8 @@ OPTIONS
     [multiple specifications allowed]
 
   /default <false|true|varying>
-    Set the default value for symbols which do not have a specified value (defaults
-    to varying)
+    Set the default value for symbols which do not have a specified value
+    (defaults to varying)
 
   /printdisabled
     Print the list of always disabled conditional regions
@@ -56,16 +56,25 @@ OPTIONS
     printsymbols)
 
   /edit
-    Perform edits to remove always enabled and always disabled conditional regions
-    from source files, and simplify preprocessor expressions which evaluate to
-    'varying'
+    Perform edits to remove always enabled and always disabled conditional
+    regions from source files, and simplify preprocessor expressions which
+    evaluate to 'varying'
 
   @<response file>
     Use the contents of the specified file as additional command line input
     [multiple specifications allowed]
 
 NOTES
-  <symbol list> is a comma or semi-colon separated list of preprocessor symbols
+  * The (possibly) environment dependent set of preprocessor symbols for a
+    given project determined by MsBuild when loading an input project file will
+    be ignored; only explicitly specified build configurations will be used in
+    analysis.
+
+  * When multiple projects are specified as input, the intersection of the
+    files in all the projects will be analyzed.
+
+  * <symbol list> is a comma or semi-colon separated list of preprocessor
+    symbols.
 ```
 
 # Examples

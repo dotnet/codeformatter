@@ -190,6 +190,8 @@ namespace DeadRegions
 
             private static string WrapStringAtColumn(int column, string linePrefix, string s)
             {
+                column -= linePrefix.Length;
+
                 var sb = new StringBuilder();
                 do
                 {
