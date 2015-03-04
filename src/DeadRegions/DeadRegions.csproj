@@ -6,7 +6,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DeadRegions</RootNamespace>
-    <AssemblyName>deadregions</AssemblyName>
+    <AssemblyName>DeadRegions</AssemblyName>
   </PropertyGroup>
   <!-- Default configurations to help VS understand -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
