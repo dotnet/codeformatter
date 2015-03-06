@@ -268,11 +268,11 @@ namespace XUnitConverter
         {
             foreach (var trivia in stl)
             {
-                if (trivia.CSharpKind() == SyntaxKind.IfDirectiveTrivia ||
-                    trivia.CSharpKind() == SyntaxKind.DisabledTextTrivia ||
-                    trivia.CSharpKind() == SyntaxKind.EndIfDirectiveTrivia ||
-                    trivia.CSharpKind() == SyntaxKind.ElifDirectiveTrivia ||
-                    trivia.CSharpKind() == SyntaxKind.ElseDirectiveTrivia)
+                if (trivia.Kind() == SyntaxKind.IfDirectiveTrivia ||
+                    trivia.Kind() == SyntaxKind.DisabledTextTrivia ||
+                    trivia.Kind() == SyntaxKind.EndIfDirectiveTrivia ||
+                    trivia.Kind() == SyntaxKind.ElifDirectiveTrivia ||
+                    trivia.Kind() == SyntaxKind.ElseDirectiveTrivia)
                 {
                     stl = stl.Remove(trivia);
                 }
