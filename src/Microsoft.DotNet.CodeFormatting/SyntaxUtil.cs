@@ -1,4 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
@@ -56,7 +59,7 @@ namespace Microsoft.DotNet.CodeFormatting
             {
                 if (trivia.IsKind(SyntaxKind.EndOfLineTrivia))
                 {
-                    newLineTrivia =  trivia;
+                    newLineTrivia = trivia;
                     return true;
                 }
             }

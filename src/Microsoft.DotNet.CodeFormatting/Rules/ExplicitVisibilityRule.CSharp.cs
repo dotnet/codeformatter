@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax originalNode)
             {
                 var node = (ClassDeclarationSyntax)base.VisitClassDeclaration(originalNode);
-                return EnsureTypeVisibility(node, (x, t) => x.WithKeyword(t),  (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
+                return EnsureTypeVisibility(node, (x, t) => x.WithKeyword(t), (x, l) => x.WithModifiers(l), () => GetTypeDefaultVisibility(originalNode));
             }
 
             public override SyntaxNode VisitInterfaceDeclaration(InterfaceDeclarationSyntax node)
@@ -262,7 +262,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     };
 
                 return EnsureVisibilityCore(
-                    originalNode, 
+                    originalNode,
                     originalModifierList,
                     withFirstModifier,
                     withModifiers,
@@ -285,18 +285,18 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     };
 
                 return EnsureVisibilityCore(
-                    originalNode, 
+                    originalNode,
                     originalModifierList,
-                    withFirstModifier, 
-                    withModifiers, 
+                    withFirstModifier,
+                    withModifiers,
                     getDefaultVisibility);
             }
 
             private static T EnsureVisibilityCore<T>(
-                T originalNode, 
+                T originalNode,
                 SyntaxTokenList originalModifierList,
                 Func<T, SyntaxKind, T> withFirstModifier,
-                Func<T, SyntaxTokenList, T> withModifiers, 
+                Func<T, SyntaxTokenList, T> withModifiers,
                 Func<SyntaxKind> getDefaultVisibility) where T : CSharpSyntaxNode
             {
                 if (originalModifierList.Any(x => SyntaxFacts.IsAccessibilityModifier(x.Kind())))

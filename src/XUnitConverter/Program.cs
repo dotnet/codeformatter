@@ -1,4 +1,7 @@
-﻿using Microsoft.CodeAnalysis.MSBuild;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis.MSBuild;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +32,7 @@ namespace XUnitConverter
             workspace.LoadMetadataForReferencedProjects = true;
 
             var project = await workspace.OpenProjectAsync(projectPath, cancellationToken);
-            var converters = new ConverterBase[] 
+            var converters = new ConverterBase[]
                 {
                     new MSTestToXUnitConverter(),
                     new TestAssertTrueOrFalseConverter()

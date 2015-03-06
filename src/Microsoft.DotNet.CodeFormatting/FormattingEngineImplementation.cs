@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.CodeFormatting
             get { return _verbose; }
             set { _verbose = value; }
         }
-        
+
         public bool ConvertUnicodeCharacters
         {
             get { return _options.ConvertUnicodeCharacters; }

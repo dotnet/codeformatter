@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             return ProcessCore(syntaxRoot, firstUsing);
         }
-        
+
         private SyntaxNode ProcessNamespace(SyntaxNode syntaxRoot)
         {
             var firstNamespace = syntaxRoot.DescendantNodesAndSelf().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             }
         }
 
-        private SyntaxNode ProcessCore<TNode>(SyntaxNode syntaxRoot, TNode node) where TNode: SyntaxNode
+        private SyntaxNode ProcessCore<TNode>(SyntaxNode syntaxRoot, TNode node) where TNode : SyntaxNode
         {
             // Don't attempt to format the node if is part of a conditional compilation directive
             // because it is simply not easy to format around correctly.

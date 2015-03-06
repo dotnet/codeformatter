@@ -248,7 +248,6 @@ class U
 ";
 
             Verify(text, expected);
-
         }
 
         [Fact]

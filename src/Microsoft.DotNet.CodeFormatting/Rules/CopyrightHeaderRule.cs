@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     index++;
                 }
             }
-            
+
             private void MoveToNextLineOrTrivia(SyntaxTriviaList list, ref int index)
             {
                 MovePastWhitespaces(list, ref index);
@@ -200,6 +200,5 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             return (new VisualBasicRule(GetHeader())).Process(syntaxNode);
         }
-
     }
 }

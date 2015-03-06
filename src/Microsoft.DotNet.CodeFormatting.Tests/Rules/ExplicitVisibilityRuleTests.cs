@@ -20,7 +20,6 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 
         public sealed class CSharpTests : ExplicitVisibilityRuleTests
         {
-
             [Fact]
             public void TestTypeVisibility()
             {
@@ -451,7 +450,6 @@ internal class C
 };";
 
                 Verify(text, expected);
-
             }
 
             [Fact]
@@ -486,7 +484,6 @@ internal class C
 };";
 
                 Verify(text, expected);
-
             }
 
             [Fact]
@@ -521,7 +518,6 @@ internal class C
 };";
 
                 Verify(text, expected);
-
             }
 
             [Fact]
@@ -556,7 +552,6 @@ internal class C
 };";
 
                 Verify(text, expected);
-
             }
 
             public void CommentAttributeAndMultipleField()
