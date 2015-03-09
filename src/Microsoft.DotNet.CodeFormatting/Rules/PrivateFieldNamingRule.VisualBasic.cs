@@ -17,7 +17,7 @@ using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    internal partial class PrivateFieldNamingRule 
+    internal partial class PrivateFieldNamingRule
     {
         private sealed class VisualBasicRule : CommonRule
         {

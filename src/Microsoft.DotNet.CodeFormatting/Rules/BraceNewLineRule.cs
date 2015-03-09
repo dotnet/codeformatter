@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return token;
             }
 
-            if (token.Kind() == SyntaxKind.CloseBraceToken && 
+            if (token.Kind() == SyntaxKind.CloseBraceToken &&
                 token.LeadingTrivia.All(x => x.IsKind(SyntaxKind.WhitespaceTrivia) || x.IsKind(SyntaxKind.EndOfLineTrivia)))
             {
                 // This is an open / close brace combo with no content inbetween.  Just return the 
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         /// </summary>
         private static SyntaxNode FixCloseBraces(SyntaxNode syntaxNode)
         {
-            var tokensToReplace = syntaxNode.DescendantTokens().Where((token) => 
+            var tokensToReplace = syntaxNode.DescendantTokens().Where((token) =>
                 {
                     return
                         token.Kind() == SyntaxKind.CloseBraceToken &&
@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return true;
             }
 
-            if (list.Count > 1 && 
+            if (list.Count > 1 &&
                 list[list.Count - 1].IsKind(SyntaxKind.WhitespaceTrivia) &&
                 list[list.Count - 2].IsKind(SyntaxKind.EndOfLineTrivia))
             {

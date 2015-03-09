@@ -19,8 +19,8 @@ namespace XUnitConverter
 {
     public sealed class MSTestToXUnitConverter : ConverterBase
     {
-        private static object _lockObject = new object();
-        private static HashSet<string> _mstestNamespaces;
+        private static object s_lockObject = new object();
+        private static HashSet<string> s_mstestNamespaces;
 
         private static UsingDirectiveSyntax RemoveLeadingAndTrailingCompilerDirectives(UsingDirectiveSyntax usingSyntax)
         {
@@ -66,7 +66,7 @@ namespace XUnitConverter
                 if (symbolInfo.Symbol != null)
                 {
                     string namespaceDocID = symbolInfo.Symbol.GetDocumentationCommentId();
-                    if (_mstestNamespaces.Contains(namespaceDocID))
+                    if (s_mstestNamespaces.Contains(namespaceDocID))
                     {
                         needsChanges = true;
                     }
@@ -301,14 +301,14 @@ namespace XUnitConverter
             }
 
             string namespaceDocID = "N" + docID.Substring(1, lastPeriod - 1);
-            return _mstestNamespaces.Contains(namespaceDocID);
+            return s_mstestNamespaces.Contains(namespaceDocID);
         }
 
         private bool LoadMSTestNamespaces()
         {
-            lock (_lockObject)
+            lock (s_lockObject)
             {
-                if (_mstestNamespaces != null)
+                if (s_mstestNamespaces != null)
                 {
                     return true;
                 }
@@ -324,7 +324,7 @@ namespace XUnitConverter
                 }
 
                 var lines = File.ReadAllLines(filePath);
-                _mstestNamespaces = new HashSet<string>(lines);
+                s_mstestNamespaces = new HashSet<string>(lines);
                 return true;
             }
         }

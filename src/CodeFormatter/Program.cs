@@ -59,7 +59,7 @@ namespace CodeFormatter
                 if (arg.StartsWith(FileSwitch, StringComparison.OrdinalIgnoreCase))
                 {
                     var all = arg.Substring(FileSwitch.Length);
-                    var files = all.Split(new[] { ','}, StringSplitOptions.RemoveEmptyEntries);
+                    var files = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                     fileNamesBuilder.AddRange(files);
                 }
                 else if (arg.StartsWith(ConfigSwitch, StringComparison.OrdinalIgnoreCase))
@@ -140,10 +140,10 @@ namespace CodeFormatter
         }
 
         private static async Task RunAsync(
-            string projectOrSolutionPath, 
-            ImmutableArray<string> ruleTypes, 
-            ImmutableArray<string> fileNames, 
-            ImmutableArray<string[]> preprocessorConfigurations, 
+            string projectOrSolutionPath,
+            ImmutableArray<string> ruleTypes,
+            ImmutableArray<string> fileNames,
+            ImmutableArray<string[]> preprocessorConfigurations,
             ImmutableArray<string> copyrightHeader,
             bool allowTables,
             bool convertUnicode,

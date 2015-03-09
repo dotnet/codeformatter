@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace XUnitConverter
 {
-    public sealed class TestAssertTrueOrFalseConverter  : ConverterBase
+    public sealed class TestAssertTrueOrFalseConverter : ConverterBase
     {
         private readonly AssertTrueOrFalseRewriter _rewriter = new AssertTrueOrFalseRewriter();
 

@@ -1,4 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -33,7 +36,6 @@ class C
 {
 }";
             Verify(source, expected);
-
         }
 
         [Fact]
@@ -52,7 +54,6 @@ class C
 {
 }";
             Verify(source, expected);
-
         }
 
         [Fact]
@@ -71,7 +72,6 @@ class C
 {
 }";
             Verify(source, expected);
-
         }
 
         [Fact]
@@ -92,7 +92,6 @@ class C
 {
 }";
             Verify(source, expected);
-
         }
 
         [Fact]
@@ -127,7 +126,6 @@ class C
 {
 }";
             Verify(source, expected);
-
         }
 
         [Fact]
@@ -163,7 +161,6 @@ class C
 {
 }";
             Verify(source, expected);
-
         }
 
         [Fact]
