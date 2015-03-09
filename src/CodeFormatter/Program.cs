@@ -2,13 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
 
@@ -19,18 +19,21 @@ namespace CodeFormatter
         private const string FileSwitch = "/file:";
         private const string ConfigSwitch = "/c:";
         private const string CopyrightSwitch = "/copyright:";
+        private const string LanguageSwitch = "/lang:";
 
         private static int Main(string[] args)
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <project or solution> [/file:<filename>] [/nocopyright] [/nounicode] [/tables] [/c:<config1,config2> [/copyright:file] [/verbose]");
+                Console.WriteLine("CodeFormatter <project, solution or responsefile> [/file:<filename>] [/nocopyright] [/nounicode] [/tables] [/c:<config1,config2> [/copyright:file] [/lang:<language>] [/verbose]");
                 Console.WriteLine("    <filename>   - Only apply changes to files with specified name.");
                 Console.WriteLine("    <configs>    - Additional preprocessor configurations the formatter");
                 Console.WriteLine("                   should run under.");
                 Console.WriteLine("    <copyright>  - Specifies file containing copyright header.");
                 Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
                 Console.WriteLine("    <tables>     - Let tables opt out of formatting by defining DOTNET_FORMATTER");
+                Console.WriteLine("    <language>   - Specifies the language to use when a responsefile is specified.");
+                Console.WriteLine("                   i.e. 'C#', 'Visual Basic', ... (default: 'C#')");
                 Console.WriteLine("    <verbose>    - Verbose output");
                 Console.WriteLine("    <nounicode>  - Do not convert unicode strings to escape sequences");
                 Console.WriteLine("    <nocopyright>- Do not update the copyright message.");
@@ -40,7 +43,7 @@ namespace CodeFormatter
             var projectOrSolutionPath = args[0];
             if (!File.Exists(projectOrSolutionPath))
             {
-                Console.Error.WriteLine("Project or solution {0} doesn't exist.", projectOrSolutionPath);
+                Console.Error.WriteLine("Project, solution or response file {0} doesn't exist.", projectOrSolutionPath);
                 return -1;
             }
 
@@ -48,6 +51,7 @@ namespace CodeFormatter
             var ruleTypeBuilder = ImmutableArray.CreateBuilder<string>();
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             var copyrightHeader = FormattingConstants.DefaultCopyrightHeader;
+            var language = LanguageNames.CSharp;
             var convertUnicode = true;
             var allowTables = false;
             var verbose = false;
@@ -81,6 +85,10 @@ namespace CodeFormatter
                         Console.Error.WriteLine(ex.Message);
                         return -1;
                     }
+                }
+                else if (arg.StartsWith(LanguageSwitch, StringComparison.OrdinalIgnoreCase))
+                {
+                    language = arg.Substring(LanguageSwitch.Length);
                 }
                 else if (comparer.Equals(arg, "/nocopyright"))
                 {
@@ -117,6 +125,7 @@ namespace CodeFormatter
                     fileNamesBuilder.ToImmutableArray(),
                     configBuilder.ToImmutableArray(),
                     copyrightHeader,
+                    language,
                     allowTables,
                     convertUnicode,
                     verbose,
@@ -140,17 +149,17 @@ namespace CodeFormatter
         }
 
         private static async Task RunAsync(
-            string projectOrSolutionPath,
+            string projectSolutionOrRspPath,
             ImmutableArray<string> ruleTypes,
             ImmutableArray<string> fileNames,
             ImmutableArray<string[]> preprocessorConfigurations,
             ImmutableArray<string> copyrightHeader,
+            string language,
             bool allowTables,
             bool convertUnicode,
             bool verbose,
             CancellationToken cancellationToken)
         {
-            var workspace = MSBuildWorkspace.Create();
             var engine = FormattingEngine.Create(ruleTypes);
             engine.PreprocessorConfigurations = preprocessorConfigurations;
             engine.FileNames = fileNames;
@@ -159,18 +168,33 @@ namespace CodeFormatter
             engine.ConvertUnicodeCharacters = convertUnicode;
             engine.Verbose = verbose;
 
-            Console.WriteLine(Path.GetFileName(projectOrSolutionPath));
-            string extension = Path.GetExtension(projectOrSolutionPath);
-            if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+            Console.WriteLine(Path.GetFileName(projectSolutionOrRspPath));
+            string extension = Path.GetExtension(projectSolutionOrRspPath);
+            if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
-                var solution = await workspace.OpenSolutionAsync(projectOrSolutionPath, cancellationToken);
-                await engine.FormatSolutionAsync(solution, cancellationToken);
+                using (var workspace = ResponseFileWorkspace.Create())
+                {
+                    Project project = workspace.OpenCommandLineProject(projectSolutionOrRspPath, language);
+                    await engine.FormatProjectAsync(project, cancellationToken);
+                }
+            }
+            else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+            {
+                using (var workspace = MSBuildWorkspace.Create())
+                {
+                    workspace.LoadMetadataForReferencedProjects = true;
+                    var solution = await workspace.OpenSolutionAsync(projectSolutionOrRspPath, cancellationToken);
+                    await engine.FormatSolutionAsync(solution, cancellationToken);
+                }
             }
             else
             {
-                workspace.LoadMetadataForReferencedProjects = true;
-                var project = await workspace.OpenProjectAsync(projectOrSolutionPath, cancellationToken);
-                await engine.FormatProjectAsync(project, cancellationToken);
+                using (var workspace = MSBuildWorkspace.Create())
+                {
+                    workspace.LoadMetadataForReferencedProjects = true;
+                    var project = await workspace.OpenProjectAsync(projectSolutionOrRspPath, cancellationToken);
+                    await engine.FormatProjectAsync(project, cancellationToken);
+                }
             }
         }
     }
