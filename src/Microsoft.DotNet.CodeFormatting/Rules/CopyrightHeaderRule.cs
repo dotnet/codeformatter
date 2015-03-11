@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private abstract class CommonRule
         {
             /// <summary>
-            /// This is the normalized copyright header that has no comment delimeters.
+            /// This is the normalized copyright header that has no comment delimiters.
             /// </summary>
             private readonly ImmutableArray<string> _header;
 
@@ -43,7 +43,18 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             private bool HasCopyrightHeader(SyntaxNode syntaxNode)
             {
                 var existingHeader = GetExistingHeader(syntaxNode.GetLeadingTrivia());
-                return _header.SequenceEqual(existingHeader);
+                return SequnceStartsWith(_header, existingHeader);
+            }
+
+            private bool SequnceStartsWith(ImmutableArray<string> header, List<string> existingHeader)
+            {
+                // Only try if the existing header is at least as long as the new copyright header
+                if (existingHeader.Count >= header.Count())
+                {
+                    return !header.Where((headerLine, i) => existingHeader[i] != headerLine).Any();
+                }
+
+                return false;
             }
 
             private SyntaxNode AddCopyrightHeader(SyntaxNode syntaxNode)
