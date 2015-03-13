@@ -164,6 +164,28 @@ class C
         }
 
         [Fact]
+        public void CSharpHeaderBeginsWithTargetHeader()
+        {
+            _options.CopyrightHeader = ImmutableArray.Create("// test", "// test2");
+            var source = @"// test
+// test2
+// file summary
+
+class C
+{
+}";
+
+            var expected = @"// test
+// test2
+// file summary
+
+class C
+{
+}";
+            Verify(source, expected);
+        }
+
+        [Fact]
         public void VisualBasicSimple()
         {
             _options.CopyrightHeader = ImmutableArray.Create("test");
