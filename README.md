@@ -5,7 +5,7 @@
 CodeFormatter is a tool that uses Roslyn to automatically rewrite the source to
 follow our coding styles, which are [documented here][corefx-coding-style].
 
-[corefx-coding-style]: https://github.com/dotnet/corefx/wiki/Contributing#c-coding-style
+[corefx-coding-style]: https://github.com/dotnet/corefx/wiki/Coding-style
 
 ## Prerequisites
 
