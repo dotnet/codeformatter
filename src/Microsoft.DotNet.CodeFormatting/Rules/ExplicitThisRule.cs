@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.Simplification;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRuleOrder(LocalSemanticRuleOrder.RemoveExplicitThisRule)]
+    [LocalSemanticRule(LocalSemanticRuleOrder.RemoveExplicitThisRule)]
     internal sealed class ExplicitThisRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
         private sealed class ExplicitThisRewriter : CSharpSyntaxRewriter

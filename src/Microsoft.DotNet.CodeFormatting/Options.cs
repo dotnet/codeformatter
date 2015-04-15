@@ -29,6 +29,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         internal bool ConvertUnicodeCharacters { get; set; }
 
+        internal FormattingLevel FormattingLevel { get; set; }
+
         [ImportingConstructor]
         internal Options()
         {

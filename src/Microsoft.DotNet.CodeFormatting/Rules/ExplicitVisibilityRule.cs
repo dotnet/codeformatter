@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRuleOrder(LocalSemanticRuleOrder.ExplicitVisibilityRule)]
+    [LocalSemanticRule(LocalSemanticRuleOrder.ExplicitVisibilityRule)]
     internal sealed partial class ExplicitVisibilityRule : ILocalSemanticFormattingRule
     {
         public bool SupportsLanguage(string languageName)

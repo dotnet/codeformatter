@@ -9,6 +9,12 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
+    public enum FormattingLevel
+    {
+        Simple = 0,
+        Agressive,
+    }
+
     /// <summary>
     /// Base formatting rule which helps establish which language the rule applies to.
     /// </summary>

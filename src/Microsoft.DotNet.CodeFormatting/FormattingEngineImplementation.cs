@@ -78,19 +78,35 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _options.ConvertUnicodeCharacters = value; }
         }
 
+        public FormattingLevel FormattingLevel
+        {
+            get { return _options.FormattingLevel; }
+            set { _options.FormattingLevel = value; }
+        }
+
         [ImportingConstructor]
         internal FormattingEngineImplementation(
             Options options,
             [ImportMany] IEnumerable<IFormattingFilter> filters,
-            [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IOrderMetadata>> syntaxRules,
-            [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IOrderMetadata>> localSemanticRules,
-            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IOrderMetadata>> globalSemanticRules)
+            [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IRuleMetadata>> syntaxRules,
+            [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> localSemanticRules,
+            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> globalSemanticRules)
         {
             _options = options;
             _filters = filters;
-            _syntaxRules = syntaxRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
-            _localSemanticRules = localSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
-            _globalSemanticRules = globalSemanticRules.OrderBy(r => r.Metadata.Order).Select(r => r.Value).ToList();
+            _syntaxRules = GetOrderedRules(syntaxRules);
+            _localSemanticRules = GetOrderedRules(localSemanticRules);
+            _globalSemanticRules = GetOrderedRules(globalSemanticRules);
+        }
+
+        private IEnumerable<TRule> GetOrderedRules<TRule>(IEnumerable<Lazy<TRule, IRuleMetadata>> rules)
+            where TRule : IFormattingRule
+        {
+            return rules
+                .OrderBy(r => r.Metadata.Order)
+                .Where(r => r.Metadata.FormattingLevel <= FormattingLevel)
+                .Select(r => r.Value)
+                .ToList();
         }
 
         public Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)

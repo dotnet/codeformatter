@@ -25,18 +25,27 @@ namespace CodeFormatter
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("CodeFormatter <project, solution or responsefile> [/file:<filename>] [/nocopyright] [/nounicode] [/tables] [/c:<config1,config2> [/copyright:file] [/lang:<language>] [/verbose]");
-                Console.WriteLine("    <filename>   - Only apply changes to files with specified name.");
-                Console.WriteLine("    <configs>    - Additional preprocessor configurations the formatter");
-                Console.WriteLine("                   should run under.");
-                Console.WriteLine("    <copyright>  - Specifies file containing copyright header.");
-                Console.WriteLine("                   Use ConvertTests to convert MSTest tests to xUnit.");
-                Console.WriteLine("    <tables>     - Let tables opt out of formatting by defining DOTNET_FORMATTER");
-                Console.WriteLine("    <language>   - Specifies the language to use when a responsefile is specified.");
-                Console.WriteLine("                   i.e. 'C#', 'Visual Basic', ... (default: 'C#')");
-                Console.WriteLine("    <verbose>    - Verbose output");
-                Console.WriteLine("    <nounicode>  - Do not convert unicode strings to escape sequences");
-                Console.WriteLine("    <nocopyright>- Do not update the copyright message.");
+                Console.WriteLine(
+@"CodeFormatter <project, solution or responsefile> [/file:<filename>] 
+    [/lang:<language>] [/c:<config>[,<config>...]>]
+    [/copyright:<file> | /nocopyright] [/tables] [/nounicode] 
+    [/simple|/agressive] [/verbose]
+
+    /file        - Only apply changes to files with specified name.
+    /lang        - Specifies the language to use when a responsefile is
+                   specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
+    /c           - Additional preprocessor configurations the formatter
+                   should run under.
+    /copyright   - Specifies file containing copyright header.
+                   Use ConvertTests to convert MSTest tests to xUnit.
+    /nocopyright - Do not update the copyright message.
+    /tables      - Let tables opt out of formatting by defining
+                   DOTNET_FORMATTER
+    /nounicode   - Do not convert unicode strings to escape sequences
+    /simple      - Only run simple formatters (default)
+    /agressive   - Run agressive form
+    /verbose     - Verbose output
+");
                 return -1;
             }
 
@@ -56,6 +65,7 @@ namespace CodeFormatter
             var allowTables = false;
             var verbose = false;
             var comparer = StringComparer.OrdinalIgnoreCase;
+            var formattingLevel = FormattingLevel.Simple;
 
             for (int i = 1; i < args.Length; i++)
             {
@@ -106,6 +116,14 @@ namespace CodeFormatter
                 {
                     allowTables = true;
                 }
+                else if (comparer.Equals(arg, "/simple"))
+                {
+                    formattingLevel = FormattingLevel.Simple;
+                }
+                else if (comparer.Equals(arg, "/aggressive"))
+                {
+                    formattingLevel = FormattingLevel.Agressive;
+                }
                 else
                 {
                     ruleTypeBuilder.Add(arg);
@@ -129,6 +147,7 @@ namespace CodeFormatter
                     allowTables,
                     convertUnicode,
                     verbose,
+                    formattingLevel,
                     ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
                 return 0;
@@ -158,6 +177,7 @@ namespace CodeFormatter
             bool allowTables,
             bool convertUnicode,
             bool verbose,
+            FormattingLevel formattingLevel,
             CancellationToken cancellationToken)
         {
             var engine = FormattingEngine.Create(ruleTypes);
@@ -167,6 +187,7 @@ namespace CodeFormatter
             engine.AllowTables = allowTables;
             engine.ConvertUnicodeCharacters = convertUnicode;
             engine.Verbose = verbose;
+            engine.FormattingLevel = formattingLevel;
 
             Console.WriteLine(Path.GetFileName(projectSolutionOrRspPath));
             string extension = Path.GetExtension(projectSolutionOrRspPath);
