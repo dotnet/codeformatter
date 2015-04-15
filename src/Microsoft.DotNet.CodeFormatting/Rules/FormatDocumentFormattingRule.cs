@@ -17,7 +17,7 @@ using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRuleOrder(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
+    [LocalSemanticRule(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
     internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
     {
         private readonly Options _options;

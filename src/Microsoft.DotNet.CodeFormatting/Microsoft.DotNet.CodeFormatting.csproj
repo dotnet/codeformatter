@@ -98,9 +98,9 @@
     <Compile Include="IFormattingRule.cs" />
     <Compile Include="Filters\IgnoreGeneratedFilesFilter.cs" />
     <Compile Include="Options.cs" />
-    <Compile Include="RuleOrderAttribute.cs" />
+    <Compile Include="RuleAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IOrderMetadata.cs" />
+    <Compile Include="IRuleMetadata.cs" />
     <Compile Include="Rules\ExplicitVisibilityRule.CSharp.cs" />
     <Compile Include="Rules\ExplicitVisibilityRule.VisualBasic.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.CSharp.cs" />

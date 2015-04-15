@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRuleOrder(SyntaxRuleOrder.CopyrightHeaderRule)]
+    [SyntaxRule(SyntaxRuleOrder.CopyrightHeaderRule)]
     internal sealed partial class CopyrightHeaderRule : SyntaxFormattingRule, ISyntaxFormattingRule
     {
         private abstract class CommonRule

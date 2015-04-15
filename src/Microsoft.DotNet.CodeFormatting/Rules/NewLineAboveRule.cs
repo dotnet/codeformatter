@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// Ensure there is a blank line above the first using and namespace in the file. 
     /// </summary>
-    [SyntaxRuleOrder(SyntaxRuleOrder.NewLineAboveFormattingRule)]
+    [SyntaxRule(SyntaxRuleOrder.NewLineAboveFormattingRule)]
     internal sealed class NewLineAboveRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         public SyntaxNode Process(SyntaxNode syntaxRoot, string languageName)

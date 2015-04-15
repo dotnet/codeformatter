@@ -13,9 +13,9 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal sealed class SyntaxRuleOrderAttribute : ExportAttribute
+    internal sealed class SyntaxRuleAttribute : ExportAttribute, IRuleMetadata
     {
-        public SyntaxRuleOrderAttribute(int order)
+        public SyntaxRuleAttribute(int order)
             : base(typeof(ISyntaxFormattingRule))
         {
             Order = order;
@@ -23,13 +23,16 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(int.MaxValue)]
         public int Order { get; private set; }
+
+        [DefaultValue(FormattingLevel.Simple)]
+        public FormattingLevel FormattingLevel { get; set; }
     }
 
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal sealed class LocalSemanticRuleOrderAttribute : ExportAttribute
+    internal sealed class LocalSemanticRuleAttribute : ExportAttribute, IRuleMetadata
     {
-        public LocalSemanticRuleOrderAttribute(int order)
+        public LocalSemanticRuleAttribute(int order)
             : base(typeof(ILocalSemanticFormattingRule))
         {
             Order = order;
@@ -37,13 +40,16 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(int.MaxValue)]
         public int Order { get; private set; }
+
+        [DefaultValue(FormattingLevel.Simple)]
+        public FormattingLevel FormattingLevel { get; set; }
     }
 
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal sealed class GlobalSemanticRuleOrderAttribute : ExportAttribute
+    internal sealed class GlobalSemanticRuleAttribute : ExportAttribute, IRuleMetadata
     {
-        public GlobalSemanticRuleOrderAttribute(int order)
+        public GlobalSemanticRuleAttribute(int order)
             : base(typeof(IGlobalSemanticFormattingRule))
         {
             Order = order;
@@ -51,5 +57,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(int.MaxValue)]
         public int Order { get; private set; }
+
+        [DefaultValue(FormattingLevel.Simple)]
+        public FormattingLevel FormattingLevel { get; set; }
     }
 }

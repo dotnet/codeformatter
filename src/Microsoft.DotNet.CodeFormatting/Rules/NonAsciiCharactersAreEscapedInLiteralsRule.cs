@@ -14,7 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRuleOrder(SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
+    [SyntaxRule(SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiCharactersAreEscapedInLiterals : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         private readonly Options _options;
