@@ -29,9 +29,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private readonly Options _options;
         private readonly IEnumerable<IFormattingFilter> _filters;
-        private readonly IEnumerable<ISyntaxFormattingRule> _syntaxRules;
-        private readonly IEnumerable<ILocalSemanticFormattingRule> _localSemanticRules;
-        private readonly IEnumerable<IGlobalSemanticFormattingRule> _globalSemanticRules;
+        private readonly IEnumerable<Lazy<ISyntaxFormattingRule, IRuleMetadata>> _syntaxRules;
+        private readonly IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> _localSemanticRules;
+        private readonly IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
         private bool _allowTables;
         private bool _verbose;
@@ -94,9 +94,9 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             _options = options;
             _filters = filters;
-            _syntaxRules = GetOrderedRules(syntaxRules);
-            _localSemanticRules = GetOrderedRules(localSemanticRules);
-            _globalSemanticRules = GetOrderedRules(globalSemanticRules);
+            _syntaxRules = syntaxRules;
+            _localSemanticRules = localSemanticRules;
+            _globalSemanticRules = globalSemanticRules;
         }
 
         private IEnumerable<TRule> GetOrderedRules<TRule>(IEnumerable<Lazy<TRule, IRuleMetadata>> rules)
@@ -277,7 +277,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private SyntaxNode RunSyntaxPass(SyntaxNode root, string languageName)
         {
-            foreach (var rule in _syntaxRules)
+            foreach (var rule in GetOrderedRules(_syntaxRules))
             {
                 if (rule.SupportsLanguage(languageName))
                 {
@@ -291,7 +291,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private async Task<Solution> RunLocalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             FormatLogger.WriteLine("\tLocal Semantic Pass");
-            foreach (var localSemanticRule in _localSemanticRules)
+            foreach (var localSemanticRule in GetOrderedRules(_localSemanticRules))
             {
                 solution = await RunLocalSemanticPass(solution, documentIds, localSemanticRule, cancellationToken);
             }
@@ -332,7 +332,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
         {
             FormatLogger.WriteLine("\tGlobal Semantic Pass");
-            foreach (var globalSemanticRule in _globalSemanticRules)
+            foreach (var globalSemanticRule in GetOrderedRules(_globalSemanticRules))
             {
                 solution = await RunGlobalSemanticPass(solution, documentIds, globalSemanticRule, cancellationToken);
             }
