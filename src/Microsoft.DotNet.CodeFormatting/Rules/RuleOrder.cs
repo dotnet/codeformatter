@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int ExplicitVisibilityRule = 2;
         public const int IsFormattedFormattingRule = 3;
         public const int RemoveExplicitThisRule = 4;
+        public const int AssertArgumentOrderRule = 5;
     }
 
     // Please keep these values sorted by number, not rule name.    

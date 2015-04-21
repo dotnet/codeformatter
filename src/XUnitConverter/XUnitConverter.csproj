@@ -97,7 +97,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssertArgumentOrderConverter.cs" />
     <Compile Include="ConverterBase.cs" />
+    <Compile Include="NameHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestAssertTrueOrFalseConverter.cs" />
