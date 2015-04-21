@@ -103,6 +103,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssertArgumentOrderTest.cs" />
     <Compile Include="ConverterTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestAssertTrueOrFalseConverterTests.cs" />
