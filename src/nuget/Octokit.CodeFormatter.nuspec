@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Octokit.CodeFormatter</id>
+    <version>1.0.0-preview</version>
+    <title>Octokit's CodeFormatter</title>
+    <authors>Brendan Forster</authors>
+    <owners>Microsoft</owners>
+    <description>A fork of the CodeFormatter tool which enforces a subset of the coding guidelines.</description>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+    <dependencies>
+      <dependency id="Microsoft.CodeAnalysis" version="1.0.0-beta1-20141031-01" />
+      <dependency id="Microsoft.CodeAnalysis.CSharp.Workspaces" version="1.0.0-beta1-20141031-01" />
+      <dependency id="Microsoft.CodeAnalysis.Workspaces.Common" version="1.0.0-beta1-20141031-01" />
+      <dependency id="Microsoft.Composition" version="1.0.0-beta1-20141031-01" />
+      <dependency id="System.Reflection.Metadata" version="1.0.0-beta1-20141031-01" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\..\bin\CodeFormatter.exe" target="lib\net45" />
+    <file src="..\..\bin\Microsoft.DotNet.CodeFormatting.dll" target="lib\net45" />
+    <file src="..\..\bin\CodeFormatter\Release\CopyrightHeader.md" target="lib\net45" />
+    <file src="..\..\bin\CodeFormatter\Release\IllegalHeaders.md" target="lib\net45" />
+    <file src="..\..\bin\MSTestNamespaces.txt" target="lib\net45" />
+  </files>
+</package>
