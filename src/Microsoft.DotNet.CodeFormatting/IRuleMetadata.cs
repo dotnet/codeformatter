@@ -12,5 +12,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(FormattingLevel.Simple)]
         FormattingLevel FormattingLevel { get; }
+
+        [DefaultValue(false)]
+        bool Skip { get; }
     }
 }

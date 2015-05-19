@@ -26,6 +26,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(FormattingLevel.Simple)]
         public FormattingLevel FormattingLevel { get; set; }
+
+        [DefaultValue(false)]
+        public bool Skip { get; set; }
     }
 
     [MetadataAttribute]
@@ -43,6 +46,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(FormattingLevel.Simple)]
         public FormattingLevel FormattingLevel { get; set; }
+
+        [DefaultValue(false)]
+        public bool Skip { get; set; }
     }
 
     [MetadataAttribute]
@@ -60,5 +66,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(FormattingLevel.Simple)]
         public FormattingLevel FormattingLevel { get; set; }
+
+        [DefaultValue(false)]
+        public bool Skip { get; set; }
     }
 }
