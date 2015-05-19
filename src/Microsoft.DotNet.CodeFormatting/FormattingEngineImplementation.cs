@@ -103,6 +103,7 @@ namespace Microsoft.DotNet.CodeFormatting
             where TRule : IFormattingRule
         {
             return rules
+                .Where(r => !r.Metadata.Skip)
                 .OrderBy(r => r.Metadata.Order)
                 .Where(r => r.Metadata.FormattingLevel <= FormattingLevel)
                 .Select(r => r.Value)
