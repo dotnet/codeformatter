@@ -8,19 +8,35 @@
     <owners>Microsoft</owners>
     <description>A fork of the CodeFormatter tool which enforces a subset of the coding guidelines.</description>
     <copyright>Copyright © Microsoft Corporation</copyright>
-    <dependencies>
-      <dependency id="Microsoft.CodeAnalysis" version="1.0.0-beta1-20141031-01" />
-      <dependency id="Microsoft.CodeAnalysis.CSharp.Workspaces" version="1.0.0-beta1-20141031-01" />
-      <dependency id="Microsoft.CodeAnalysis.Workspaces.Common" version="1.0.0-beta1-20141031-01" />
-      <dependency id="Microsoft.Composition" version="1.0.0-beta1-20141031-01" />
-      <dependency id="System.Reflection.Metadata" version="1.0.0-beta1-20141031-01" />
-    </dependencies>
   </metadata>
   <files>
-    <file src="..\..\bin\CodeFormatter.exe" target="lib\net45" />
-    <file src="..\..\bin\Microsoft.DotNet.CodeFormatting.dll" target="lib\net45" />
-    <file src="..\..\bin\CodeFormatter\Release\CopyrightHeader.md" target="lib\net45" />
-    <file src="..\..\bin\CodeFormatter\Release\IllegalHeaders.md" target="lib\net45" />
-    <file src="..\..\bin\MSTestNamespaces.txt" target="lib\net45" />
+    <file src="..\..\bin\CodeFormatter.exe" target="tools" />
+    <file src="..\..\bin\CodeFormatter\Release\CopyrightHeader.md" target="tools" />
+    <file src="..\..\bin\CodeFormatter\Release\IllegalHeaders.md" target="tools" />
+    <file src="..\..\bin\Microsoft.DotNet.CodeFormatting.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.CSharp.Desktop.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.CSharp.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.CSharp.Workspaces.Desktop.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.CSharp.Workspaces.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.Desktop.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.VisualBasic.Desktop.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.VisualBasic.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces.Desktop.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.Workspaces.Desktop.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.CodeAnalysis.Workspaces.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.DotNet.CodeFormatting.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.DotNet.CodeFormatting.Tests.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.DotNet.DeadRegionAnalysis.dll" target="tools" />
+    <file src="..\..\bin\Microsoft.DotNet.DeadRegionAnalysis.Tests.dll" target="tools" />
+    <file src="..\..\bin\System.Collections.Immutable.dll" target="tools" />
+    <file src="..\..\bin\System.Composition.AttributedModel.dll" target="tools" />
+    <file src="..\..\bin\System.Composition.Convention.dll" target="tools" />
+    <file src="..\..\bin\System.Composition.Hosting.dll" target="tools" />
+    <file src="..\..\bin\System.Composition.Runtime.dll" target="tools" />
+    <file src="..\..\bin\System.Composition.TypedParts.dll" target="tools" />
+    <file src="..\..\bin\System.Reflection.Metadata.dll" target="tools" />
+    <file src="..\..\bin\MSTestNamespaces.txt" target="tools" />
   </files>
 </package>
