@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int CopyrightHeaderRule = 2;
         public const int UsingLocationFormattingRule = 3;
         public const int NewLineAboveFormattingRule = 4;
+        public const int NewLineAtEndOfFileRule = 5;
         public const int BraceNewLineRule = 6;
         public const int NonAsciiChractersAreEscapedInLiterals = 7;
     }

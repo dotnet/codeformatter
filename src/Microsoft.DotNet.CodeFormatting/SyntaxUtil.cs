@@ -30,6 +30,23 @@ namespace Microsoft.DotNet.CodeFormatting
             return defaultNewLineTrivia ?? SyntaxFactory.CarriageReturnLineFeed;
         }
 
+        internal static SyntaxTrivia GetBestNewLineTriviaRecursive(SyntaxNode node, SyntaxTrivia? defaultNewLineTrivia = null)
+        {
+            while(node != null)
+            {
+                SyntaxTrivia trivia;
+                if (TryGetExistingNewLine(node.GetLeadingTrivia(), out trivia) ||
+                    TryGetExistingNewLine(node.GetTrailingTrivia(), out trivia))
+                {
+                    return trivia;
+                }
+
+                node = node.Parent;
+            }
+
+            return defaultNewLineTrivia ?? SyntaxFactory.CarriageReturnLineFeed;
+        }
+
         internal static SyntaxTrivia GetBestNewLineTrivia(SyntaxToken token, SyntaxTrivia? defaultNewLineTrivia = null)
         {
             SyntaxTrivia trivia;
