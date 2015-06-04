@@ -21,7 +21,11 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public void Dispose()
         {
-            Interlocked.Exchange(ref _semaphore, null)?.Release();
+            var semaphore = Interlocked.Exchange(ref _semaphore, null);
+            if (semaphore != null)
+            {
+                semaphore.Release();
+            }
         }
 
         /// <summary>

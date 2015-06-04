@@ -100,7 +100,7 @@ namespace XUnitConverter
                         {
                             ISymbol symbol = _model.GetSymbolInfo(expression).Symbol;
 
-                            if (symbol?.Kind == SymbolKind.Field)
+                            if (symbol != null && symbol.Kind == SymbolKind.Field)
                             {
                                 return ((IFieldSymbol)symbol).IsConst;
                             }
