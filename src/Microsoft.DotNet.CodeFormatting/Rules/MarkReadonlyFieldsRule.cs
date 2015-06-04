@@ -291,7 +291,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 {
                     var memberAccess = (MemberAccessExpressionSyntax)node.Expression;
                     ISymbol symbol = _semanticModel.GetSymbolInfo(memberAccess.Expression).Symbol;
-                    if (symbol?.Kind == SymbolKind.Field)
+                    if (symbol != null && symbol.Kind == SymbolKind.Field)
                     {
                         var fieldSymbol = (IFieldSymbol)symbol;
                         if (fieldSymbol.Type.TypeKind == TypeKind.Struct)
