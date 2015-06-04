@@ -3,7 +3,7 @@
 SETLOCAL
 
 SET CACHED_NUGET=%LocalAppData%\NuGet\NuGet.exe
-SET SOLUTION_PATH=%~dp0src\CodeFormatter.sln
+SET SOLUTION_PATH="%~dp0src\CodeFormatter.sln"
 SET MSBUILD14_TOOLS_PATH="%ProgramFiles(x86)%\MSBuild\14.0\bin\MSBuild.exe"
 SET MSBUILD12_TOOLS_PATH="%ProgramFiles(x86)%\MSBuild\12.0\bin\MSBuild.exe"
 SET BUILD_TOOLS_PATH=%MSBUILD14_TOOLS_PATH%
