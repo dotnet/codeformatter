@@ -7,6 +7,12 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     public interface IRuleMetadata
     {
+        [DefaultValue("")]
+        string Name { get; }
+
+        [DefaultValue("")]
+        string Description { get; }
+
         [DefaultValue(int.MaxValue)]
         int Order { get; }
 

@@ -14,9 +14,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(LocalSemanticRuleOrder.ExplicitVisibilityRule)]
+    [LocalSemanticRule(ExplicitVisibilityRule.Name, ExplicitVisibilityRule.Description, LocalSemanticRuleOrder.ExplicitVisibilityRule)]
     internal sealed partial class ExplicitVisibilityRule : ILocalSemanticFormattingRule
     {
+        internal const string Name = "ExplicitVisibility";
+        internal const string Description = "Ensure all members have an explicit visibility modifier";
+
         public bool SupportsLanguage(string languageName)
         {
             return

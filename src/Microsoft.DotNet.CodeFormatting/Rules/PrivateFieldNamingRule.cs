@@ -15,9 +15,12 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [GlobalSemanticRule(GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
+    [GlobalSemanticRule(PrivateFieldNamingRule.Name, PrivateFieldNamingRule.Description, GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
     internal partial class PrivateFieldNamingRule : IGlobalSemanticFormattingRule
     {
+        internal const string Name = "FieldNames";
+        internal const string Description = "Prefix private fields with _ and statics with s_";
+
         #region CommonRule
 
         private abstract class CommonRule

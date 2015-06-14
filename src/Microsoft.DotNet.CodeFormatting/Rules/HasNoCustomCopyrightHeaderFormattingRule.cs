@@ -15,9 +15,12 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(SyntaxRuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
+    [SyntaxRule(HasNoCustomCopyrightHeaderFormattingRule.Name, HasNoCustomCopyrightHeaderFormattingRule.Description, SyntaxRuleOrder.HasNoCustomCopyrightHeaderFormattingRule)]
     internal sealed class HasNoCustomCopyrightHeaderFormattingRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
+        internal const string Name = "CustomCopyright";
+        internal const string Description = "Remove any custom copyright header from the file";
+
         private static string RulerMarker { get; set; }
         private static string StartMarker { get; set; }
         private static string EndMarker { get; set; }

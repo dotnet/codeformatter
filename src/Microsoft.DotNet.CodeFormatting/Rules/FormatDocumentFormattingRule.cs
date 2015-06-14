@@ -17,9 +17,11 @@ using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(LocalSemanticRuleOrder.IsFormattedFormattingRule)]
+    [LocalSemanticRule(FormatDocumentFormattingRule.Name, FormatDocumentFormattingRule.Description, LocalSemanticRuleOrder.IsFormattedFormattingRule)]
     internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
     {
+        internal const string Name = "FormatDocument";
+        internal const string Description = "Run the language specific formatter on every document";
         private readonly Options _options;
 
         [ImportingConstructor]

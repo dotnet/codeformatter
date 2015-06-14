@@ -14,9 +14,12 @@ using Microsoft.CodeAnalysis.Simplification;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(LocalSemanticRuleOrder.RemoveExplicitThisRule)]
+    [LocalSemanticRule(ExplicitThisRule.Name, ExplicitThisRule.Description, LocalSemanticRuleOrder.RemoveExplicitThisRule)]
     internal sealed class ExplicitThisRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
+        internal const string Name = "ExplicitThis";
+        internal const string Description = "Remove explicit this/Me prefixes on expressions except where necessary";
+
         private sealed class ExplicitThisRewriter : CSharpSyntaxRewriter
         {
             private readonly Document _document;

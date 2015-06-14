@@ -12,9 +12,12 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(SyntaxRuleOrder.CopyrightHeaderRule)]
+    [SyntaxRule(CopyrightHeaderRule.Name, CopyrightHeaderRule.Description, SyntaxRuleOrder.CopyrightHeaderRule)]
     internal sealed partial class CopyrightHeaderRule : SyntaxFormattingRule, ISyntaxFormattingRule
     {
+        internal const string Name = "Copyright";
+        internal const string Description = "Insert the copyright header into every file";
+
         private abstract class CommonRule
         {
             /// <summary>

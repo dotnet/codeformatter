@@ -44,12 +44,20 @@ namespace CodeFormatter
     /nounicode   - Do not convert unicode strings to escape sequences
     /simple      - Only run simple formatters (default)
     /agressive   - Run agressive form
+    /list        - List the available rules
     /verbose     - Verbose output
 ");
                 return -1;
             }
 
+            var comparer = StringComparer.OrdinalIgnoreCase;
             var projectOrSolutionPath = args[0];
+            if (comparer.Equals(projectOrSolutionPath, "/list"))
+            {
+                RunListRules();
+                return 0;
+            }
+
             if (!File.Exists(projectOrSolutionPath))
             {
                 Console.Error.WriteLine("Project, solution or response file {0} doesn't exist.", projectOrSolutionPath);
@@ -64,7 +72,6 @@ namespace CodeFormatter
             var convertUnicode = true;
             var allowTables = false;
             var verbose = false;
-            var comparer = StringComparer.OrdinalIgnoreCase;
             var formattingLevel = FormattingLevel.Simple;
 
             for (int i = 1; i < args.Length; i++)
@@ -164,6 +171,17 @@ namespace CodeFormatter
                     Console.WriteLine("- {0}", message);
 
                 return 1;
+            }
+        }
+
+        private static void RunListRules()
+        {
+            var rules = FormattingEngine.GetFormattingRules();
+            Console.WriteLine("{0,-20} {1}", "Name", "Description");
+            Console.WriteLine("==============================================");
+            foreach (var rule in rules)
+            {
+                Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
             }
         }
 

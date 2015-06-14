@@ -14,9 +14,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
+    [SyntaxRule(NonAsciiCharactersAreEscapedInLiterals.Name, NonAsciiCharactersAreEscapedInLiterals.Description, SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiCharactersAreEscapedInLiterals : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
+        internal const string Name = "UnicodeLiterals";
+        internal const string Description = "Use unicode escape sequence instead of unicode literals";
+
         private readonly Options _options;
 
         [ImportingConstructor]
