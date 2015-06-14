@@ -32,8 +32,8 @@ namespace Microsoft.DotNet.CodeFormatting
         [DefaultValue(int.MaxValue)]
         public int Order { get; private set; }
 
-        [DefaultValue(FormattingLevel.Simple)]
-        public FormattingLevel FormattingLevel { get; set; }
+        [DefaultValue(true)]
+        public bool DefaultRule { get; set; }
     }
 
     [MetadataAttribute]
@@ -57,8 +57,8 @@ namespace Microsoft.DotNet.CodeFormatting
         [DefaultValue(int.MaxValue)]
         public int Order { get; private set; }
 
-        [DefaultValue(FormattingLevel.Simple)]
-        public FormattingLevel FormattingLevel { get; set; }
+        [DefaultValue(true)]
+        public bool DefaultRule { get; set; }
     }
 
     [MetadataAttribute]
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.CodeFormatting
         [DefaultValue(int.MaxValue)]
         public int Order { get; private set; }
 
-        [DefaultValue(FormattingLevel.Simple)]
-        public FormattingLevel FormattingLevel { get; set; }
+        [DefaultValue(true)]
+        public bool DefaultRule { get; set; }
     }
 }

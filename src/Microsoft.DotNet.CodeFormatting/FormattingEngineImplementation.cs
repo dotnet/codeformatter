@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> _localSemanticRules;
         private readonly IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
+        private readonly Dictionary<string, bool> _ruleMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private bool _allowTables;
         private bool _verbose;
 
@@ -78,10 +79,16 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _options.ConvertUnicodeCharacters = value; }
         }
 
-        public FormattingLevel FormattingLevel
+        public ImmutableArray<IRuleMetadata> AllRules
         {
-            get { return _options.FormattingLevel; }
-            set { _options.FormattingLevel = value; }
+            get
+            {
+                var list = new List<IRuleMetadata>();
+                list.AddRange(_syntaxRules.Select(x => x.Metadata));
+                list.AddRange(_localSemanticRules.Select(x => x.Metadata));
+                list.AddRange(_globalSemanticRules.Select(x => x.Metadata));
+                return list.ToImmutableArray();
+            }
         }
 
         [ImportingConstructor]
@@ -97,6 +104,11 @@ namespace Microsoft.DotNet.CodeFormatting
             _syntaxRules = syntaxRules;
             _localSemanticRules = localSemanticRules;
             _globalSemanticRules = globalSemanticRules;
+
+            foreach (var rule in AllRules)
+            {
+                _ruleMap[rule.Name] = rule.DefaultRule;
+            }
         }
 
         private IEnumerable<TRule> GetOrderedRules<TRule>(IEnumerable<Lazy<TRule, IRuleMetadata>> rules)
@@ -104,7 +116,7 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             return rules
                 .OrderBy(r => r.Metadata.Order)
-                .Where(r => r.Metadata.FormattingLevel <= FormattingLevel)
+                .Where(r => _ruleMap[r.Metadata.Name])
                 .Select(r => r.Value)
                 .ToList();
         }
@@ -118,6 +130,11 @@ namespace Microsoft.DotNet.CodeFormatting
         public Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
         {
             return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
+        }
+
+        public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
+        {
+            _ruleMap[ruleMetaData.Name] = enabled;
         }
 
         private async Task FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)

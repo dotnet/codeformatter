@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingEngine
     {
-        public static IFormattingEngine Create(ImmutableArray<string> ruleTypes)
+        public static IFormattingEngine Create()
         {
             var container = CreateCompositionContainer();
             var engine = container.GetExportedValue<IFormattingEngine>();
