@@ -3,6 +3,7 @@ using Microsoft.DotNet.CodeFormatting;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -62,6 +63,56 @@ namespace CodeFormatter
         }
     }
 
+    public sealed class CommandLineParseResult
+    {
+        private readonly CommandLineOptions _options;
+        private readonly string _error;
+
+        public bool IsSuccess
+        {
+            get { return _options != null; }
+        }
+
+        public bool IsError
+        {
+            get { return !IsSuccess; }
+        }
+
+        public CommandLineOptions Options
+        {
+            get
+            {
+                Debug.Assert(IsSuccess);
+                return _options;
+            }
+        }
+
+        public string Error
+        {
+            get
+            {
+                Debug.Assert(IsError);
+                return _error;
+            }
+        }
+
+        private CommandLineParseResult(CommandLineOptions options = null, string error = null)
+        {
+            _options = options;
+            _error = error;
+        }
+
+        public static CommandLineParseResult CreateSuccess(CommandLineOptions options)
+        {
+            return new CommandLineParseResult(options: options);
+        }
+
+        public static CommandLineParseResult CreateError(string error)
+        {
+            return new CommandLineParseResult(error: error);
+        }
+    }
+
     public static class CommandLineParser
     {
         private const string FileSwitch = "/file:";
@@ -71,10 +122,7 @@ namespace CodeFormatter
         private const string RuleEnabledSwitch1 = "/rule+:";
         private const string RuleEnabledSwitch2 = "/rule:";
         private const string RuleDisabledSwitch = "/rule-:";
-
-        public static void PrintUsage()
-        {
-            Console.WriteLine(
+        private const string Usage = 
 @"CodeFormatter [/file:<filename>] [/lang:<language>] [/c:<config>[,<config>...]>]
     [/copyright:<file> | /nocopyright] [/tables] [/nounicode] 
     [/rule(+|-):rule1,rule2,...]  [/verbose]
@@ -94,19 +142,24 @@ namespace CodeFormatter
     /rule(+|-)   - Enable (default) or disable the specified rule
     /rules       - List the available rules
     /verbose     - Verbose output
-");
+";
+
+        public static void PrintUsage()
+        {
+            Console.WriteLine(Usage);
         }
 
         public static bool TryParse(string[] args, out CommandLineOptions options)
         {
-            if (args.Length < 1)
-            {
-                PrintUsage();
-                options = null;
-                return false;
-            }
+            var result = Parse(args);
+            options = result.IsSuccess ? result.Options : null;
+            return result.IsSuccess;
+        }
 
+        public static CommandLineParseResult Parse(string[] args)
+        {
             var comparer = StringComparer.OrdinalIgnoreCase;
+            var comparison = StringComparison.OrdinalIgnoreCase;
             var formatTargets = new List<string>();
             var fileNames = new List<string>();
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
@@ -116,7 +169,7 @@ namespace CodeFormatter
             var allowTables = false;
             var verbose = false;
 
-            for (int i = 1; i < args.Length; i++)
+            for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
                 if (arg.StartsWith(ConfigSwitch, StringComparison.OrdinalIgnoreCase))
@@ -134,10 +187,11 @@ namespace CodeFormatter
                     }
                     catch (Exception ex)
                     {
-                        Console.Error.WriteLine("Could not read {0}", fileName);
-                        Console.Error.WriteLine(ex.Message);
-                        options = null;
-                        return false;
+                        string error = string.Format("Could not read {0}{1}{2}",
+                           fileName,
+                           Environment.NewLine,
+                           ex.Message);
+                        return CommandLineParseResult.CreateError(error);
                     }
                 }
                 else if (arg.StartsWith(LanguageSwitch, StringComparison.OrdinalIgnoreCase))
@@ -156,19 +210,19 @@ namespace CodeFormatter
                 {
                     verbose = true;
                 }
-                else if (comparer.Equals(arg, FileSwitch))
+                else if (arg.StartsWith(FileSwitch, comparison))
                 {
                     fileNames.Add(arg.Substring(FileSwitch.Length));
                 }
-                else if (comparer.Equals(arg, RuleEnabledSwitch1))
+                else if (arg.StartsWith(RuleEnabledSwitch1, comparison))
                 {
                     UpdateRuleMap(ref ruleMap, arg.Substring(RuleEnabledSwitch1.Length), enabled: true);
                 }
-                else if (comparer.Equals(arg, RuleEnabledSwitch2))
+                else if (arg.StartsWith(RuleEnabledSwitch2, comparison))
                 {
                     UpdateRuleMap(ref ruleMap, arg.Substring(RuleEnabledSwitch2.Length), enabled: true);
                 }
-                else if (comparer.Equals(arg, RuleDisabledSwitch))
+                else if (arg.StartsWith(RuleDisabledSwitch, comparison))
                 {
                     UpdateRuleMap(ref ruleMap, arg.Substring(RuleDisabledSwitch.Length), enabled: false);
                 }
@@ -178,8 +232,7 @@ namespace CodeFormatter
                 }
                 else if (comparer.Equals(arg, "/rules"))
                 {
-                    options = CommandLineOptions.ListRules;
-                    return true;
+                    return CommandLineParseResult.CreateSuccess(CommandLineOptions.ListRules);
                 }
                 else
                 {
@@ -187,7 +240,12 @@ namespace CodeFormatter
                 }
             }
 
-            options = new CommandLineOptions(
+            if (formatTargets.Count == 0)
+            {
+                return CommandLineParseResult.CreateError("Must specify at least one project / solution / rsp to format");
+            }
+
+            var options = new CommandLineOptions(
                 Operation.Format,
                 configBuilder.ToImmutableArray(),
                 copyrightHeader,
@@ -197,7 +255,7 @@ namespace CodeFormatter
                 language,
                 allowTables,
                 verbose);
-            return true;
+            return CommandLineParseResult.CreateSuccess(options);
         }
 
         private static void UpdateRuleMap(ref ImmutableDictionary<string, bool> ruleMap, string data, bool enabled)

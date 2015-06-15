@@ -18,12 +18,15 @@ namespace CodeFormatter
     {
         private static int Main(string[] args)
         {
-            CommandLineOptions options;
-            if (!CommandLineParser.TryParse(args, out options))
+            var result = CommandLineParser.Parse(args);
+            if (result.IsError)
             {
+                Console.Error.WriteLine(result.Error);
+                CommandLineParser.PrintUsage();
                 return -1;
             }
 
+            var options = result.Options;
             int exitCode;
             switch (options.Operation)
             {
