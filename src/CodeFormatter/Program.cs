@@ -69,10 +69,9 @@ namespace CodeFormatter
 
             var fileNamesBuilder = ImmutableArray.CreateBuilder<string>();
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
-            var copyrightHeader = FormattingConstants.DefaultCopyrightHeader;
+            var copyrightHeader = FormattingDefaults.DefaultCopyrightHeader;
             var ruleMap = ImmutableDictionary<string, bool>.Empty;
             var language = LanguageNames.CSharp;
-            var convertUnicode = true;
             var allowTables = false;
             var verbose = false;
 
@@ -111,11 +110,11 @@ namespace CodeFormatter
                 }
                 else if (comparer.Equals(arg, "/nocopyright"))
                 {
-                    copyrightHeader = ImmutableArray<string>.Empty;
+                    ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, false);
                 }
                 else if (comparer.Equals(arg, "/nounicode"))
                 {
-                    convertUnicode = false;
+                    ruleMap = ruleMap.SetItem(FormattingDefaults.UnicodeLiteralsRuleName, false);
                 }
                 else if (comparer.Equals(arg, "/verbose"))
                 {
@@ -152,7 +151,6 @@ namespace CodeFormatter
                     ruleMap,
                     language,
                     allowTables,
-                    convertUnicode,
                     verbose);
         }
 
@@ -183,7 +181,6 @@ namespace CodeFormatter
             ImmutableDictionary<string, bool> ruleMap,
             string language,
             bool allowTables,
-            bool convertUnicode,
             bool verbose)
         {
             var cts = new CancellationTokenSource();
@@ -201,7 +198,6 @@ namespace CodeFormatter
                     ruleMap,
                     language,
                     allowTables,
-                    convertUnicode,
                     verbose,
                     ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
@@ -230,7 +226,6 @@ namespace CodeFormatter
             ImmutableDictionary<string, bool> ruleMap,
             string language,
             bool allowTables,
-            bool convertUnicode,
             bool verbose,
             CancellationToken cancellationToken)
         {
@@ -239,7 +234,6 @@ namespace CodeFormatter
             engine.FileNames = fileNames;
             engine.CopyrightHeader = copyrightHeader;
             engine.AllowTables = allowTables;
-            engine.ConvertUnicodeCharacters = convertUnicode;
             engine.Verbose = verbose;
 
             if (!SetRuleMap(engine, ruleMap))

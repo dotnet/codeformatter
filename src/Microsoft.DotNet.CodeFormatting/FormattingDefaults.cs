@@ -10,8 +10,11 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
-    public static class FormattingConstants
+    public static class FormattingDefaults
     {
+        public const string UnicodeLiteralsRuleName = "UnicodeLiterals";
+        public const string CopyrightRuleName = "Copyright";
+
         private static readonly string[] s_defaultCopyrightHeader =
         {
             "// Copyright (c) Microsoft. All rights reserved.",
@@ -20,7 +23,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public static readonly ImmutableArray<string> DefaultCopyrightHeader;
 
-        static FormattingConstants()
+        static FormattingDefaults()
         {
             DefaultCopyrightHeader = ImmutableArray.CreateRange(s_defaultCopyrightHeader);
         }

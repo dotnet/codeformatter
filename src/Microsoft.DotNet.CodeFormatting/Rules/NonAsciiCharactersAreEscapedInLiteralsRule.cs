@@ -17,24 +17,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [SyntaxRule(NonAsciiCharactersAreEscapedInLiterals.Name, NonAsciiCharactersAreEscapedInLiterals.Description, SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiCharactersAreEscapedInLiterals : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
-        internal const string Name = "UnicodeLiterals";
+        internal const string Name = FormattingDefaults.UnicodeLiteralsRuleName;
         internal const string Description = "Use unicode escape sequence instead of unicode literals";
-
-        private readonly Options _options;
-
-        [ImportingConstructor]
-        internal NonAsciiCharactersAreEscapedInLiterals(Options options)
-        {
-            _options = options;
-        }
 
         public SyntaxNode Process(SyntaxNode root, string languageName)
         {
-            if (!_options.ConvertUnicodeCharacters)
-            {
-                return root;
-            }
-
             return UnicodeCharacterEscapingSyntaxRewriter.Rewriter.Visit(root);
         }
 

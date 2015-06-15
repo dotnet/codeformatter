@@ -73,12 +73,6 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _verbose = value; }
         }
 
-        public bool ConvertUnicodeCharacters
-        {
-            get { return _options.ConvertUnicodeCharacters; }
-            set { _options.ConvertUnicodeCharacters = value; }
-        }
-
         public ImmutableArray<IRuleMetadata> AllRules
         {
             get

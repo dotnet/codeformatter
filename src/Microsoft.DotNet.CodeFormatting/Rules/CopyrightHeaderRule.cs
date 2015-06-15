@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [SyntaxRule(CopyrightHeaderRule.Name, CopyrightHeaderRule.Description, SyntaxRuleOrder.CopyrightHeaderRule)]
     internal sealed partial class CopyrightHeaderRule : SyntaxFormattingRule, ISyntaxFormattingRule
     {
-        internal const string Name = "Copyright";
+        internal const string Name = FormattingDefaults.CopyrightRuleName;
         internal const string Description = "Insert the copyright header into every file";
 
         private abstract class CommonRule
