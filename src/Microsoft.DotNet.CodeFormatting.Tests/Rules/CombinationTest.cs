@@ -18,29 +18,25 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     /// </summary>
     public sealed class CombinationTest : CodeFormattingTestBase, IDisposable
     {
-        private static FormattingEngineImplementation s_formattingEngine;
-
-        static CombinationTest()
-        {
-            s_formattingEngine = (FormattingEngineImplementation)FormattingEngine.Create();
-        }
+        private FormattingEngineImplementation _formattingEngine;
 
         public CombinationTest()
         {
-            s_formattingEngine.CopyrightHeader = ImmutableArray.Create("// header");
-            s_formattingEngine.AllowTables = true;
-            s_formattingEngine.FormatLogger = new EmptyFormatLogger();
-            s_formattingEngine.PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
+            _formattingEngine = (FormattingEngineImplementation)FormattingEngine.Create();
+            _formattingEngine.CopyrightHeader = ImmutableArray.Create("// header");
+            _formattingEngine.AllowTables = true;
+            _formattingEngine.FormatLogger = new EmptyFormatLogger();
+            _formattingEngine.PreprocessorConfigurations = ImmutableArray<string[]>.Empty;
         }
 
         public void Dispose()
         {
-            s_formattingEngine.AllowTables = false;
+            _formattingEngine.AllowTables = false;
         }
 
         protected override async Task<Document> RewriteDocumentAsync(Document document)
         {
-            var solution = await s_formattingEngine.FormatCoreAsync(
+            var solution = await _formattingEngine.FormatCoreAsync(
                 document.Project.Solution,
                 new[] { document.Id },
                 CancellationToken.None);
@@ -147,7 +143,7 @@ internal class C
 #endif
 }";
 
-            s_formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "DOG" } });
+            _formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "DOG" } });
             Verify(text, expected, runFormatter: false);
         }
 
@@ -221,7 +217,7 @@ internal class C
 #endif 
 }";
 
-            s_formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "TEST" } });
+            _formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "TEST" } });
             Verify(text, expected, runFormatter: false);
         }
 

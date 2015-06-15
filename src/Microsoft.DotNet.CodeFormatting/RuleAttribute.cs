@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.CodeFormatting
             Name = name;
             Description = description;
             Order = order;
+            DefaultRule = true;
         }
 
         [DefaultValue("")]
@@ -46,6 +47,7 @@ namespace Microsoft.DotNet.CodeFormatting
             Name = name;
             Description = description;
             Order = order;
+            DefaultRule = true;
         }
 
         [DefaultValue("")]
@@ -71,6 +73,7 @@ namespace Microsoft.DotNet.CodeFormatting
             Name = name;
             Description = description;
             Order = order;
+            DefaultRule = true;
         }
 
         [DefaultValue("")]
