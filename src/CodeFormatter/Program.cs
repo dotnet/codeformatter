@@ -16,142 +16,29 @@ namespace CodeFormatter
 {
     internal static class Program
     {
-        private const string FileSwitch = "/file:";
-        private const string ConfigSwitch = "/c:";
-        private const string CopyrightSwitch = "/copyright:";
-        private const string LanguageSwitch = "/lang:";
-        private const string RuleEnabledSwitch1 = "/rule+:";
-        private const string RuleEnabledSwitch2 = "/rule:";
-        private const string RuleDisabledSwitch = "/rule-:";
-
         private static int Main(string[] args)
         {
-            if (args.Length < 1)
+            CommandLineOptions options;
+            if (!CommandLineParser.TryParse(args, out options))
             {
-                Console.WriteLine(
-@"CodeFormatter <project, solution or responsefile> [/file:<filename>] 
-    [/lang:<language>] [/c:<config>[,<config>...]>]
-    [/copyright:<file> | /nocopyright] [/tables] [/nounicode] 
-    [/rule(+|-):rule1,rule2,...
-    [/verbose]
-
-    /file        - Only apply changes to files with specified name.
-    /lang        - Specifies the language to use when a responsefile is
-                   specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
-    /c           - Additional preprocessor configurations the formatter
-                   should run under.
-    /copyright   - Specifies file containing copyright header.
-                   Use ConvertTests to convert MSTest tests to xUnit.
-    /nocopyright - Do not update the copyright message.
-    /tables      - Let tables opt out of formatting by defining
-                   DOTNET_FORMATTER
-    /nounicode   - Do not convert unicode strings to escape sequences
-    /rule(+|-)   - Enable (default) or disable the specified rule
-    /rules       - List the available rules
-    /verbose     - Verbose output
-");
                 return -1;
             }
 
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            var projectOrSolutionPath = args[0];
-            if (comparer.Equals(projectOrSolutionPath, "/rules"))
+            int exitCode;
+            switch (options.Operation)
             {
-                RunListRules();
-                return 0;
+                case Operation.ListRules:
+                    RunListRules();
+                    exitCode = 0;
+                    break;
+                case Operation.Format:
+                    exitCode = RunFormat(options);
+                    break;
+                default:
+                    throw new Exception("Invalid enum value: " + options.Operation);
             }
 
-            if (!File.Exists(projectOrSolutionPath))
-            {
-                Console.Error.WriteLine("Project, solution or response file {0} doesn't exist.", projectOrSolutionPath);
-                return -1;
-            }
-
-            var fileNamesBuilder = ImmutableArray.CreateBuilder<string>();
-            var configBuilder = ImmutableArray.CreateBuilder<string[]>();
-            var copyrightHeader = FormattingDefaults.DefaultCopyrightHeader;
-            var ruleMap = ImmutableDictionary<string, bool>.Empty;
-            var language = LanguageNames.CSharp;
-            var allowTables = false;
-            var verbose = false;
-
-            for (int i = 1; i < args.Length; i++)
-            {
-                string arg = args[i];
-                if (arg.StartsWith(FileSwitch, StringComparison.OrdinalIgnoreCase))
-                {
-                    var all = arg.Substring(FileSwitch.Length);
-                    var files = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    fileNamesBuilder.AddRange(files);
-                }
-                else if (arg.StartsWith(ConfigSwitch, StringComparison.OrdinalIgnoreCase))
-                {
-                    var all = arg.Substring(ConfigSwitch.Length);
-                    var configs = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    configBuilder.Add(configs);
-                }
-                else if (arg.StartsWith(CopyrightSwitch, StringComparison.OrdinalIgnoreCase))
-                {
-                    var fileName = arg.Substring(CopyrightSwitch.Length);
-                    try
-                    {
-                        copyrightHeader = ImmutableArray.CreateRange(File.ReadAllLines(fileName));
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine("Could not read {0}", fileName);
-                        Console.Error.WriteLine(ex.Message);
-                        return -1;
-                    }
-                }
-                else if (arg.StartsWith(LanguageSwitch, StringComparison.OrdinalIgnoreCase))
-                {
-                    language = arg.Substring(LanguageSwitch.Length);
-                }
-                else if (comparer.Equals(arg, "/nocopyright"))
-                {
-                    ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, false);
-                }
-                else if (comparer.Equals(arg, "/nounicode"))
-                {
-                    ruleMap = ruleMap.SetItem(FormattingDefaults.UnicodeLiteralsRuleName, false);
-                }
-                else if (comparer.Equals(arg, "/verbose"))
-                {
-                    verbose = true;
-                }
-                else if (comparer.Equals(arg, RuleEnabledSwitch1))
-                {
-                    UpdateRuleMap(ref ruleMap, arg.Substring(RuleEnabledSwitch1.Length), enabled: true);
-                }
-                else if (comparer.Equals(arg, RuleEnabledSwitch2))
-                {
-                    UpdateRuleMap(ref ruleMap, arg.Substring(RuleEnabledSwitch2.Length), enabled: true);
-                }
-                else if (comparer.Equals(arg, RuleDisabledSwitch))
-                {
-                    UpdateRuleMap(ref ruleMap, arg.Substring(RuleDisabledSwitch.Length), enabled: false);
-                }
-                else if (comparer.Equals(arg, "/tables"))
-                {
-                    allowTables = true;
-                }
-                else
-                {
-                    Console.WriteLine("Unrecognized option: {0}", arg);
-                    return 1;
-                }
-            }
-
-            return RunFormat(
-                    projectOrSolutionPath,
-                    fileNamesBuilder.ToImmutableArray(),
-                    configBuilder.ToImmutableArray(),
-                    copyrightHeader,
-                    ruleMap,
-                    language,
-                    allowTables,
-                    verbose);
+            return 0;
         }
 
         private static void RunListRules()
@@ -165,23 +52,7 @@ namespace CodeFormatter
             }
         }
 
-        private static void UpdateRuleMap(ref ImmutableDictionary<string, bool> ruleMap, string data, bool enabled)
-        {
-            foreach (var current in data.Split(','))
-            {
-                ruleMap = ruleMap.SetItem(current, enabled);
-            }
-        }
-
-        private static int RunFormat(
-            string projectSolutionOrRspPath,
-            ImmutableArray<string> fileNames,
-            ImmutableArray<string[]> preprocessorConfigurations,
-            ImmutableArray<string> copyrightHeader,
-            ImmutableDictionary<string, bool> ruleMap,
-            string language,
-            bool allowTables,
-            bool verbose)
+        private static int RunFormat(CommandLineOptions options)
         {
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
@@ -190,16 +61,7 @@ namespace CodeFormatter
 
             try
             {
-                RunFormatAsync(
-                    projectSolutionOrRspPath,
-                    fileNames,
-                    preprocessorConfigurations,
-                    copyrightHeader,
-                    ruleMap,
-                    language,
-                    allowTables,
-                    verbose,
-                    ct).Wait(ct);
+                RunFormatAsync(options, ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
                 return 0;
             }
@@ -218,36 +80,37 @@ namespace CodeFormatter
             }
         }
 
-        private static async Task<int> RunFormatAsync(
-            string projectSolutionOrRspPath,
-            ImmutableArray<string> fileNames,
-            ImmutableArray<string[]> preprocessorConfigurations,
-            ImmutableArray<string> copyrightHeader,
-            ImmutableDictionary<string, bool> ruleMap,
-            string language,
-            bool allowTables,
-            bool verbose,
-            CancellationToken cancellationToken)
+        private static async Task<int> RunFormatAsync(CommandLineOptions options, CancellationToken cancellationToken)
         {
             var engine = FormattingEngine.Create();
-            engine.PreprocessorConfigurations = preprocessorConfigurations;
-            engine.FileNames = fileNames;
-            engine.CopyrightHeader = copyrightHeader;
-            engine.AllowTables = allowTables;
-            engine.Verbose = verbose;
+            engine.PreprocessorConfigurations = options.PreprocessorConfigurations;
+            engine.FileNames = options.FileNames;
+            engine.CopyrightHeader = options.CopyrightHeader;
+            engine.AllowTables = options.AllowTables;
+            engine.Verbose = options.Verbose;
 
-            if (!SetRuleMap(engine, ruleMap))
+            if (!SetRuleMap(engine, options.RuleMap))
             {
                 return 1;
             }
 
-            Console.WriteLine(Path.GetFileName(projectSolutionOrRspPath));
-            string extension = Path.GetExtension(projectSolutionOrRspPath);
+            foreach (var item in options.FormatTargets)
+            {
+                await RunFormatItemAsync(engine, item, options.Language, cancellationToken);
+            }
+
+            return 0;
+        }
+
+        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
+        { 
+            Console.WriteLine(Path.GetFileName(item));
+            string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
                 using (var workspace = ResponseFileWorkspace.Create())
                 {
-                    Project project = workspace.OpenCommandLineProject(projectSolutionOrRspPath, language);
+                    Project project = workspace.OpenCommandLineProject(item, language);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
@@ -256,7 +119,7 @@ namespace CodeFormatter
                 using (var workspace = MSBuildWorkspace.Create())
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
-                    var solution = await workspace.OpenSolutionAsync(projectSolutionOrRspPath, cancellationToken);
+                    var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
                     await engine.FormatSolutionAsync(solution, cancellationToken);
                 }
             }
@@ -265,12 +128,10 @@ namespace CodeFormatter
                 using (var workspace = MSBuildWorkspace.Create())
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
-                    var project = await workspace.OpenProjectAsync(projectSolutionOrRspPath, cancellationToken);
+                    var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
-
-            return 0;
         }
 
         private static bool SetRuleMap(IFormattingEngine engine, ImmutableDictionary<string, bool> ruleMap)
