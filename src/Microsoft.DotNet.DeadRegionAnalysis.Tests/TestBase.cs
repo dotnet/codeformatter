@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 {
     public class TestBase
     {
-        private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromAssembly(typeof(object).Assembly);
-        private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromAssembly(typeof(Enumerable).Assembly);
+        private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+        private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
 
         private const string FileNamePrefix = "Test";
         private const string CSharpFileExtension = ".cs";

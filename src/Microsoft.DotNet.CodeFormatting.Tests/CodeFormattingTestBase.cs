@@ -17,9 +17,9 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 {
     public abstract class CodeFormattingTestBase
     {
-        private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromAssembly(typeof(object).Assembly);
-        private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromAssembly(typeof(Enumerable).Assembly);
-        private static readonly MetadataReference s_CodeFormatterReference = MetadataReference.CreateFromAssembly(typeof(IFormattingEngine).Assembly);
+        private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+        private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
+        private static readonly MetadataReference s_CodeFormatterReference = MetadataReference.CreateFromFile(typeof(IFormattingEngine).Assembly.Location);
 
         private const string FileNamePrefix = "Test";
         private const string CSharpFileExtension = ".cs";
