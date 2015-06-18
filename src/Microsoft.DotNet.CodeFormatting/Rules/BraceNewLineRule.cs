@@ -13,9 +13,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(SyntaxRuleOrder.BraceNewLineRule)]
+    [SyntaxRule(BraceNewLineRule.Name, BraceNewLineRule.Description, SyntaxRuleOrder.BraceNewLineRule)]
     internal sealed class BraceNewLineRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
+        internal const string Name = "BraceNewLine";
+        internal const string Description = "Ensure all braces occur on a new line";
+
         private enum NewLineKind
         {
             WhitespaceAndNewLine,

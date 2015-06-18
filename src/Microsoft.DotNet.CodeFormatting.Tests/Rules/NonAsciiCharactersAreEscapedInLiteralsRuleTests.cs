@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     {
         internal override ISyntaxFormattingRule Rule
         {
-            get { return new Rules.NonAsciiCharactersAreEscapedInLiterals(new Options() { ConvertUnicodeCharacters = true }); }
+            get { return new Rules.NonAsciiCharactersAreEscapedInLiterals(); }
         }
 
         [Fact]

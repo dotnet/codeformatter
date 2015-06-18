@@ -7,10 +7,16 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     public interface IRuleMetadata
     {
+        [DefaultValue("")]
+        string Name { get; }
+
+        [DefaultValue("")]
+        string Description { get; }
+
         [DefaultValue(int.MaxValue)]
         int Order { get; }
 
-        [DefaultValue(FormattingLevel.Simple)]
-        FormattingLevel FormattingLevel { get; }
+        [DefaultValue(true)]
+        bool DefaultRule { get; }
     }
 }

@@ -14,24 +14,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
+    [SyntaxRule(NonAsciiCharactersAreEscapedInLiterals.Name, NonAsciiCharactersAreEscapedInLiterals.Description, SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiCharactersAreEscapedInLiterals : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
-        private readonly Options _options;
-
-        [ImportingConstructor]
-        internal NonAsciiCharactersAreEscapedInLiterals(Options options)
-        {
-            _options = options;
-        }
+        internal const string Name = FormattingDefaults.UnicodeLiteralsRuleName;
+        internal const string Description = "Use unicode escape sequence instead of unicode literals";
 
         public SyntaxNode Process(SyntaxNode root, string languageName)
         {
-            if (!_options.ConvertUnicodeCharacters)
-            {
-                return root;
-            }
-
             return UnicodeCharacterEscapingSyntaxRewriter.Rewriter.Visit(root);
         }
 

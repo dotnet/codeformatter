@@ -15,9 +15,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
+    [LocalSemanticRule(HasNoIllegalHeadersFormattingRule.Name, HasNoIllegalHeadersFormattingRule.Description, LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
     internal sealed class HasNoIllegalHeadersFormattingRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
+        internal const string Name = "IllegalHeaders";
+        internal const string Description = "Remove illegal headers from files";
+
         // We are going to replace this header with the actual filename of the document being processed
         private const string FileNameIllegalHeader = "<<<filename>>>";
 

@@ -16,9 +16,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// This will ensure that using directives are placed outside of the namespace.
     /// </summary>
-    [SyntaxRule(SyntaxRuleOrder.UsingLocationFormattingRule)]
+    [SyntaxRule(UsingLocationRule.Name, UsingLocationRule.Description, SyntaxRuleOrder.UsingLocationFormattingRule)]
     internal sealed class UsingLocationRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
+        internal const string Name = "UsingLocation";
+        internal const string Description = "Place using directives outside namespace declarations";
+
         public SyntaxNode Process(SyntaxNode syntaxNode, string languageName)
         {
             var root = syntaxNode as CompilationUnitSyntax;

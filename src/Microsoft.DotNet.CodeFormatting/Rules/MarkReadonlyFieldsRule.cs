@@ -16,10 +16,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// Mark any fields that can provably be marked as readonly.
     /// </summary>
-    [GlobalSemanticRule(GlobalSemanticRuleOrder.MarkReadonlyFieldsRule,
-        FormattingLevel = FormattingLevel.Agressive)]
+    [GlobalSemanticRule(MarkReadonlyFieldsRule.Name, MarkReadonlyFieldsRule.Description, GlobalSemanticRuleOrder.MarkReadonlyFieldsRule, DefaultRule = false)]
     internal sealed class MarkReadonlyFieldsRule : IGlobalSemanticFormattingRule
     {
+        internal const string Name = "ReadonlyFields";
+        internal const string Description = "Mark fields which can be readonly as readonly";
+
         private readonly SemaphoreSlim _processUsagesLock = new SemaphoreSlim(1, 1);
         private ConcurrentDictionary<IFieldSymbol, bool> _unwrittenWritableFields;
 

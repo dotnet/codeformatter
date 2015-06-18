@@ -105,6 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
+    <Compile Include="CommandLineParserTests.cs" />
     <Compile Include="Rules\BracesRuleTests.cs" />
     <Compile Include="Rules\CombinationTest.cs" />
     <Compile Include="Rules\CopyrightHeaderRuleTests.cs" />
@@ -130,6 +131,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CodeFormatter\CodeFormatter.csproj">
+      <Project>{b0e1a988-f762-459d-ad0d-56a3cf4fff3f}</Project>
+      <Name>CodeFormatter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Microsoft.DotNet.CodeFormatting\Microsoft.DotNet.CodeFormatting.csproj">
       <Project>{d535641f-a2d7-481c-930d-96c02f052b95}</Project>
       <Name>Microsoft.DotNet.CodeFormatting</Name>
