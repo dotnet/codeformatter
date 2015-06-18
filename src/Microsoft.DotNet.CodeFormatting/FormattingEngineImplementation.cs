@@ -6,14 +6,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting
@@ -115,15 +112,39 @@ namespace Microsoft.DotNet.CodeFormatting
                 .ToList();
         }
 
-        public Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        public async Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        {
+            await FormatSolutionWithRulesAsync(solution, cancellationToken).ConfigureAwait(false);
+            FormatSolutionWithAnalyzersAsync(solution, cancellationToken);
+        }
+
+        public async Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
+        {
+            await FormatProjectWithRulesAsync(project, cancellationToken).ConfigureAwait(false);
+            FormatProjectWithAnalyzersAsync(project, cancellationToken);
+        }
+
+        public Task FormatSolutionWithRulesAsync(Solution solution, CancellationToken cancellationToken)
         {
             var documentIds = solution.Projects.SelectMany(x => x.DocumentIds).ToList();
             return FormatAsync(solution.Workspace, documentIds, cancellationToken);
         }
 
-        public Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
+        public Task FormatProjectWithRulesAsync(Project project, CancellationToken cancellationToken)
         {
             return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
+        }
+
+        public void FormatSolutionWithAnalyzersAsync(Solution solution, CancellationToken cancellationToken)
+        {
+            foreach (var project in solution.Projects)
+            {
+                FormatProjectWithAnalyzersAsync(project, cancellationToken);
+            }
+        }
+
+        public void FormatProjectWithAnalyzersAsync(Project project, CancellationToken cancellationToken)
+        {
         }
 
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
