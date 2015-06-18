@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 
         private static readonly CSharpParseOptions s_expressionParseOptions = new CSharpParseOptions(
             documentationMode: DocumentationMode.None,
-            kind: SourceCodeKind.Interactive);
+            kind: SourceCodeKind.Regular);
 
         private static void Verify(string expression, string expected)
         {

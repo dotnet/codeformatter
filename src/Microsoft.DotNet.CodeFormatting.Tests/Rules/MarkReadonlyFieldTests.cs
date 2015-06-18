@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 yield return reference;
             }
 
-            yield return MetadataReference.CreateFromAssembly(typeof(ImportAttribute).Assembly);
+            yield return MetadataReference.CreateFromFile(typeof(ImportAttribute).Assembly.Location);
         }
 
         // In general a single sting with "READONLY" in it is used

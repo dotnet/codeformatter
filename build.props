@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MsBuildThisFileDirectory)obj\$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)' == ''">$(MsBuildThisFileDirectory)bin\$(MSBuildProjectName)\$(Configuration)\</OutputPath>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
