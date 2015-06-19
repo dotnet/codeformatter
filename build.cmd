@@ -32,9 +32,7 @@ IF NOT EXIST %LocalAppData%\NuGet md %LocalAppData%\NuGet
 @powershell -NoProfile -ExecutionPolicy unrestricted -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest 'https://www.nuget.org/nuget.exe' -OutFile '%CACHED_NUGET%'"
 
 :restore
-IF EXIST "%~dp0src\packages" goto build
+IF NOT EXIST src\packages md src\packages
 %CACHED_NUGET% restore %SOLUTION_PATH%
-
-:build
 
 %BUILD_TOOLS_PATH% %SOLUTION_PATH% /p:OutDir="%~dp0bin" /nologo /m /v:m /flp:verbosity=normal %*
