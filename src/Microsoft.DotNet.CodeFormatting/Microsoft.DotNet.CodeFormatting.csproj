@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormattingEngineDiagnosticProvider.cs" />
     <Compile Include="NameHelper.cs" />
     <Compile Include="ResponseFileWorkspace.cs" />
     <Compile Include="Rules\MarkReadonlyFieldsRule.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
     <Compile Include="Rules\ExplicitThisRule.cs" />
     <Compile Include="Rules\RuleOrder.cs" />
+    <Compile Include="UberCodeFixer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
