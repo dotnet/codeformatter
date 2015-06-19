@@ -1,16 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.CodeFormatting;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
@@ -111,7 +108,12 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
     }
 
-    public abstract class SyntaxRuleTestBase : CodeFormattingTestBase
+    public abstract class RuleTestBase : CodeFormattingTestBase
+    {
+
+    }
+
+    public abstract class SyntaxRuleTestBase : RuleTestBase
     {
         internal abstract ISyntaxFormattingRule Rule
         {
@@ -126,7 +128,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
     }
 
-    public abstract class LocalSemanticRuleTestBase : CodeFormattingTestBase
+    public abstract class LocalSemanticRuleTestBase : RuleTestBase
     {
         internal abstract ILocalSemanticFormattingRule Rule
         {
@@ -141,7 +143,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
     }
 
-    public abstract class GlobalSemanticRuleTestBase : CodeFormattingTestBase
+    public abstract class GlobalSemanticRuleTestBase : RuleTestBase
     {
         internal abstract IGlobalSemanticFormattingRule Rule
         {
