@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.Composition;
+using System.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -30,9 +30,9 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<DiagnosticAnalyzer> _analyzers;
         private readonly IEnumerable<CodeFixProvider> _fixers;
-        private readonly IEnumerable<Lazy<ISyntaxFormattingRule, IRuleMetadata>> _syntaxRules;
-        private readonly IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> _localSemanticRules;
-        private readonly IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> _globalSemanticRules;
+        private readonly IEnumerable<ExportFactory<ISyntaxFormattingRule, IRuleMetadata>> _syntaxRules;
+        private readonly IEnumerable<ExportFactory<ILocalSemanticFormattingRule, IRuleMetadata>> _localSemanticRules;
+        private readonly IEnumerable<ExportFactory<IGlobalSemanticFormattingRule, IRuleMetadata>> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
         private readonly Dictionary<string, bool> _ruleMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private readonly ImmutableDictionary<string, CodeFixProvider> _fixerMap;
@@ -88,14 +88,14 @@ namespace Microsoft.DotNet.CodeFormatting
         }
 
         [ImportingConstructor]
-        internal FormattingEngineImplementation(
+        public FormattingEngineImplementation(
             Options options,
             [ImportMany] IEnumerable<IFormattingFilter> filters,
             [ImportMany] IEnumerable<DiagnosticAnalyzer> analyzers,
             [ImportMany] IEnumerable<CodeFixProvider> fixers,
-            [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IRuleMetadata>> syntaxRules,
-            [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> localSemanticRules,
-            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> globalSemanticRules)
+            [ImportMany] IEnumerable<ExportFactory<ISyntaxFormattingRule, IRuleMetadata>> syntaxRules,
+            [ImportMany] IEnumerable<ExportFactory<ILocalSemanticFormattingRule, IRuleMetadata>> localSemanticRules,
+            [ImportMany] IEnumerable<ExportFactory<IGlobalSemanticFormattingRule, IRuleMetadata>> globalSemanticRules)
         {
             _options = options;
             _filters = filters;
@@ -113,13 +113,13 @@ namespace Microsoft.DotNet.CodeFormatting
             _fixerMap = CreateFixerMap();
         }
 
-        private IEnumerable<TRule> GetOrderedRules<TRule>(IEnumerable<Lazy<TRule, IRuleMetadata>> rules)
+        private IEnumerable<TRule> GetOrderedRules<TRule>(IEnumerable<ExportFactory<TRule, IRuleMetadata>> rules)
             where TRule : IFormattingRule
         {
             return rules
                 .OrderBy(r => r.Metadata.Order)
                 .Where(r => _ruleMap[r.Metadata.Name])
-                .Select(r => r.Value)
+                .Select(r => r.CreateExport().Value)
                 .ToList();
         }
 

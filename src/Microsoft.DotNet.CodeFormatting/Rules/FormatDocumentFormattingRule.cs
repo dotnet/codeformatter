@@ -2,17 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.ComponentModel.Composition;
+using System.Collections.Generic;
+using System.Composition;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
@@ -25,7 +23,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private readonly Options _options;
 
         [ImportingConstructor]
-        internal FormatDocumentFormattingRule(Options options)
+        public FormatDocumentFormattingRule(Options options)
         {
             _options = options;
         }

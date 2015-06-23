@@ -3,12 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
+using System.Composition;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -28,7 +26,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private readonly Options _options;
 
         [ImportingConstructor]
-        internal HasNoCustomCopyrightHeaderFormattingRule(Options options)
+        public HasNoCustomCopyrightHeaderFormattingRule(Options options)
         {
             _options = options;
         }

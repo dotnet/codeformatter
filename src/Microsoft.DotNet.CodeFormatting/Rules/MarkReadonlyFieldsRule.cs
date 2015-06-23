@@ -95,8 +95,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             private static readonly HashSet<string> s_serializingFieldAttributes = new HashSet<string>
             {
-                "System.ComponentModel.Composition.ImportAttribute",
-                "System.ComponentModel.Composition.ImportManyAttribute",
+                "System.Composition.ImportAttribute",
+                "System.Composition.ImportManyAttribute",
             };
 
             private readonly HashSet<IFieldSymbol> _fields = new HashSet<IFieldSymbol>();
