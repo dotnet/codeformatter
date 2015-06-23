@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition.Convention;
 using System.Composition.Hosting;
 
@@ -17,23 +18,11 @@ namespace Microsoft.DotNet.CodeFormatting
             return engine;
         }
 
-        public static List<IRuleMetadata> GetFormattingRules()
+        public static ImmutableArray<IRuleMetadata> GetFormattingRules()
         {
             var container = CreateCompositionContainer();
-            var list = new List<IRuleMetadata>();
-            AppendRules<ISyntaxFormattingRule>(list, container);
-            AppendRules<ILocalSemanticFormattingRule>(list, container);
-            AppendRules<IGlobalSemanticFormattingRule>(list, container);
-            return list;
-        }
-
-        private static void AppendRules<T>(List<IRuleMetadata> list, CompositionHost container)
-            where T : IFormattingRule
-        {
-            foreach (var rule in container.GetExports<T>())
-            {
-                //list.Add(rule.Metadata);
-            }
+            var engine = container.GetExport<IFormattingEngine>();
+            return engine.AllRules;
         }
 
         private static CompositionHost CreateCompositionContainer()
