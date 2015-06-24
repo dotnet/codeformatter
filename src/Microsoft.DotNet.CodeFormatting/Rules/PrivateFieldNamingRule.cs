@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [GlobalSemanticRule(PrivateFieldNamingRule.Name, PrivateFieldNamingRule.Description, GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
+    [GlobalSemanticRule(Name = PrivateFieldNamingRule.Name, Description = PrivateFieldNamingRule.Description, Order = GlobalSemanticRuleOrder.PrivateFieldNamingRule)]
     internal partial class PrivateFieldNamingRule : IGlobalSemanticFormattingRule
     {
         internal const string Name = "FieldNames";

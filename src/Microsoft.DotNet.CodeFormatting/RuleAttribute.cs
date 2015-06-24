@@ -9,79 +9,64 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal sealed class SyntaxRuleAttribute : ExportAttribute, IRuleMetadata
+    public class SyntaxRule : ExportAttribute, IRuleMetadata
     {
-        public SyntaxRuleAttribute(string name, string description, int order)
-            : base(typeof(ISyntaxFormattingRule))
-        {
-            Name = name;
-            Description = description;
-            Order = order;
-            DefaultRule = true;
-        }
+        [DefaultValue("")]
+        public string Name { get; set; }
 
         [DefaultValue("")]
-        public string Name { get; private set; }
-
-        [DefaultValue("")]
-        public string Description { get; private set; }
+        public string Description { get; set; }
 
         [DefaultValue(int.MaxValue)]
-        public int Order { get; private set; }
+        public int Order { get; set; }
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        public SyntaxRule() : base(typeof(ISyntaxFormattingRule))
+        {
+        }
     }
 
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal sealed class LocalSemanticRuleAttribute : ExportAttribute, IRuleMetadata
+    public class LocalSemanticRule : ExportAttribute, IRuleMetadata
     {
-        public LocalSemanticRuleAttribute(string name, string description, int order)
-            : base(typeof(ILocalSemanticFormattingRule))
-        {
-            Name = name;
-            Description = description;
-            Order = order;
-            DefaultRule = true;
-        }
+        [DefaultValue("")]
+        public string Name { get; set; }
 
         [DefaultValue("")]
-        public string Name { get; private set; }
-
-        [DefaultValue("")]
-        public string Description { get; private set; }
+        public string Description { get; set; }
 
         [DefaultValue(int.MaxValue)]
-        public int Order { get; private set; }
+        public int Order { get; set; }
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        public LocalSemanticRule() : base(typeof(ILocalSemanticFormattingRule))
+        {
+        }
     }
 
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    internal sealed class GlobalSemanticRuleAttribute : ExportAttribute, IRuleMetadata
+    public class GlobalSemanticRule : ExportAttribute, IRuleMetadata
     {
-        public GlobalSemanticRuleAttribute(string name, string description, int order)
-            : base(typeof(IGlobalSemanticFormattingRule))
-        {
-            Name = name;
-            Description = description;
-            Order = order;
-            DefaultRule = true;
-        }
+        [DefaultValue("")]
+        public string Name { get; set; }
 
         [DefaultValue("")]
-        public string Name { get; private set; }
-
-        [DefaultValue("")]
-        public string Description { get; private set; }
+        public string Description { get; set; }
 
         [DefaultValue(int.MaxValue)]
-        public int Order { get; private set; }
+        public int Order { get; set; }
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        public GlobalSemanticRule() : base(typeof(IGlobalSemanticFormattingRule))
+        {
+        }
     }
 }

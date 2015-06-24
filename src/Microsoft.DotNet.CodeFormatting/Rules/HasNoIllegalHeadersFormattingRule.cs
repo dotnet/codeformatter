@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(HasNoIllegalHeadersFormattingRule.Name, HasNoIllegalHeadersFormattingRule.Description, LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
+    [LocalSemanticRule(Name = HasNoIllegalHeadersFormattingRule.Name, Description = HasNoIllegalHeadersFormattingRule.Description, Order = LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
     internal sealed class HasNoIllegalHeadersFormattingRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
         internal const string Name = "IllegalHeaders";

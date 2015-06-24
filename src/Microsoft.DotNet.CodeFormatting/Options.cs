@@ -2,14 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Composition;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     /// <summary>
     /// This is a MEF importable type which contains all of the options for formatting
     /// </summary>
-    [Export(typeof(Options))]
     internal sealed class Options
     {
         internal ImmutableArray<string> CopyrightHeader { get; set; }
@@ -22,7 +20,6 @@ namespace Microsoft.DotNet.CodeFormatting
 
         internal IFormatLogger FormatLogger { get; set; }
 
-        [ImportingConstructor]
         public Options()
         {
             CopyrightHeader = FormattingDefaults.DefaultCopyrightHeader;

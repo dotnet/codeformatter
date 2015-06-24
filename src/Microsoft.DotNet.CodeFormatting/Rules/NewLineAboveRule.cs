@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// Ensure there is a blank line above the first using and namespace in the file. 
     /// </summary>
-    [SyntaxRule(NewLineAboveRule.Name, NewLineAboveRule.Description, SyntaxRuleOrder.NewLineAboveFormattingRule)]
+    [SyntaxRule(Name = NewLineAboveRule.Name, Description = NewLineAboveRule.Description, Order = SyntaxRuleOrder.NewLineAboveFormattingRule)]
     internal sealed class NewLineAboveRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         internal const string Name = "NewLineAbove";

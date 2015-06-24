@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,14 +14,13 @@ using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(FormatDocumentFormattingRule.Name, FormatDocumentFormattingRule.Description, LocalSemanticRuleOrder.IsFormattedFormattingRule)]
+    [LocalSemanticRule(Name = FormatDocumentFormattingRule.Name, Description = FormatDocumentFormattingRule.Description, Order = LocalSemanticRuleOrder.IsFormattedFormattingRule)]
     internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
     {
         internal const string Name = "FormatDocument";
         internal const string Description = "Run the language specific formatter on every document";
         private readonly Options _options;
 
-        [ImportingConstructor]
         public FormatDocumentFormattingRule(Options options)
         {
             _options = options;

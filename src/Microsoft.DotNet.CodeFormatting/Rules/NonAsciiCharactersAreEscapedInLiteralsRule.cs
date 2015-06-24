@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(NonAsciiCharactersAreEscapedInLiterals.Name, NonAsciiCharactersAreEscapedInLiterals.Description, SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
+    [SyntaxRule(Name = NonAsciiCharactersAreEscapedInLiterals.Name, Description = NonAsciiCharactersAreEscapedInLiterals.Description, Order = SyntaxRuleOrder.NonAsciiChractersAreEscapedInLiterals)]
     internal sealed class NonAsciiCharactersAreEscapedInLiterals : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         internal const string Name = FormattingDefaults.UnicodeLiteralsRuleName;

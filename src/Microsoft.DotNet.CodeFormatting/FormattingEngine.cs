@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition.Convention;
 using System.Composition.Hosting;
@@ -37,12 +36,22 @@ namespace Microsoft.DotNet.CodeFormatting
         private static ConventionBuilder GetConventions()
         {
             var conventions = new ConventionBuilder();
+
+            conventions.ForTypesDerivedFrom<IFormattingFilter>()
+                .Export<IFormattingFilter>();
+
             conventions.ForTypesDerivedFrom<ISyntaxFormattingRule>()
                 .Export<ISyntaxFormattingRule>();
             conventions.ForTypesDerivedFrom<ILocalSemanticFormattingRule>()
                 .Export<ILocalSemanticFormattingRule>();
             conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
                 .Export<IGlobalSemanticFormattingRule>();
+
+            conventions.ForType<Options>()
+                .Export();
+
+            conventions.ForTypesDerivedFrom<IFormattingEngine>()
+                .Export<IFormattingEngine>();
 
             return conventions;
         }

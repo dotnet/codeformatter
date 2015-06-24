@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// This will ensure that using directives are placed outside of the namespace.
     /// </summary>
-    [SyntaxRule(UsingLocationRule.Name, UsingLocationRule.Description, SyntaxRuleOrder.UsingLocationFormattingRule)]
+    [SyntaxRule(Name = UsingLocationRule.Name, Description = UsingLocationRule.Description, Order = SyntaxRuleOrder.UsingLocationFormattingRule)]
     internal sealed class UsingLocationRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         internal const string Name = "UsingLocation";

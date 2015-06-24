@@ -2,19 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Composition;
 using System.IO;
 
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting.Filters
 {
-    [Export(typeof(IFormattingFilter))]
     internal sealed class FilenameFilter : IFormattingFilter
     {
         private readonly Options _options;
 
-        [ImportingConstructor]
         public FilenameFilter(Options options)
         {
             _options = options;
