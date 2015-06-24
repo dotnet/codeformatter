@@ -3,9 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Composition;
-using System.Linq;
 using System.Collections.Immutable;
+using System.Linq;
 
 using Microsoft.CodeAnalysis;
 
@@ -167,7 +166,6 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         private ImmutableArray<string> _cachedHeader;
         private ImmutableArray<string> _cachedHeaderSource;
 
-        [ImportingConstructor]
         public CopyrightHeaderRule(Options options)
         {
             _options = options;
