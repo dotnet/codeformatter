@@ -118,8 +118,7 @@ namespace Microsoft.DotNet.CodeFormatting
             return rules
                 .OrderBy(r => r.Metadata.Order)
                 .Where(r => _ruleMap[r.Metadata.Name])
-                .Select(r => r.CreateExport().Value)
-                .ToList();
+                .Select(r => r.CreateExport().Value);
         }
 
         private ImmutableDictionary<string, CodeFixProvider> CreateFixerMap()

@@ -11,20 +11,17 @@ namespace Microsoft.DotNet.CodeFormatting
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class SyntaxRule : ExportAttribute, IRuleMetadata
     {
-        [DefaultValue("")]
         public string Name { get; set; }
 
-        [DefaultValue("")]
         public string Description { get; set; }
 
-        [DefaultValue(int.MaxValue)]
         public int Order { get; set; }
 
-        [DefaultValue(true)]
         public bool DefaultRule { get; set; }
 
         public SyntaxRule() : base(typeof(ISyntaxFormattingRule))
         {
+            this.Initialize();
         }
     }
 
@@ -32,20 +29,17 @@ namespace Microsoft.DotNet.CodeFormatting
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class LocalSemanticRule : ExportAttribute, IRuleMetadata
     {
-        [DefaultValue("")]
         public string Name { get; set; }
 
-        [DefaultValue("")]
         public string Description { get; set; }
 
-        [DefaultValue(int.MaxValue)]
         public int Order { get; set; }
 
-        [DefaultValue(true)]
         public bool DefaultRule { get; set; }
 
         public LocalSemanticRule() : base(typeof(ILocalSemanticFormattingRule))
         {
+            this.Initialize();
         }
     }
 
@@ -53,20 +47,28 @@ namespace Microsoft.DotNet.CodeFormatting
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class GlobalSemanticRule : ExportAttribute, IRuleMetadata
     {
-        [DefaultValue("")]
         public string Name { get; set; }
 
-        [DefaultValue("")]
         public string Description { get; set; }
 
-        [DefaultValue(int.MaxValue)]
         public int Order { get; set; }
 
-        [DefaultValue(true)]
         public bool DefaultRule { get; set; }
 
         public GlobalSemanticRule() : base(typeof(IGlobalSemanticFormattingRule))
         {
+            this.Initialize();
+        }
+    }
+
+    internal static class IRuleMetadataExtensions
+    {
+        internal static void Initialize(this IRuleMetadata metadata)
+        {
+            metadata.Name = String.Empty;
+            metadata.Description = String.Empty;
+            metadata.Order = int.MaxValue;
+            metadata.DefaultRule = true;
         }
     }
 }
