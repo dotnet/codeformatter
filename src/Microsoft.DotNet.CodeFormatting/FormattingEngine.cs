@@ -1,14 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
-using System.ComponentModel.Composition.Hosting;
-using System.ComponentModel.Composition;
-using System.Collections.Generic;
-using Microsoft.DotNet.CodeFormatting.Rules;
-using Microsoft.DotNet.CodeFormatting.Filters;
 using System.Collections.Immutable;
+using System.Composition.Convention;
+using System.Composition.Hosting;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -17,34 +12,48 @@ namespace Microsoft.DotNet.CodeFormatting
         public static IFormattingEngine Create()
         {
             var container = CreateCompositionContainer();
-            var engine = container.GetExportedValue<IFormattingEngine>();
+            var engine = container.GetExport<IFormattingEngine>();
             var consoleFormatLogger = new ConsoleFormatLogger();
             return engine;
         }
 
-        public static List<IRuleMetadata> GetFormattingRules()
+        public static ImmutableArray<IRuleMetadata> GetFormattingRules()
         {
             var container = CreateCompositionContainer();
-            var list = new List<IRuleMetadata>();
-            AppendRules<ISyntaxFormattingRule>(list, container);
-            AppendRules<ILocalSemanticFormattingRule>(list, container);
-            AppendRules<IGlobalSemanticFormattingRule>(list, container);
-            return list;
+            var engine = container.GetExport<IFormattingEngine>();
+            return engine.AllRules;
         }
 
-        private static void AppendRules<T>(List<IRuleMetadata> list, CompositionContainer container)
-            where T : IFormattingRule
+        private static CompositionHost CreateCompositionContainer()
         {
-            foreach (var rule in container.GetExports<T, IRuleMetadata>())
-            {
-                list.Add(rule.Metadata);
-            }
+            ConventionBuilder conventions = GetConventions();
+
+            return new ContainerConfiguration()
+                .WithAssembly(typeof(FormattingEngine).Assembly, conventions)
+                .CreateContainer();
         }
 
-        private static CompositionContainer CreateCompositionContainer()
+        private static ConventionBuilder GetConventions()
         {
-            var catalog = new AssemblyCatalog(typeof(FormattingEngine).Assembly);
-            return new CompositionContainer(catalog);
+            var conventions = new ConventionBuilder();
+
+            conventions.ForTypesDerivedFrom<IFormattingFilter>()
+                .Export<IFormattingFilter>();
+
+            conventions.ForTypesDerivedFrom<ISyntaxFormattingRule>()
+                .Export<ISyntaxFormattingRule>();
+            conventions.ForTypesDerivedFrom<ILocalSemanticFormattingRule>()
+                .Export<ILocalSemanticFormattingRule>();
+            conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
+                .Export<IGlobalSemanticFormattingRule>();
+
+            conventions.ForType<Options>()
+                .Export();
+
+            conventions.ForTypesDerivedFrom<IFormattingEngine>()
+                .Export<IFormattingEngine>();
+
+            return conventions;
         }
     }
 }

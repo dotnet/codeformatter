@@ -1,22 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
-
 namespace Microsoft.DotNet.CodeFormatting
 {
     public interface IRuleMetadata
     {
-        [DefaultValue("")]
-        string Name { get; }
+        string Name { get; set; }
 
-        [DefaultValue("")]
-        string Description { get; }
+        string Description { get; set; }
 
-        [DefaultValue(int.MaxValue)]
-        int Order { get; }
+        int Order { get; set; }
 
-        [DefaultValue(true)]
-        bool DefaultRule { get; }
+        bool DefaultRule { get; set; }
     }
 }

@@ -1,16 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.DotNet.CodeFormatting;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
@@ -55,24 +52,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return solution;
         }
 
-        private async Task<Solution> Format(Solution solution, bool runFormatter)
-        {
-            var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
-
-            foreach (var id in documentIds)
-            {
-                var document = solution.GetDocument(id);
-                document = await RewriteDocumentAsync(document);
-                if (runFormatter)
-                {
-                    document = await Formatter.FormatAsync(document);
-                }
-
-                solution = document.Project.Solution;
-            }
-
-            return solution;
-        }
+        protected abstract Task<Solution> Format(Solution solution, bool runFormatter);
 
         private void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
         {
@@ -90,8 +70,6 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 }
             }
         }
-
-        protected abstract Task<Document> RewriteDocumentAsync(Document document);
 
         protected void Verify(string[] sources, string[] expected, bool runFormatter, string languageName)
         {
@@ -111,7 +89,31 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
     }
 
-    public abstract class SyntaxRuleTestBase : CodeFormattingTestBase
+    public abstract class RuleTestBase : CodeFormattingTestBase
+    {
+        protected override async Task<Solution> Format(Solution solution, bool runFormatter)
+        {
+            var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
+
+            foreach (var id in documentIds)
+            {
+                var document = solution.GetDocument(id);
+                document = await RewriteDocumentAsync(document);
+                if (runFormatter)
+                {
+                    document = await Formatter.FormatAsync(document);
+                }
+
+                solution = document.Project.Solution;
+            }
+
+            return solution;
+        }
+
+        protected abstract Task<Document> RewriteDocumentAsync(Document document);
+    }
+
+    public abstract class SyntaxRuleTestBase : RuleTestBase
     {
         internal abstract ISyntaxFormattingRule Rule
         {
@@ -126,7 +128,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
     }
 
-    public abstract class LocalSemanticRuleTestBase : CodeFormattingTestBase
+    public abstract class LocalSemanticRuleTestBase : RuleTestBase
     {
         internal abstract ILocalSemanticFormattingRule Rule
         {
@@ -141,7 +143,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
     }
 
-    public abstract class GlobalSemanticRuleTestBase : CodeFormattingTestBase
+    public abstract class GlobalSemanticRuleTestBase : RuleTestBase
     {
         internal abstract IGlobalSemanticFormattingRule Rule
         {

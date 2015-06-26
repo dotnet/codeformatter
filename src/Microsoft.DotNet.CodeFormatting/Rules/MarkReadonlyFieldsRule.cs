@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// Mark any fields that can provably be marked as readonly.
     /// </summary>
-    [GlobalSemanticRule(MarkReadonlyFieldsRule.Name, MarkReadonlyFieldsRule.Description, GlobalSemanticRuleOrder.MarkReadonlyFieldsRule, DefaultRule = false)]
+    [GlobalSemanticRule(Name = MarkReadonlyFieldsRule.Name, Description = MarkReadonlyFieldsRule.Description, Order = GlobalSemanticRuleOrder.MarkReadonlyFieldsRule, DefaultRule = false)]
     internal sealed class MarkReadonlyFieldsRule : IGlobalSemanticFormattingRule
     {
         internal const string Name = "ReadonlyFields";
@@ -95,8 +95,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             private static readonly HashSet<string> s_serializingFieldAttributes = new HashSet<string>
             {
-                "System.ComponentModel.Composition.ImportAttribute",
-                "System.ComponentModel.Composition.ImportManyAttribute",
+                "System.Composition.ImportAttribute",
+                "System.Composition.ImportManyAttribute",
             };
 
             private readonly HashSet<IFieldSymbol> _fields = new HashSet<IFieldSymbol>();
