@@ -91,5 +91,20 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             return trivia.IsKind(SyntaxKind.EndOfLineTrivia) || trivia.IsDirective;
         }
+
+        /// <summary>
+        /// Find the node directly before this in the parent.  Returns null in the case it 
+        /// cannot be found.
+        /// </summary>
+        internal static SyntaxNode FindPreviousNodeInParent(this SyntaxNode node)
+        {
+            var parent = node.Parent;
+            if (parent == null)
+            {
+                return null;
+            }
+
+            return parent.ChildNodes().Where(x => x.FullSpan.End == node.FullSpan.Start).FirstOrDefault();
+        }
     }
 }

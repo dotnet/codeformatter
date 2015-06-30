@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,8 +81,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return syntaxRoot;
             }
 
-            SyntaxTriviaList newTriviaList;
-            if (!TryGetNewLeadingTrivia(node, out newTriviaList))
+            var newTriviaList = GetNewLeadingTrivia(node);
+            if (newTriviaList == node.GetLeadingTrivia())
             {
                 return syntaxRoot;
             }
@@ -93,69 +94,104 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         /// Get the new leading trivia list that will add the double blank line that we are looking
         /// for.
         /// </summary>
-        private bool TryGetNewLeadingTrivia(SyntaxNode node, out SyntaxTriviaList newTriviaList)
+        private SyntaxTriviaList GetNewLeadingTrivia(SyntaxNode node)
         {
-            var newLineTrivia = SyntaxUtil.GetBestNewLineTrivia(node);
             var list = node.GetLeadingTrivia();
-            var index = list.Count - 1;
+            var searchIndex = 0;
+            var newLineTrivia = SyntaxUtil.GetBestNewLineTrivia(node);
+            var prev = node.FindPreviousNodeInParent();
 
-            MoveBackwardsPastWhitespace(list, ref index);
-            if (index < 0 || !list[index].IsAnyEndOfLine())
+            if (prev == null)
             {
-                // There is no newline before the using at all.  Add a double newline to 
-                // get the blank we are looking for
-                newTriviaList = list.InsertRange(index + 1, new[] { newLineTrivia, newLineTrivia });
-                return true;
-            }
-
-            var wasDirective = list[index].IsDirective;
-            index--;
-
-            // Move past any directives that are above the token.  The newline needs to 
-            // be above them.
-            while (index >= 0 && list[index].IsDirective)
-            {
-                index--;
-            }
-
-            if (wasDirective)
-            {
-                // There was a directive above the using and index now points directly before 
-                // that.  This token must be a new line.  
-                if (index < 0 || !list[index].IsKind(SyntaxKind.EndOfLineTrivia))
+                if (node.Span.Start == 0)
                 {
-                    newTriviaList = list.Insert(index + 1, newLineTrivia);
-                    return true;
+                    // First item in the file.  Do nothing for this case.  
+                    return list;
                 }
-
-                index--;
             }
-
-            // In the logical line above the using.  Need to see <blank><eol> in order for the 
-            // using to be correct
-            var insertIndex = index + 1;
-            MoveBackwardsPastWhitespace(list, ref index);
-            if (index < 0 || !list[index].IsAnyEndOfLine())
+            else
             {
-                // If this is the first item in the file then there is no need for a double 
-                // blank line.  
-                if (index >= 0 || node.FullSpan.Start != 0)
+                // If there is no new line in the trailing trivia of the previous node then need to add 
+                // one to put this node on the next line. 
+                if (prev.GetTrailingTrivia().Count == 0 || !prev.GetTrailingTrivia().Last().IsAnyEndOfLine())
                 {
-                    newTriviaList = list.Insert(insertIndex, newLineTrivia);
-                    return true;
+                    list = list.Insert(0, newLineTrivia);
+                    searchIndex = 1;
                 }
             }
 
-            // The using is well formed so there is no work to be done. 
-            newTriviaList = SyntaxTriviaList.Empty;
-            return false;
+            // Ensure there are blank above #pragma directives here.  This is an attempt to maintain compatibility
+            // with the original design of this rule which had special spacing rules for #pragma.  No reason
+            // was given for the special casing, only tests.  
+            if (searchIndex < list.Count && list[0].IsKind(SyntaxKind.PragmaWarningDirectiveTrivia) && list[0].FullSpan.Start != 0)
+            {
+                list = list.Insert(searchIndex, newLineTrivia);
+                searchIndex++;
+            }
+
+            EnsureHasBlankLineAtEnd(ref list, searchIndex, newLineTrivia);
+
+            return list;
         }
 
-        private static void MoveBackwardsPastWhitespace(SyntaxTriviaList list, ref int index)
+        /// <summary>
+        /// Ensure the trivia list has a blank line at the end.  Both the second to last
+        /// and final line may contain spaces. 
+        ///
+        /// Note: This function assumes the trivia token before <param name="startIndex" />
+        /// is an end of line trivia.  
+        /// </summary>
+        private static void EnsureHasBlankLineAtEnd(ref SyntaxTriviaList list, int startIndex, SyntaxTrivia newLineTrivia)
         {
-            while (index >= 0 && list[index].IsKind(SyntaxKind.WhitespaceTrivia))
+            const int StateNone = 0;
+            const int StateEol = 1;
+            const int StateBlankLine = 2;
+
+            var state = StateEol;
+            var index = startIndex;
+            var eolIndex = startIndex - 1;
+
+            while (index < list.Count)
             {
-                index--;
+                var current = list[index];
+                if (current.IsKind(SyntaxKind.WhitespaceTrivia))
+                {
+                    index++;
+                    continue;
+                }
+
+                var isStateAnyEol = (state == StateEol || state == StateBlankLine);
+                if (isStateAnyEol && current.IsKind(SyntaxKind.EndOfLineTrivia))
+                {
+                    state = StateBlankLine;
+                }
+                else if (current.IsAnyEndOfLine())
+                {
+                    eolIndex = index;
+                    state = StateEol;
+                }
+                else
+                {
+                    state = StateNone;
+                }
+
+                index++;
+            }
+
+            switch (state)
+            {
+                case StateNone:
+                    list = list.InsertRange(list.Count, new[] { newLineTrivia, newLineTrivia });
+                    break;
+                case StateEol:
+                    list = list.Insert(eolIndex + 1, newLineTrivia);
+                    break;
+                case StateBlankLine:
+                    // Nothing to do. 
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
             }
         }
     }
