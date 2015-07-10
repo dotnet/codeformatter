@@ -5,11 +5,17 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    public sealed class ExplicitThisRuleTests : LocalSemanticRuleTestBase
+    public sealed class ExplicitThisAnalyzerTests : AnalyzerFixerTestBase
     {
-        internal override ILocalSemanticFormattingRule Rule
+        private static IFormattingEngine s_engine;
+
+        static ExplicitThisAnalyzerTests()
         {
-            get { return new Rules.ExplicitThisRule(); }
+            s_engine = FormattingEngine.Create();
+        }
+
+        public ExplicitThisAnalyzerTests() : base(s_engine)
+        {
         }
 
         [Fact]
@@ -25,9 +31,9 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
 
         [Fact]
-        public void TestFieldAssignmentWithTrivia()
+        public void TestFieldAssignmentWithTrivia_AnalyzerBased()
         {
-            Verify(nameof(TestFieldAssignmentWithTrivia), runFormatter: false);
+            Verify(nameof(TestFieldAssignmentWithTrivia_AnalyzerBased), runFormatter: false);
         }
 
         [Fact]

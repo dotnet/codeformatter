@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 foreach (var diagnostic in context.Diagnostics)
                 {
                     var fixer = _fixerMap[diagnostic.Id];
-                    await fixer.RegisterCodeFixesAsync(new CodeFixContext(context.Document, diagnostic, (a, d) => context.RegisterCodeFix(a, d), context.CancellationToken));
+                    await fixer.RegisterCodeFixesAsync(new CodeFixContext(context.Document, diagnostic, (a, d) => context.RegisterCodeFix(a, d), context.CancellationToken)).ConfigureAwait(false);
                 }
             }
 

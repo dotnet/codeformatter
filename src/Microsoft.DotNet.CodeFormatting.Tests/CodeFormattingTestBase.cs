@@ -2,12 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
@@ -30,12 +34,14 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             yield return s_CodeFormatterReference;
         }
 
-        private Solution CreateSolution(string[] sources, string language = LanguageNames.CSharp)
+        private Workspace CreateWorkspace(string[] sources, string language = LanguageNames.CSharp)
         {
             string fileExtension = language == LanguageNames.CSharp ? CSharpFileExtension : VBFileExtension;
             var projectId = ProjectId.CreateNewId(TestProjectName);
 
-            var solution = new AdhocWorkspace()
+            var workspace = new AdhocWorkspace();
+
+            var solution = workspace
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
                 .AddMetadataReferences(projectId, GetSolutionMetadataReferences());
@@ -49,7 +55,9 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 count++;
             }
 
-            return solution;
+            workspace.TryApplyChanges(solution);
+
+            return workspace;
         }
 
         protected abstract Task<Solution> Format(Solution solution, bool runFormatter);
@@ -73,22 +81,75 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 
         protected void Verify(string[] sources, string[] expected, bool runFormatter, string languageName)
         {
-            var inputSolution = CreateSolution(sources, languageName);
-            var expectedSolution = CreateSolution(expected, languageName);
-            var actualSolution = Format(inputSolution, runFormatter).Result;
+            var inputWorkspace = CreateWorkspace(sources, languageName);
+            var expectedWorkspace = CreateWorkspace(expected, languageName);
+            var actualSolution = Format(inputWorkspace.CurrentSolution, runFormatter).Result;
 
             if (actualSolution == null)
                 Assert.False(true, "Solution is null. Test Failed.");
 
-            AssertSolutionEqual(expectedSolution, actualSolution);
+            AssertSolutionEqual(expectedWorkspace.CurrentSolution, actualSolution);
         }
 
         protected void Verify(string source, string expected, bool runFormatter = true, string languageName = LanguageNames.CSharp)
         {
             Verify(new string[] { source }, new string[] { expected }, runFormatter, languageName);
         }
+
+        /// <summary>
+        /// Verify that the input text
+        /// </summary>
+        /// <param name="resourceNameStem"></param>
+        /// <param name="runFormatter"></param>
+        /// <param name="languageName"></param>
+        protected void Verify(string resourceNameStem, bool runFormatter = true, string languageName = LanguageNames.CSharp)
+        {
+            var source = GetInputData(resourceNameStem);
+            var expected = GetExpectedData(resourceNameStem);
+
+            Verify(source, expected, runFormatter, languageName);
+        }
+
+        private string GetInputData(string resourceNameStem)
+        {
+            return GetResourceData("Input", resourceNameStem);
+        }
+
+        private string GetExpectedData(string resourceNameStem)
+        {
+            return GetResourceData("Expected", resourceNameStem);
+        }
+
+        private string GetResourceData(string dataCategory, string resourceNameStem)
+        {
+            Assembly thisAssembly = Assembly.GetExecutingAssembly();
+
+            // Strip off the conventional test class name suffix so that, for example,
+            // "ExplicitThisRuleTests" becomes "ExplicitThis".
+            string testCategory = GetType().Name;
+            int suffixIndex = testCategory.IndexOf("RuleTests");
+            if (suffixIndex == -1)
+            {
+                suffixIndex = testCategory.IndexOf("AnalyzerTests");
+            }
+
+            if (suffixIndex > 0)
+            {
+                testCategory = testCategory.Substring(0, suffixIndex);
+            }
+
+            string resourceName =
+                string.Join(".", thisAssembly.GetName().Name, "TestData", testCategory, dataCategory, resourceNameStem)
+                + CSharpFileExtension;
+
+            Stream resourceStream = thisAssembly.GetManifestResourceStream(resourceName);
+            TextReader reader = new StreamReader(resourceStream);
+
+            return reader.ReadToEnd();
+        }
     }
 
+    // TODO: Pull RuleTestBase and its three derived classes into separate file RuleTestBase.cs.
     public abstract class RuleTestBase : CodeFormattingTestBase
     {
         protected override async Task<Solution> Format(Solution solution, bool runFormatter)
@@ -98,10 +159,10 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             foreach (var id in documentIds)
             {
                 var document = solution.GetDocument(id);
-                document = await RewriteDocumentAsync(document);
+                document = await RewriteDocumentAsync(document).ConfigureAwait(false);
                 if (runFormatter)
                 {
-                    document = await Formatter.FormatAsync(document);
+                    document = await Formatter.FormatAsync(document).ConfigureAwait(false);
                 }
 
                 solution = document.Project.Solution;
