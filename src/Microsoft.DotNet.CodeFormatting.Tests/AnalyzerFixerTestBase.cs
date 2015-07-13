@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         protected override async Task<Solution> Format(Solution solution, bool runFormatter)
         { 
             Workspace workspace = solution.Workspace; 
-            await _engine.FormatSolutionAsync(solution, /* useAnalyzers = */ true, default(CancellationToken)).ConfigureAwait(false); 
+            await _engine.FormatSolutionAsync(solution, useAnalyzers: true, cancellationToken: default(CancellationToken)).ConfigureAwait(false); 
             return workspace.CurrentSolution; 
         } 
     } 

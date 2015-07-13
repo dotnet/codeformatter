@@ -96,57 +96,6 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Verify(new string[] { source }, new string[] { expected }, runFormatter, languageName);
         }
 
-        /// <summary>
-        /// Verify that the input text
-        /// </summary>
-        /// <param name="resourceNameStem"></param>
-        /// <param name="runFormatter"></param>
-        /// <param name="languageName"></param>
-        protected void Verify(string resourceNameStem, bool runFormatter = true, string languageName = LanguageNames.CSharp)
-        {
-            var source = GetInputData(resourceNameStem);
-            var expected = GetExpectedData(resourceNameStem);
-
-            Verify(source, expected, runFormatter, languageName);
-        }
-
-        private string GetInputData(string resourceNameStem)
-        {
-            return GetResourceData("Input", resourceNameStem);
-        }
-
-        private string GetExpectedData(string resourceNameStem)
-        {
-            return GetResourceData("Expected", resourceNameStem);
-        }
-
-        private string GetResourceData(string dataCategory, string resourceNameStem)
-        {
-            Assembly thisAssembly = Assembly.GetExecutingAssembly();
-
-            // Strip off the conventional test class name suffix so that, for example,
-            // "ExplicitThisRuleTests" becomes "ExplicitThis".
-            string testCategory = GetType().Name;
-            int suffixIndex = testCategory.IndexOf("RuleTests");
-            if (suffixIndex == -1)
-            {
-                suffixIndex = testCategory.IndexOf("AnalyzerTests");
-            }
-
-            if (suffixIndex > 0)
-            {
-                testCategory = testCategory.Substring(0, suffixIndex);
-            }
-
-            string resourceName =
-                string.Join(".", thisAssembly.GetName().Name, "TestData", testCategory, dataCategory, resourceNameStem)
-                + CSharpFileExtension;
-
-            Stream resourceStream = thisAssembly.GetManifestResourceStream(resourceName);
-            TextReader reader = new StreamReader(resourceStream);
-
-            return reader.ReadToEnd();
-        }
     }
 
     // TODO: Pull RuleTestBase and its three derived classes into separate file RuleTestBase.cs.

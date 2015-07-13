@@ -98,16 +98,6 @@
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\MarkReadonlyFieldTests.cs" />
     <Compile Include="Rules\UsingLocationRuleTests.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Input\TestFieldAssignmentWithTrivia_AnalyzerBased.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Expected\TestFieldAssignmentWithTrivia_AnalyzerBased.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Expected\TestFieldBadName.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Input\TestFieldBadName.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Expected\TestFieldAssignmentWithTrivia.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Input\TestFieldAssignmentWithTrivia.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Expected\TestFieldAssignment.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Input\TestFieldAssignment.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Expected\TestFieldUse.cs" />
-    <EmbeddedResource Include="TestData\ExplicitThis\Input\TestFieldUse.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
