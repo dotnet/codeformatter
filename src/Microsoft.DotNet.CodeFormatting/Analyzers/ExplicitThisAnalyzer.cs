@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ExplicitThisAnalyzer : DiagnosticAnalyzer
     {
-        internal static DiagnosticDescriptor rule = new DiagnosticDescriptor("DNS0001",
+        private static DiagnosticDescriptor rule = new DiagnosticDescriptor("DNS0001",
                                                                              "Don't use explicit 'this' for private fields",
                                                                              "Don't use explicit 'this' for private fields",
                                                                              "Style",
@@ -23,9 +23,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                                              true);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
-        {
-            get { return ImmutableArray.Create(rule); }
-        }
+            => ImmutableArray.Create(rule);
 
         public override void Initialize(AnalysisContext context)
         {
