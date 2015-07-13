@@ -98,6 +98,7 @@
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\MarkReadonlyFieldTests.cs" />
     <Compile Include="Rules\UsingLocationRuleTests.cs" />
+    <Compile Include="RuleTestBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
