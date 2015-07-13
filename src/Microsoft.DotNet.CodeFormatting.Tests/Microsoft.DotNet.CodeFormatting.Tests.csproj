@@ -83,6 +83,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnalyzerFixerTestBase.cs" />
+    <Compile Include="Analyzers\ExplicitThisAnalyzerTests.cs" />
     <Compile Include="CodeFormattingTestBase.cs" />
     <Compile Include="CommandLineParserTests.cs" />
     <Compile Include="Rules\BracesRuleTests.cs" />

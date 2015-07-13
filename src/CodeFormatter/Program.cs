@@ -99,13 +99,18 @@ namespace CodeFormatter
 
             foreach (var item in options.FormatTargets)
             {
-                await RunFormatItemAsync(engine, item, options.Language, cancellationToken);
+                await RunFormatItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
             }
 
             return 0;
         }
 
-        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
+        private static async Task RunFormatItemAsync(
+            IFormattingEngine engine,
+            string item,
+            string language,
+            bool useAnalyzers,
+            CancellationToken cancellationToken)
         { 
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
@@ -114,7 +119,7 @@ namespace CodeFormatter
                 using (var workspace = ResponseFileWorkspace.Create())
                 {
                     Project project = workspace.OpenCommandLineProject(item, language);
-                    await engine.FormatProjectAsync(project, cancellationToken);
+                    await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
                 }
             }
             else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
@@ -123,7 +128,7 @@ namespace CodeFormatter
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
-                    await engine.FormatSolutionAsync(solution, cancellationToken);
+                    await engine.FormatSolutionAsync(solution, useAnalyzers, cancellationToken);
                 }
             }
             else
@@ -132,7 +137,7 @@ namespace CodeFormatter
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
-                    await engine.FormatProjectAsync(project, cancellationToken);
+                    await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
                 }
             }
         }

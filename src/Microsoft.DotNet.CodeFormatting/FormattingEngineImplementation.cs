@@ -138,27 +138,39 @@ namespace Microsoft.DotNet.CodeFormatting
             return fixerMap.ToImmutable();
         }
 
-        public async Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
+        public async Task FormatSolutionAsync(Solution solution, bool useAnalyzers, CancellationToken cancellationToken)
         {
-            await FormatSolutionWithRulesAsync(solution, cancellationToken).ConfigureAwait(false);
-            await FormatSolutionWithAnalyzersAsync(solution, cancellationToken).ConfigureAwait(false);
+            if (useAnalyzers)
+            {
+                await FormatSolutionWithAnalyzersAsync(solution, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await FormatSolutionWithRulesAsync(solution, cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        public async Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
+        public async Task FormatProjectAsync(Project project, bool useAnalyzers, CancellationToken cancellationToken)
         {
-            await FormatProjectWithRulesAsync(project, cancellationToken).ConfigureAwait(false);
-            await FormatProjectWithAnalyzersAsync(project, cancellationToken).ConfigureAwait(false);
+            if (useAnalyzers)
+            {
+                await FormatProjectWithAnalyzersAsync(project, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await FormatProjectWithRulesAsync(project, cancellationToken).ConfigureAwait(false);
+            }
         }
 
-        public Task FormatSolutionWithRulesAsync(Solution solution, CancellationToken cancellationToken)
+        public async Task FormatSolutionWithRulesAsync(Solution solution, CancellationToken cancellationToken)
         {
             var documentIds = solution.Projects.SelectMany(x => x.DocumentIds).ToList();
-            return FormatAsync(solution.Workspace, documentIds, cancellationToken);
+            await FormatAsync(solution.Workspace, documentIds, cancellationToken).ConfigureAwait(false);
         }
 
-        public Task FormatProjectWithRulesAsync(Project project, CancellationToken cancellationToken)
+        public async Task FormatProjectWithRulesAsync(Project project, CancellationToken cancellationToken)
         {
-            return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
+            await FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task FormatSolutionWithAnalyzersAsync(Solution solution, CancellationToken cancellationToken)
@@ -174,18 +186,12 @@ namespace Microsoft.DotNet.CodeFormatting
             var watch = new Stopwatch();
             watch.Start();
 
-            // We can't actually make this call yet, because there aren't any analyzers,
-            // so the call to compilation.WithAnalyzers(analyzers) below would fail.
-#if NOT_YET
             var diagnostics = await GetDiagnostics(project, cancellationToken).ConfigureAwait(false);
-#else
-            var diagnostics = ImmutableArray<Diagnostic>.Empty;
-#endif
 
             var batchFixer = WellKnownFixAllProviders.BatchFixer;
 
             var context = new FixAllContext(
-                project.Documents.First(),
+                project.Documents.First(), // TODO: Shouldn't this be the whole project?
                 new UberCodeFixer(_fixerMap),
                 FixAllScope.Project,
                 null,

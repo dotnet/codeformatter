@@ -1,13 +1,14 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.CodeFormatting;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.CodeFormatting;
 
 namespace CodeFormatter
 {
@@ -28,7 +29,8 @@ namespace CodeFormatter
             ImmutableArray<string>.Empty,
             null,
             allowTables: false,
-            verbose: false);
+            verbose: false,
+            useAnalyzers: false);
 
         public readonly Operation Operation;
         public readonly ImmutableArray<string[]> PreprocessorConfigurations;
@@ -39,6 +41,7 @@ namespace CodeFormatter
         public readonly string Language;
         public readonly bool AllowTables;
         public readonly bool Verbose;
+        public readonly bool UseAnalyzers;
 
         public CommandLineOptions(
             Operation operation,
@@ -49,7 +52,8 @@ namespace CodeFormatter
             ImmutableArray<string> fileNames,
             string language,
             bool allowTables,
-            bool verbose)
+            bool verbose,
+            bool useAnalyzers)
         {
             Operation = operation;
             PreprocessorConfigurations = preprocessorConfigurations;
@@ -60,6 +64,7 @@ namespace CodeFormatter
             Language = language;
             AllowTables = allowTables;
             Verbose = verbose;
+            UseAnalyzers = useAnalyzers;
         }
     }
 
@@ -130,18 +135,21 @@ namespace CodeFormatter
 
     /file        - Only apply changes to files with specified name
     /lang        - Specifies the language to use when a responsefile is
-                   specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
+                   specified. e.g. 'C#', 'Visual Basic', ... (default: 'C#')
     /c           - Additional preprocessor configurations the formatter
-                   should run under.
+                      should run under.
     /copyright   - Specifies file containing copyright header.
-                   Use ConvertTests to convert MSTest tests to xUnit.
+                      Use ConvertTests to convert MSTest tests to xUnit.
     /nocopyright - Do not update the copyright message.
     /tables      - Let tables opt out of formatting by defining
-                   DOTNET_FORMATTER
+                      DOTNET_FORMATTER
     /nounicode   - Do not convert unicode strings to escape sequences
     /rule(+|-)   - Enable (default) or disable the specified rule
     /rules       - List the available rules
     /verbose     - Verbose output
+    /useanalyzers - Use Roslyn analyzers and code fixes to perform
+                   formatting operations. (Default is to use codeformatter's
+                   ""rule""-based operations.
 ";
 
         public static void PrintUsage()
@@ -168,6 +176,7 @@ namespace CodeFormatter
             var language = LanguageNames.CSharp;
             var allowTables = false;
             var verbose = false;
+            var useAnalyzers = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -209,6 +218,10 @@ namespace CodeFormatter
                 else if (comparer.Equals(arg, "/verbose"))
                 {
                     verbose = true;
+                }
+                else if (comparer.Equals(arg, "/useanalyzers"))
+                {
+                    useAnalyzers = true;
                 }
                 else if (arg.StartsWith(FileSwitch, comparison))
                 {
@@ -254,7 +267,8 @@ namespace CodeFormatter
                 fileNames.ToImmutableArray(),
                 language,
                 allowTables,
-                verbose);
+                verbose,
+                useAnalyzers);
             return CommandLineParseResult.CreateSuccess(options);
         }
 

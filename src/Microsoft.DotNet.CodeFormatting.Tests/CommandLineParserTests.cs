@@ -1,9 +1,8 @@
-﻿using CodeFormatter;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using CodeFormatter;
+
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
@@ -89,6 +88,20 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             var options = Parse("/nocopyright", "test.csproj");
             Assert.False(options.RuleMap[FormattingDefaults.CopyrightRuleName]);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+        }
+
+        [Fact]
+        public void UseAnalyzers()
+        {
+            var options = Parse("test.csproj", "/useanalyzers");
+            Assert.True(options.UseAnalyzers);
+        }
+
+        [Fact]
+        public void DontUseAnalyzers()
+        {
+            var options = Parse("test.csproj");
+            Assert.False(options.UseAnalyzers);
         }
     }
 }
