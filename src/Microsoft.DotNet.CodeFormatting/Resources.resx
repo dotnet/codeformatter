@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ExplicitThisAnalyzer_MessageFormat" xml:space="preserve">
-    <value>Don't use explicit 'this' for private fields</value>
+    <value>Explicit 'this' is not necessary in reference to private field '{0}'</value>
   </data>
   <data name="ExplicitThisAnalyzer_Title" xml:space="preserve">
     <value>Don't use explicit 'this' for private fields</value>

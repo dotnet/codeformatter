@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t use explicit &apos;this&apos; for private fields.
+        ///   Looks up a localized string similar to Explicit &apos;this&apos; is not necessary in reference to private field &apos;{0}&apos;.
         /// </summary>
         internal static string ExplicitThisAnalyzer_MessageFormat {
             get {

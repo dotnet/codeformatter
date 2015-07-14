@@ -16,8 +16,8 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     public class ExplicitThisAnalyzer : DiagnosticAnalyzer
     {
         private static DiagnosticDescriptor rule = new DiagnosticDescriptor("DNS0001",
-                                                                            ResourceHelper.MakeLocalizableString(Resources.ExplicitThisAnalyzer_Title),
-                                                                            ResourceHelper.MakeLocalizableString(Resources.ExplicitThisAnalyzer_MessageFormat),
+                                                                            ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_Title)),
+                                                                            ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_MessageFormat)),
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
                                                                             true);
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                         node.Expression.Kind() == SyntaxKind.ThisExpression &&
                         IsPrivateField(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                     {
-                        syntaxContext.ReportDiagnostic(Diagnostic.Create(rule, node.GetLocation()));
+                        syntaxContext.ReportDiagnostic(Diagnostic.Create(rule, node.GetLocation(), node.Name));
                     }
                 }
             }, SyntaxKind.SimpleMemberAccessExpression);
