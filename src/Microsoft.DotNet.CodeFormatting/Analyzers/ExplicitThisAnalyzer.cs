@@ -16,11 +16,11 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     public class ExplicitThisAnalyzer : DiagnosticAnalyzer
     {
         private static DiagnosticDescriptor rule = new DiagnosticDescriptor("DNS0001",
-                                                                             "Don't use explicit 'this' for private fields",
-                                                                             "Don't use explicit 'this' for private fields",
-                                                                             "Style",
-                                                                             DiagnosticSeverity.Warning,
-                                                                             true);
+                                                                            ResourceHelper.MakeLocalizableString(Resources.ExplicitThisAnalyzer_Title),
+                                                                            ResourceHelper.MakeLocalizableString(Resources.ExplicitThisAnalyzer_MessageFormat),
+                                                                            "Style",
+                                                                            DiagnosticSeverity.Warning,
+                                                                            true);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(rule);
