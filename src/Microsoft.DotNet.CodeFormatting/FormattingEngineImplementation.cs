@@ -86,6 +86,12 @@ namespace Microsoft.DotNet.CodeFormatting
             }
         }
 
+        public ImmutableArray<DiagnosticDescriptor> AllSupportedDiagnostics
+            => _analyzers
+                    .SelectMany(a => a.SupportedDiagnostics)
+                    .OrderBy(a => a.Id)
+                    .ToImmutableArray();
+
         public FormattingEngineImplementation(
             Options options,
             IEnumerable<IFormattingFilter> filters,

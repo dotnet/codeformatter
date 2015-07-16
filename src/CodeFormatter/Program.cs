@@ -31,7 +31,7 @@ namespace CodeFormatter
             switch (options.Operation)
             {
                 case Operation.ListRules:
-                    RunListRules();
+                    RunListRules(options.UseAnalyzers);
                     exitCode = 0;
                     break;
                 case Operation.Format:
@@ -44,14 +44,26 @@ namespace CodeFormatter
             return 0;
         }
 
-        private static void RunListRules()
+        private static void RunListRules(bool useAnalyzers)
         {
-            var rules = FormattingEngine.GetFormattingRules();
-            Console.WriteLine("{0,-20} {1}", "Name", "Description");
+            Console.WriteLine("{0,-20} {1}", "Name", "Title");
             Console.WriteLine("==============================================");
-            foreach (var rule in rules)
+
+            if (useAnalyzers)
             {
-                Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
+                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics();
+                foreach (var diagnosticDescriptor in diagnosticDescriptors)
+                {
+                    Console.WriteLine("{0,-20} :{1}", diagnosticDescriptor.Id, diagnosticDescriptor.Title);
+                }
+            }
+            else
+            {
+                var rules = FormattingEngine.GetFormattingRules();
+                foreach (var rule in rules)
+                {
+                    Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
+                }
             }
         }
 

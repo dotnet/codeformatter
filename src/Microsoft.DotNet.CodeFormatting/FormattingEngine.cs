@@ -5,6 +5,8 @@ using System.Collections.Immutable;
 using System.Composition.Convention;
 using System.Composition.Hosting;
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingEngine
@@ -22,6 +24,13 @@ namespace Microsoft.DotNet.CodeFormatting
             var container = CreateCompositionContainer();
             var engine = container.GetExport<IFormattingEngine>();
             return engine.AllRules;
+        }
+
+        public static ImmutableArray<DiagnosticDescriptor> GetSupportedDiagnostics()
+        {
+            var container = CreateCompositionContainer();
+            var engine = container.GetExport<IFormattingEngine>();
+            return engine.AllSupportedDiagnostics;
         }
 
         private static CompositionHost CreateCompositionContainer()
