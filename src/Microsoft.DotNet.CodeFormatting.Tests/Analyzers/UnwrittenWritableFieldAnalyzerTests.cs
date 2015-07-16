@@ -130,6 +130,31 @@ class C
         }
 
         [Fact]
+        public void TestMarkReadonlyWithReadReferences()
+        {
+            string text = @"
+class C
+{
+    private READONLY int read;
+    private int writen;
+
+    public void T()
+    {
+        int x = change;
+        x = read;
+        writen = read;
+        X(read);
+    }
+
+    public void X(int a)
+    {
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkReadonlyWithWriteReferencesInConstructor()
         {
             string text = @"
