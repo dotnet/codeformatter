@@ -9,7 +9,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Microsoft.DotNet.CodeFormatting.Rules
+namespace Microsoft.DotNet.CodeFormatting.Analyzers
 {
     /// <summary>
     /// Mark any fields that can provably be marked as readonly.
@@ -18,7 +18,8 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class UnwrittenWritableFieldAnalyzer: DiagnosticAnalyzer
     {
-        private static DiagnosticDescriptor rule = new DiagnosticDescriptor("DNS0002",
+        internal const string DiagnosticId = "DNS002";
+        private static DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId,
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.UnwrittenWritableFieldAnalyzer_Title)),
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.UnwrittenWritableFieldAnalyzer_MessageFormat)),
                                                                             "Usage",

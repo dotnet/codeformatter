@@ -79,6 +79,15 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove &apos;this&apos; qualifier.
+        /// </summary>
+        internal static string ExplicitThisFixer_Title {
+            get {
+                return ResourceManager.GetString("ExplicitThisFixer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The field &apos;{0}&apos; is never written to and can be marked readonly.
         /// </summary>
         internal static string UnwrittenWritableFieldAnalyzer_MessageFormat {
@@ -93,6 +102,15 @@ namespace Microsoft.DotNet.CodeFormatting {
         internal static string UnwrittenWritableFieldAnalyzer_Title {
             get {
                 return ResourceManager.GetString("UnwrittenWritableFieldAnalyzer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mark field as readonly.
+        /// </summary>
+        internal static string UnwrittenWritableFieldFixer_Title {
+            get {
+                return ResourceManager.GetString("UnwrittenWritableFieldFixer_Title", resourceCulture);
             }
         }
     }
