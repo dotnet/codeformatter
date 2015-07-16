@@ -77,5 +77,23 @@ namespace Microsoft.DotNet.CodeFormatting {
                 return ResourceManager.GetString("ExplicitThisAnalyzer_Title", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field &apos;{0}&apos; is never written to and can be marked readonly.
+        /// </summary>
+        internal static string UnwrittenWritableFieldAnalyzer_MessageFormat {
+            get {
+                return ResourceManager.GetString("UnwrittenWritableFieldAnalyzer_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mark unwritten fields readonly.
+        /// </summary>
+        internal static string UnwrittenWritableFieldAnalyzer_Title {
+            get {
+                return ResourceManager.GetString("UnwrittenWritableFieldAnalyzer_Title", resourceCulture);
+            }
+        }
     }
 }

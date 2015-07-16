@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Analyzers\ExplicitThisAnalyzer.cs" />
     <Compile Include="Analyzers\ExplicitThisFixer.cs" />
+    <Compile Include="Analyzers\UnwrittenWritableFieldAnalyzer.cs" />
     <Compile Include="FormattingEngineDiagnosticProvider.cs" />
     <Compile Include="IRuleMetadata.cs" />
     <Compile Include="NameHelper.cs" />
