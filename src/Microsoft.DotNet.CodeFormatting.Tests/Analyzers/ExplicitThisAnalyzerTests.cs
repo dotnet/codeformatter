@@ -1,21 +1,18 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.DotNet.CodeFormatting.Analyzers;
+
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
     public sealed class ExplicitThisAnalyzerTests : AnalyzerFixerTestBase
     {
-        private static IFormattingEngine s_engine;
-
-        static ExplicitThisAnalyzerTests()
+        public ExplicitThisAnalyzerTests()
         {
-            s_engine = FormattingEngine.Create();
-        }
-
-        public ExplicitThisAnalyzerTests() : base(s_engine)
-        {
+            DisableAllDiagnostics();
+            EnableDiagnostic(ExplicitThisAnalyzer.DiagnosticId);
         }
 
         public const string TestFieldUse_Input = @"class C1

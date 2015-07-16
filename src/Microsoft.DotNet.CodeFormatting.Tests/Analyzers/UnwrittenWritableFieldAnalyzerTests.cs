@@ -3,21 +3,18 @@
 
 using System.Linq;
 
+using Microsoft.DotNet.CodeFormatting.Analyzers;
+
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
     public sealed class UnwrittenWritableFieldAnalyzerTests : AnalyzerFixerTestBase
     {
-        private static IFormattingEngine s_engine;
-
-        static UnwrittenWritableFieldAnalyzerTests()
+        public UnwrittenWritableFieldAnalyzerTests()
         {
-            s_engine = FormattingEngine.Create();
-        }
-
-        public UnwrittenWritableFieldAnalyzerTests() : base(s_engine)
-        {
+            DisableAllDiagnostics();
+            EnableDiagnostic(UnwrittenWritableFieldAnalyzer.DiagnosticId);
         }
 
         // In general a single sting with "READONLY" in it is used
