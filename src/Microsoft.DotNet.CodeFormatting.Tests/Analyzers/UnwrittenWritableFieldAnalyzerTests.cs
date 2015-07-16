@@ -72,6 +72,18 @@ class C
         }
 
         [Fact]
+        public void TestIgnoredPublic()
+        {
+            string text = @"
+public class C
+{
+    public int exposed;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkedPublicInInternalClass()
         {
             string text = @"
@@ -94,6 +106,23 @@ class C
     public void T()
     {
         wrote = 5;
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestIgnoredReadonlyWithCompoundWriteReferences()
+        {
+            string text = @"
+class C
+{
+    private int wrote;
+
+    public void T()
+    {
+        wrote += 5;
     }
 }
 ";

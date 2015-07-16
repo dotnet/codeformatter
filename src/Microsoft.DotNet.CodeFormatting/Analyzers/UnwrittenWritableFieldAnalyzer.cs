@@ -28,6 +28,21 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                                             DiagnosticSeverity.Warning,
                                                                             true);
 
+        private static readonly SyntaxKind[] compoundAssignmentExpressionKinds =
+            {
+                SyntaxKind.SimpleAssignmentExpression,
+                SyntaxKind.AddAssignmentExpression,
+                SyntaxKind.AndAssignmentExpression,
+                SyntaxKind.DivideAssignmentExpression,
+                SyntaxKind.ExclusiveOrAssignmentExpression,
+                SyntaxKind.LeftShiftAssignmentExpression,
+                SyntaxKind.ModuloAssignmentExpression,
+                SyntaxKind.MultiplyAssignmentExpression,
+                SyntaxKind.OrAssignmentExpression,
+                SyntaxKind.RightShiftAssignmentExpression,
+                SyntaxKind.SubtractAssignmentExpression
+            };
+
         private ISymbol _internalsVisibleToAttribute;
 
         // The set of fields which it will be safe to mark as readonly, if we discover
@@ -54,7 +69,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                 "System.Runtime.CompilerServices.InternalsVisibleToAttribute");
 
             context.RegisterSymbolAction(EvaluateField, SymbolKind.Field);
-            context.RegisterSyntaxNodeAction(CheckForAssignment, SyntaxKind.SimpleAssignmentExpression);
+            context.RegisterSyntaxNodeAction(CheckForAssignment, compoundAssignmentExpressionKinds);
             context.RegisterCompilationEndAction(ReportUnwrittenFields);
         }
 
