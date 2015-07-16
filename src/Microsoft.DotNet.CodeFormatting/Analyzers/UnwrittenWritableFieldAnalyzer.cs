@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             IEnumerable<IFieldSymbol> fieldsToMark = _candidateReadonlyFields.Except(_writtenFields);
             foreach (var field in fieldsToMark)
             {
-                Diagnostic.Create(rule, field.Locations[0], field.Name);
+                context.ReportDiagnostic(Diagnostic.Create(rule, field.Locations[0], field.Name));
             }
         }
     }

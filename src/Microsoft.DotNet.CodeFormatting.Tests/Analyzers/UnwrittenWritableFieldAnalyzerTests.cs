@@ -37,6 +37,30 @@ class C
             Verify(Original(text), Readonly(text));
         }
 
+        [Fact]
+        public void TestMarkReadonlyWithNoReferences()
+        {
+            string text = @"
+class C
+{
+    private READONLY int read;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestMarkReadonlyInternalWithNoReferences()
+        {
+            string text = @"
+class C
+{
+    internal READONLY int read;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");

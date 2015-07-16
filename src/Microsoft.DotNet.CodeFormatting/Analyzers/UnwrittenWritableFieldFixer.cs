@@ -11,12 +11,15 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
     public class UnwrittenWritableFieldThisFixer : CodeFixProvider
     {
+        private static SyntaxToken s_readOnlyToken =  SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
+
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             SyntaxNode root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -36,9 +39,13 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                 diagnostic);
         }
 
-        private Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, SyntaxNode fieldDeclarationNode)
+        private Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, FieldDeclarationSyntax fieldDeclaration)
         {
-            return Task.FromResult(document);
+            FieldDeclarationSyntax newFieldDeclaration = fieldDeclaration
+                .WithModifiers(fieldDeclaration.Modifiers.Add(s_readOnlyToken));
+            SyntaxNode newRoot = root.ReplaceNode(fieldDeclaration, newFieldDeclaration);
+            Document newDocument = document.WithSyntaxRoot(newRoot);
+            return Task.FromResult(newDocument);
         }
 
         public override FixAllProvider GetFixAllProvider()
