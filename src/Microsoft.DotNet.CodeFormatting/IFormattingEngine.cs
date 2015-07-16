@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting
         bool AllowTables { get; set; }
         bool Verbose { get; set; }
         void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled);
+        void ToggleDiagnosticEnabled(string diagnosticId, bool enabled);
         Task FormatSolutionAsync(Solution solution, bool useAnalyzers, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project project, bool useAnalyzers, CancellationToken cancellationToken);
     }

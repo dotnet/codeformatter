@@ -104,9 +104,19 @@ namespace CodeFormatter
             engine.AllowTables = options.AllowTables;
             engine.Verbose = options.Verbose;
 
-            if (!SetRuleMap(engine, options.RuleMap))
+            if (options.UseAnalyzers)
             {
-                return 1;
+                if (!SetDiagnosticsEnabledMap(engine, options.RuleMap))
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                if (!SetRuleMap(engine, options.RuleMap))
+                {
+                    return 1;
+                }
             }
 
             foreach (var item in options.FormatTargets)
@@ -167,6 +177,24 @@ namespace CodeFormatter
                 }
 
                 engine.ToggleRuleEnabled(rule, entry.Value);
+            }
+
+            return true;
+        }
+
+        private static bool SetDiagnosticsEnabledMap(IFormattingEngine engine, ImmutableDictionary<string, bool> ruleMap)
+        {
+            var comparer = StringComparer.OrdinalIgnoreCase;
+            foreach (var entry in ruleMap)
+            {
+                var diagnosticDescriptor = engine.AllSupportedDiagnostics.Where(x => comparer.Equals(x.Id, entry.Key)).FirstOrDefault();
+                if (diagnosticDescriptor == null)
+                {
+                    Console.WriteLine("Could not find diagnostic with ID {0}", entry.Key);
+                    return false;
+                }
+
+                engine.ToggleDiagnosticEnabled(diagnosticDescriptor.Id, entry.Value);
             }
 
             return true;
