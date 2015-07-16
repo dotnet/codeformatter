@@ -58,6 +58,75 @@ class C
             Verify(Original(text), Readonly(text));
         }
 
+        [Fact]
+        public void TestIgnoredReadonlyInternalWithNoReferencesByInternalsVisibleTo()
+        {
+            string text = @"
+[assembly: System.Runtime.CompilerServices.InternalsVisibleToAttribute(""Some.Other.Assembly"")]
+class C
+{
+    internal int exposed;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestMarkedPublicInInternalClass()
+        {
+            string text = @"
+internal class C
+{
+    public READONLY int notExposed;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestIgnoredReadonlyWithWriteReferences()
+        {
+            string text = @"
+class C
+{
+    private int wrote;
+
+    public void T()
+    {
+        wrote = 5;
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestMarkReadonlyWithWriteReferencesInConstructor()
+        {
+            string text = @"
+class C
+{
+    private READONLY int read;
+
+    public C()
+    {
+        read = 5;
+        M(ref read);
+        N(out read);
+    }
+
+    public void M(ref int a)
+    {
+    }
+
+    public void N(out int a)
+    {
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");

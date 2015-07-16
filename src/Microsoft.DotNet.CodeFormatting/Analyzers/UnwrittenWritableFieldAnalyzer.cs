@@ -7,6 +7,8 @@ using System.Composition;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Microsoft.DotNet.CodeFormatting.Analyzers
@@ -52,6 +54,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                 "System.Runtime.CompilerServices.InternalsVisibleToAttribute");
 
             context.RegisterSymbolAction(EvaluateField, SymbolKind.Field);
+            context.RegisterSyntaxNodeAction(CheckForAssignment, SyntaxKind.SimpleAssignmentExpression);
             context.RegisterCompilationEndAction(ReportUnwrittenFields);
         }
 
@@ -64,6 +67,12 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             }
         }
 
+        private void CheckForAssignment(SyntaxNodeAnalysisContext context)
+        {
+            var assignmentExpression = (AssignmentExpressionSyntax)context.Node;
+            CheckForFieldWrite(assignmentExpression.Left, context.SemanticModel);
+        }
+
         private void ReportUnwrittenFields(CompilationAnalysisContext context)
         {
             IEnumerable<IFieldSymbol> fieldsToMark = _candidateReadonlyFields.Except(_writtenFields);
@@ -71,6 +80,59 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             {
                 context.ReportDiagnostic(Diagnostic.Create(rule, field.Locations[0], field.Name));
             }
+        }
+
+        private void CheckForFieldWrite(ExpressionSyntax node, SemanticModel model)
+        {
+            var fieldSymbol = model.GetSymbolInfo(node).Symbol as IFieldSymbol;
+
+            if (fieldSymbol != null)
+            {
+                if (IsInsideOwnConstructor(node, fieldSymbol.ContainingType, fieldSymbol.IsStatic, model))
+                {
+                    return;
+                }
+
+                _writtenFields.Add(fieldSymbol);
+            }
+        }
+
+        private bool IsInsideOwnConstructor(SyntaxNode node, ITypeSymbol type, bool isStatic, SemanticModel model)
+        {
+            while (node != null)
+            {
+                switch (node.Kind())
+                {
+                    case SyntaxKind.ConstructorDeclaration:
+                        {
+                            return model.GetDeclaredSymbol(node).IsStatic == isStatic &&
+                                IsInType(node.Parent, type, model);
+                        }
+                    case SyntaxKind.ParenthesizedLambdaExpression:
+                    case SyntaxKind.SimpleLambdaExpression:
+                    case SyntaxKind.AnonymousMethodExpression:
+                        return false;
+                }
+
+                node = node.Parent;
+            }
+
+            return false;
+        }
+
+        private bool IsInType(SyntaxNode node, ITypeSymbol containingType, SemanticModel model)
+        {
+            while (node != null)
+            {
+                if (node.IsKind(SyntaxKind.ClassDeclaration) || node.IsKind(SyntaxKind.StructDeclaration))
+                {
+                    return Equals(containingType, model.GetDeclaredSymbol(node));
+                }
+
+                node = node.Parent;
+            }
+
+            return false;
         }
     }
 
