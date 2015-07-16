@@ -155,6 +155,27 @@ class C
         }
 
         [Fact]
+        public void TestIgnoredReadonlyWithRefArgument()
+        {
+            string text = @"
+class C
+{
+    private int read;
+
+    public void M(ref int a)
+    {
+    }
+
+    public void T()
+    {
+        M(ref read);
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkReadonlyWithWriteReferencesInConstructor()
         {
             string text = @"

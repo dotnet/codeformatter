@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -70,6 +71,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
 
             context.RegisterSymbolAction(EvaluateField, SymbolKind.Field);
             context.RegisterSyntaxNodeAction(CheckForAssignment, compoundAssignmentExpressionKinds);
+            context.RegisterSyntaxNodeAction(CheckForRefOrOutParameter, SyntaxKind.Argument);
             context.RegisterCompilationEndAction(ReportUnwrittenFields);
         }
 
@@ -84,8 +86,17 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
 
         private void CheckForAssignment(SyntaxNodeAnalysisContext context)
         {
-            var assignmentExpression = (AssignmentExpressionSyntax)context.Node;
-            CheckForFieldWrite(assignmentExpression.Left, context.SemanticModel);
+            var node = (AssignmentExpressionSyntax)context.Node;
+            CheckForFieldWrite(node.Left, context.SemanticModel);
+        }
+
+        private void CheckForRefOrOutParameter(SyntaxNodeAnalysisContext context)
+        {
+            var node = (ArgumentSyntax)context.Node;
+            if (!node.RefOrOutKeyword.IsKind(SyntaxKind.None))
+            {
+                CheckForFieldWrite(node.Expression, context.SemanticModel);
+            }
         }
 
         private void ReportUnwrittenFields(CompilationAnalysisContext context)
