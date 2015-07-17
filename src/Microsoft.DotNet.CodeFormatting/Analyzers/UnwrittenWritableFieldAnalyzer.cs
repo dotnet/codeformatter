@@ -69,13 +69,14 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             _internalsVisibleToAttribute = context.Compilation.GetTypeByMetadataName(
                                                 "System.Runtime.CompilerServices.InternalsVisibleToAttribute");
 
-            context.RegisterSymbolAction(EvaluateField, SymbolKind.Field);
+            context.RegisterSymbolAction(LocateCandidateReadonlyFields, SymbolKind.Field);
             context.RegisterSyntaxNodeAction(CheckForAssignment, compoundAssignmentExpressionKinds);
             context.RegisterSyntaxNodeAction(CheckForRefOrOutParameter, SyntaxKind.Argument);
+            context.RegisterSyntaxNodeAction(CheckForExternMethodWithRefParameters, SyntaxKind.MethodDeclaration);
             context.RegisterCompilationEndAction(ReportUnwrittenFields);
         }
 
-        private void EvaluateField(SymbolAnalysisContext context)
+        private void LocateCandidateReadonlyFields(SymbolAnalysisContext context)
         {
             var fieldSymbol = (IFieldSymbol)context.Symbol;
             if (fieldSymbol.IsCandidateReadonlyField(_internalsVisibleToAttribute))
@@ -96,6 +97,48 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             if (!node.RefOrOutKeyword.IsKind(SyntaxKind.None))
             {
                 CheckForFieldWrite(node.Expression, context.SemanticModel);
+            }
+        }
+
+        // An extern method that takes a ref parameter of a value type, or a parameter
+        // of a reference type (whether or not it is marked with "ref"), might modify
+        // any field of that type. We can't tell, because we can't see the method body.
+        // So don't mark any fields of that type as readonly.
+        private void CheckForExternMethodWithRefParameters(SyntaxNodeAnalysisContext context)
+        {
+            MethodDeclarationSyntax node = (MethodDeclarationSyntax)context.Node;
+            if (node.Modifiers.Any(m => m.IsKind(SyntaxKind.ExternKeyword)))
+            {
+                CheckForRefParameters(node.ParameterList.Parameters, context.SemanticModel);
+            }
+        }
+
+        private void CheckForRefParameters(IEnumerable<ParameterSyntax> parameters, SemanticModel model)
+        {
+            foreach (ParameterSyntax parameter in parameters)
+            {
+                ITypeSymbol parameterType = model.GetTypeInfo(parameter.Type).Type;
+                if (parameterType == null)
+                {
+                    continue;
+                }
+
+                bool canModify = true;
+                if (parameterType.TypeKind == TypeKind.Struct)
+                {
+                    canModify = parameter.Modifiers.Any(m => m.IsKind(SyntaxKind.RefKeyword));
+                }
+
+                if (canModify)
+                {
+                    // This parameter might be used to modify one of the fields, since the
+                    // implmentation is hidden from this analysys. Assume all fields
+                    // of the type are written to
+                    foreach (IFieldSymbol field in parameterType.GetMembers().OfType<IFieldSymbol>())
+                    {
+                        _writtenFields.Add(field);
+                    }
+                }
             }
         }
 

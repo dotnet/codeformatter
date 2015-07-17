@@ -197,6 +197,62 @@ class C
         }
 
         [Fact]
+        public void TestIgnoredReadonlyWithExternClassArgument()
+        {
+            string text = @"
+class C
+{
+    private int read;
+
+    private extern void M(C c);
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestIgnoredReadonlyWithExternRefClassArgument()
+        {
+            string text = @"
+class C
+{
+    private int read;
+
+    private extern void M(ref C c);
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestMarkReadonlyWithExternStructArgument()
+        {
+            string text = @"
+struct C
+{
+    private READONLY int read;
+
+    private extern void M(C c);
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestIgnoredReadonlyWithExternRefStructArgument()
+        {
+            string text = @"
+struct C
+{
+    private int read;
+
+    private extern void M(ref C c);
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkReadonlyWithWriteReferencesInConstructor()
         {
             string text = @"
