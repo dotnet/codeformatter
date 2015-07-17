@@ -393,6 +393,42 @@ class C
             Verify(Original(text), Readonly(text));
         }
 
+        [Fact]
+        public void TestMultipleFiles()
+        {
+            string[] text =
+            {
+                @"
+class C1
+{
+    internal READONLY int read;
+    internal int wrote;
+
+    public void M(C2 c)
+    {
+        c.wrote = 5;
+        int x = c.read;
+    }
+}
+",
+                @"
+class C2
+{
+    internal READONLY int read;
+    internal int wrote;
+
+    public void M(C1 c)
+    {
+        c.wrote = 5;
+        int x = c.read;
+    }
+}
+"
+            };
+
+            Verify(Original(text), Readonly(text), true, LanguageNames.CSharp);
+        }
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
