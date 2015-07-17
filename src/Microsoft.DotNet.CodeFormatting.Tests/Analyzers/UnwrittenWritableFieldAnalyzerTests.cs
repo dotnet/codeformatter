@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
+using System.Composition;
 using System.Linq;
 
+using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.CodeFormatting.Analyzers;
 
 using Xunit;
@@ -15,6 +18,19 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             DisableAllDiagnostics();
             EnableDiagnostic(UnwrittenWritableFieldAnalyzer.DiagnosticId);
+        }
+
+        // The tests for this analyzer depend on being able to access the type
+        // System.Composition.ImportAttribute, so add a reference to the assembly
+        // containing that type to the solution.
+        protected override IEnumerable<MetadataReference> GetSolutionMetadataReferences()
+        {
+            foreach (MetadataReference reference in base.GetSolutionMetadataReferences())
+            {
+                yield return reference;
+            }
+
+            yield return MetadataReference.CreateFromFile(typeof(ImportAttribute).Assembly.Location);
         }
 
         // In general a single sting with "READONLY" in it is used
@@ -287,6 +303,30 @@ class C
     {
         string s = called.ToString();
     }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestIgnoredImportedField()
+        {
+            string text = @"
+using System.Composition;
+
+public interface ITest
+{
+}
+
+[Export(typeof(ITest))]
+public class Test : ITest
+{
+}
+
+class C
+{
+    [Import]
+    private ITest imported;
 }
 ";
             Verify(Original(text), Readonly(text));
