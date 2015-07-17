@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -73,6 +72,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             context.RegisterSyntaxNodeAction(CheckForAssignment, compoundAssignmentExpressionKinds);
             context.RegisterSyntaxNodeAction(CheckForRefOrOutParameter, SyntaxKind.Argument);
             context.RegisterSyntaxNodeAction(CheckForExternMethodWithRefParameters, SyntaxKind.MethodDeclaration);
+            context.RegisterSyntaxNodeAction(CheckForInvocations, SyntaxKind.InvocationExpression);
             context.RegisterCompilationEndAction(ReportUnwrittenFields);
         }
 
@@ -136,10 +136,41 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                     // of the type are written to
                     foreach (IFieldSymbol field in parameterType.GetMembers().OfType<IFieldSymbol>())
                     {
-                        _writtenFields.Add(field);
+                        MarkFieldAsWritten(field);
                     }
                 }
             }
+        }
+
+        // A call to myStruct.myField.myMethod() might change myField, since myMethod
+        // might modify it. So those invocations need to be counted as writes.
+        private void CheckForInvocations(SyntaxNodeAnalysisContext context)
+        {
+            var node = (InvocationExpressionSyntax)context.Node;
+            if (node.Expression.IsKind(SyntaxKind.SimpleMemberAccessExpression))
+            {
+                var memberAccess = (MemberAccessExpressionSyntax)node.Expression;
+                ISymbol symbol = context.SemanticModel.GetSymbolInfo(memberAccess.Expression).Symbol;
+                if (symbol != null && symbol.Kind == SymbolKind.Field)
+                {
+                    var fieldSymbol = (IFieldSymbol)symbol;
+                    if (fieldSymbol.Type.TypeKind == TypeKind.Struct)
+                    {
+                        if (!IsImmutablePrimitiveType(fieldSymbol.Type))
+                        {
+                            MarkFieldAsWritten(fieldSymbol);
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool IsImmutablePrimitiveType(ITypeSymbol type)
+        {
+            // All of the "special type" structs exposed are all immutable,
+            // so it's safe to assume all methods on them are non-mutating, and
+            // therefore safe to call on a readonly field
+            return type.SpecialType != SpecialType.None && type.TypeKind == TypeKind.Struct;
         }
 
         private void ReportUnwrittenFields(CompilationAnalysisContext context)
@@ -162,8 +193,13 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                     return;
                 }
 
-                _writtenFields.Add(fieldSymbol);
+                MarkFieldAsWritten(fieldSymbol);
             }
+        }
+
+        private void MarkFieldAsWritten(IFieldSymbol field)
+        {
+            _writtenFields.Add(field);
         }
 
         private bool IsInsideOwnConstructor(SyntaxNode node, ITypeSymbol type, bool isStatic, SemanticModel model)

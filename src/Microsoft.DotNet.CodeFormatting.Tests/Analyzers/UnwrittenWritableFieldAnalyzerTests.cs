@@ -253,6 +253,28 @@ struct C
         }
 
         [Fact]
+        public void TestIgnoredReadonlyWithMethodCall()
+        {
+            string text = @"
+struct S
+{
+    public void T() { }
+}
+
+class C
+{
+    private S called;
+
+    public void T()
+    {
+        called.T();
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkReadonlyWithWriteReferencesInConstructor()
         {
             string text = @"
