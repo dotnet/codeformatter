@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -72,6 +73,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             context.RegisterSyntaxNodeAction(CheckForAssignment, compoundAssignmentExpressionKinds);
             context.RegisterSyntaxNodeAction(CheckForRefOrOutParameter, SyntaxKind.Argument);
             context.RegisterSyntaxNodeAction(CheckForExternMethodWithRefParameters, SyntaxKind.MethodDeclaration);
+            context.RegisterSyntaxNodeAction(CheckForExternIndexer, SyntaxKind.IndexerDeclaration);
             context.RegisterSyntaxNodeAction(CheckForInvocations, SyntaxKind.InvocationExpression);
             context.RegisterCompilationEndAction(ReportUnwrittenFields);
         }
@@ -139,6 +141,16 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                         MarkFieldAsWritten(field);
                     }
                 }
+            }
+        }
+
+        private void CheckForExternIndexer(SyntaxNodeAnalysisContext context)
+        {
+            var node = (IndexerDeclarationSyntax)context.Node;
+            if (node.Modifiers.Any(m => m.IsKind(SyntaxKind.ExternKeyword)))
+            {
+                // This method body is unable to be analysed, so may contain writer instances
+                CheckForRefParameters(node.ParameterList.Parameters, context.SemanticModel);
             }
         }
 

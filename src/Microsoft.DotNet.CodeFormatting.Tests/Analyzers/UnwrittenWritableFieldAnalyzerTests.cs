@@ -269,6 +269,20 @@ struct C
         }
 
         [Fact]
+        public void TestIgnoredReadonlyWithExternIndexer()
+        {
+            string text = @"
+struct C
+{
+    private int read;
+
+    private extern int this[ref C c];
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestIgnoredReadonlyWithMethodCall()
         {
             string text = @"
