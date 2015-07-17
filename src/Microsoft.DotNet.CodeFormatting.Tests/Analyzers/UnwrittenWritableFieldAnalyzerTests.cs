@@ -176,6 +176,27 @@ class C
         }
 
         [Fact]
+        public void TestIgnoredReadonlyWithOutArgument()
+        {
+            string text = @"
+class C
+{
+    private int read;
+
+    public void N(out int a)
+    {
+    }
+
+    public void T()
+    {
+        N(out read);
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkReadonlyWithWriteReferencesInConstructor()
         {
             string text = @"
