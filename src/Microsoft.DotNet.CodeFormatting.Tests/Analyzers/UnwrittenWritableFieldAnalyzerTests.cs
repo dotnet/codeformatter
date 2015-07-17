@@ -376,6 +376,23 @@ class C
             Verify(Original(text), Readonly(text));
         }
 
+        [Fact]
+        public void TestIgnoreStaticReadonlyWithWriteReferencesInInstanceConstructor()
+        {
+            string text = @"
+class C
+{
+    private static int wrote;
+
+    public C()
+    {
+        wrote = 5;
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
