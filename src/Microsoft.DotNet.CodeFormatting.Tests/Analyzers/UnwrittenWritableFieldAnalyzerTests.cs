@@ -443,6 +443,45 @@ class C2
             Verify(Original(text), Readonly(text), true, LanguageNames.CSharp);
         }
 
+        [Fact]
+        public void TestMarkReadonlyWithFieldPrecededByXmlComment()
+        {
+            string text = @"
+class C
+{
+    /// <summary>Stuff</summary>
+    private READONLY int read;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
+        public void TestMarkReadonlyWithFieldPrecededByNonXmlComment()
+        {
+            string text = @"
+class C
+{
+    // Stuff
+    private READONLY int read;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+#if NOT_YET_PASSING
+        [Fact]
+        public void TestMarkReadonlyWithFieldWithNoAccessSpecifierPrecededByXmlComment()
+        {
+            string text = @"
+class C
+{
+    /// <summary>Stuff</summary>
+    READONLY int read;
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+#endif
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");

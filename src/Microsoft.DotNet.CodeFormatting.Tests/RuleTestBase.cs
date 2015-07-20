@@ -7,73 +7,74 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.DotNet.CodeFormatting;
-using Microsoft.DotNet.CodeFormatting.Tests;
 
-public abstract class RuleTestBase : CodeFormattingTestBase
+namespace Microsoft.DotNet.CodeFormatting.Tests
 {
-    protected override async Task<Solution> Format(Solution solution, bool runFormatter)
+    public abstract class RuleTestBase : CodeFormattingTestBase
     {
-        var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
-
-        foreach (var id in documentIds)
+        protected override async Task<Solution> Format(Solution solution, bool runFormatter)
         {
-            var document = solution.GetDocument(id);
-            document = await RewriteDocumentAsync(document).ConfigureAwait(false);
-            if (runFormatter)
+            var documentIds = solution.Projects.SelectMany(p => p.DocumentIds);
+
+            foreach (var id in documentIds)
             {
-                document = await Formatter.FormatAsync(document).ConfigureAwait(false);
+                var document = solution.GetDocument(id);
+                document = await RewriteDocumentAsync(document).ConfigureAwait(false);
+                if (runFormatter)
+                {
+                    document = await Formatter.FormatAsync(document).ConfigureAwait(false);
+                }
+
+                solution = document.Project.Solution;
             }
 
-            solution = document.Project.Solution;
+            return solution;
         }
 
-        return solution;
+        protected abstract Task<Document> RewriteDocumentAsync(Document document);
     }
 
-    protected abstract Task<Document> RewriteDocumentAsync(Document document);
-}
-
-public abstract class SyntaxRuleTestBase : RuleTestBase
-{
-    internal abstract ISyntaxFormattingRule Rule
+    public abstract class SyntaxRuleTestBase : RuleTestBase
     {
-        get;
+        internal abstract ISyntaxFormattingRule Rule
+        {
+            get;
+        }
+
+        protected override async Task<Document> RewriteDocumentAsync(Document document)
+        {
+            var syntaxRoot = await document.GetSyntaxRootAsync();
+            syntaxRoot = Rule.Process(syntaxRoot, document.Project.Language);
+            return document.WithSyntaxRoot(syntaxRoot);
+        }
     }
 
-    protected override async Task<Document> RewriteDocumentAsync(Document document)
+    public abstract class LocalSemanticRuleTestBase : RuleTestBase
     {
-        var syntaxRoot = await document.GetSyntaxRootAsync();
-        syntaxRoot = Rule.Process(syntaxRoot, document.Project.Language);
-        return document.WithSyntaxRoot(syntaxRoot);
-    }
-}
+        internal abstract ILocalSemanticFormattingRule Rule
+        {
+            get;
+        }
 
-public abstract class LocalSemanticRuleTestBase : RuleTestBase
-{
-    internal abstract ILocalSemanticFormattingRule Rule
-    {
-        get;
-    }
-
-    protected override async Task<Document> RewriteDocumentAsync(Document document)
-    {
-        var syntaxRoot = await document.GetSyntaxRootAsync();
-        syntaxRoot = await Rule.ProcessAsync(document, syntaxRoot, CancellationToken.None);
-        return document.WithSyntaxRoot(syntaxRoot);
-    }
-}
-
-public abstract class GlobalSemanticRuleTestBase : RuleTestBase
-{
-    internal abstract IGlobalSemanticFormattingRule Rule
-    {
-        get;
+        protected override async Task<Document> RewriteDocumentAsync(Document document)
+        {
+            var syntaxRoot = await document.GetSyntaxRootAsync();
+            syntaxRoot = await Rule.ProcessAsync(document, syntaxRoot, CancellationToken.None);
+            return document.WithSyntaxRoot(syntaxRoot);
+        }
     }
 
-    protected override async Task<Document> RewriteDocumentAsync(Document document)
+    public abstract class GlobalSemanticRuleTestBase : RuleTestBase
     {
-        var solution = await Rule.ProcessAsync(document, await document.GetSyntaxRootAsync(), CancellationToken.None);
-        return solution.GetDocument(document.Id);
+        internal abstract IGlobalSemanticFormattingRule Rule
+        {
+            get;
+        }
+
+        protected override async Task<Document> RewriteDocumentAsync(Document document)
+        {
+            var solution = await Rule.ProcessAsync(document, await document.GetSyntaxRootAsync(), CancellationToken.None);
+            return solution.GetDocument(document.Id);
+        }
     }
 }

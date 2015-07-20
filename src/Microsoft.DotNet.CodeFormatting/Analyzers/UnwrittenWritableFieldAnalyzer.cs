@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     public class UnwrittenWritableFieldAnalyzer: DiagnosticAnalyzer
     {
         internal const string DiagnosticId = "DNS0002";
-        private static DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId,
+        private static DiagnosticDescriptor s_rule = new DiagnosticDescriptor(DiagnosticId,
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.UnwrittenWritableFieldAnalyzer_Title)),
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.UnwrittenWritableFieldAnalyzer_MessageFormat)),
                                                                             "Usage",
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
         private HashSet<IFieldSymbol> _writtenFields;
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
-            => ImmutableArray.Create(rule);
+            => ImmutableArray.Create(s_rule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             IEnumerable<IFieldSymbol> fieldsToMark = _candidateReadonlyFields.Except(_writtenFields);
             foreach (var field in fieldsToMark)
             {
-                context.ReportDiagnostic(Diagnostic.Create(rule, field.Locations[0], field.Name));
+                context.ReportDiagnostic(Diagnostic.Create(s_rule, field.Locations[0], field.Name));
             }
         }
 

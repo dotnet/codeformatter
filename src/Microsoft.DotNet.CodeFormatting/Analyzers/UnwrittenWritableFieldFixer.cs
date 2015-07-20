@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -42,7 +43,8 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
         private Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, FieldDeclarationSyntax fieldDeclaration)
         {
             FieldDeclarationSyntax newFieldDeclaration = fieldDeclaration
-                .WithModifiers(fieldDeclaration.Modifiers.Add(s_readOnlyToken));
+                .WithModifiers(fieldDeclaration.Modifiers.Add(s_readOnlyToken))
+                .WithAdditionalAnnotations(Formatter.Annotation);
             SyntaxNode newRoot = root.ReplaceNode(fieldDeclaration, newFieldDeclaration);
             Document newDocument = document.WithSyntaxRoot(newRoot);
             return Task.FromResult(newDocument);
