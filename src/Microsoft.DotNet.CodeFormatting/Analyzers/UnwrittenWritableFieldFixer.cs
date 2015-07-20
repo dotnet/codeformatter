@@ -5,41 +5,49 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
-    public class ExplicitThisFixer : CodeFixProvider
+    public class UnwrittenWritableFieldThisFixer : CodeFixProvider
     {
+        private static SyntaxToken s_readOnlyToken =  SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
+
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             SyntaxNode root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             Diagnostic diagnostic = context.Diagnostics.First();
             TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
-            var memberAccessNode = root
+            var fieldDeclarationNode = root
                 .FindToken(diagnosticSpan.Start)
                 .Parent
-                .FirstAncestorOrSelf<MemberAccessExpressionSyntax>();
+                .FirstAncestorOrSelf<FieldDeclarationSyntax>();
 
-            Debug.Assert(memberAccessNode != null);
+            Debug.Assert(fieldDeclarationNode != null);
 
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    Resources.ExplicitThisFixer_Title,
-                    c => RemoveThisQualifier(context.Document, root, memberAccessNode)),
-                context.Diagnostics.First());
+                    Resources.UnwrittenWritableFieldFixer_Title,
+                    c => AddReadonlyModifier(context.Document, root, fieldDeclarationNode)),
+                diagnostic);
         }
 
-        private Task<Document> RemoveThisQualifier(Document document, SyntaxNode root, SyntaxNode memberAccessNode)
+        private Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, FieldDeclarationSyntax fieldDeclaration)
         {
-            return Task.FromResult(
-                document.WithSyntaxRoot(root.ReplaceNode(memberAccessNode, memberAccessNode.WithAdditionalAnnotations(Simplifier.Annotation))));
+            FieldDeclarationSyntax newFieldDeclaration = fieldDeclaration
+                .WithModifiers(fieldDeclaration.Modifiers.Add(s_readOnlyToken))
+                .WithAdditionalAnnotations(Formatter.Annotation);
+            SyntaxNode newRoot = root.ReplaceNode(fieldDeclaration, newFieldDeclaration);
+            Document newDocument = document.WithSyntaxRoot(newRoot);
+            return Task.FromResult(newDocument);
         }
 
         public override FixAllProvider GetFixAllProvider()
@@ -48,6 +56,6 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
         }
 
         public override ImmutableArray<string> FixableDiagnosticIds
-            => ImmutableArray.Create(ExplicitThisAnalyzer.DiagnosticId);
+            => ImmutableArray.Create(UnwrittenWritableFieldAnalyzer.DiagnosticId);
     }
 }

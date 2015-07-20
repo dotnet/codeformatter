@@ -4,6 +4,7 @@
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,17 +16,16 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ExplicitThisAnalyzer : DiagnosticAnalyzer
     {
-        internal static DiagnosticDescriptor rule = new DiagnosticDescriptor("DNS0001",
-                                                                             "Don't use explicit 'this' for private fields",
-                                                                             "Don't use explicit 'this' for private fields",
-                                                                             "Style",
-                                                                             DiagnosticSeverity.Warning,
-                                                                             true);
+        internal const string DiagnosticId = "DNS0001";
+        private static DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId,
+                                                                            ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_Title)),
+                                                                            ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_MessageFormat)),
+                                                                            "Style",
+                                                                            DiagnosticSeverity.Warning,
+                                                                            true);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
-        {
-            get { return ImmutableArray.Create(rule); }
-        }
+            => ImmutableArray.Create(rule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                         node.Expression.Kind() == SyntaxKind.ThisExpression &&
                         IsPrivateField(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                     {
-                        syntaxContext.ReportDiagnostic(Diagnostic.Create(rule, node.GetLocation()));
+                        syntaxContext.ReportDiagnostic(Diagnostic.Create(rule, node.GetLocation(), node.Name));
                     }
                 }
             }, SyntaxKind.SimpleMemberAccessExpression);

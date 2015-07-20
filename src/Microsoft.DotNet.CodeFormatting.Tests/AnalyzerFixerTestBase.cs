@@ -12,10 +12,31 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     { 
         private IFormattingEngine _engine; 
 
-        protected AnalyzerFixerTestBase(IFormattingEngine engine)
-        { 
-            _engine = engine; 
-        } 
+        private IFormattingEngine Engine
+        {
+            get
+            {
+                if (_engine == null)
+                {
+                    _engine = FormattingEngine.Create();
+                }
+
+                return _engine;
+            }
+        }
+
+        protected void DisableAllDiagnostics()
+        {
+            foreach (var supportedDiagnostic in Engine.AllSupportedDiagnostics)
+            {
+                Engine.ToggleDiagnosticEnabled(supportedDiagnostic.Id, false);
+            }
+        }
+
+        protected void EnableDiagnostic(string diagnosticId)
+        {
+            Engine.ToggleDiagnosticEnabled(diagnosticId, true);
+        }
 
         protected override async Task<Solution> Format(Solution solution, bool runFormatter)
         { 

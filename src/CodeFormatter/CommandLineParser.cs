@@ -32,6 +32,18 @@ namespace CodeFormatter
             verbose: false,
             useAnalyzers: false);
 
+        public static readonly CommandLineOptions ListAnalyzers = new CommandLineOptions(
+            Operation.ListRules,
+            ImmutableArray<string[]>.Empty,
+            ImmutableArray<string>.Empty,
+            ImmutableDictionary<string, bool>.Empty,
+            ImmutableArray<string>.Empty,
+            ImmutableArray<string>.Empty,
+            null,
+            allowTables: false,
+            verbose: false,
+            useAnalyzers: true);
+
         public readonly Operation Operation;
         public readonly ImmutableArray<string[]> PreprocessorConfigurations;
         public readonly ImmutableArray<string> CopyrightHeader;
@@ -149,7 +161,8 @@ namespace CodeFormatter
     /verbose     - Verbose output
     /useanalyzers - Use Roslyn analyzers and code fixes to perform
                    formatting operations. (Default is to use codeformatter's
-                   ""rule""-based operations.
+                   ""rule""-based operations.)
+    /analyzers   - List the available Roslyn diagnostics.
 ";
 
         public static void PrintUsage()
@@ -246,6 +259,10 @@ namespace CodeFormatter
                 else if (comparer.Equals(arg, "/rules"))
                 {
                     return CommandLineParseResult.CreateSuccess(CommandLineOptions.ListRules);
+                }
+                else if (comparer.Equals(arg, "/analyzers"))
+                {
+                    return CommandLineParseResult.CreateSuccess(CommandLineOptions.ListAnalyzers);
                 }
                 else
                 {

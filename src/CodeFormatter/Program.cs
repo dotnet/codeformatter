@@ -31,7 +31,7 @@ namespace CodeFormatter
             switch (options.Operation)
             {
                 case Operation.ListRules:
-                    RunListRules();
+                    RunListRules(options.UseAnalyzers);
                     exitCode = 0;
                     break;
                 case Operation.Format:
@@ -44,14 +44,26 @@ namespace CodeFormatter
             return 0;
         }
 
-        private static void RunListRules()
+        private static void RunListRules(bool useAnalyzers)
         {
-            var rules = FormattingEngine.GetFormattingRules();
-            Console.WriteLine("{0,-20} {1}", "Name", "Description");
+            Console.WriteLine("{0,-20} {1}", "Name", "Title");
             Console.WriteLine("==============================================");
-            foreach (var rule in rules)
+
+            if (useAnalyzers)
             {
-                Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
+                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics();
+                foreach (var diagnosticDescriptor in diagnosticDescriptors)
+                {
+                    Console.WriteLine("{0,-20} :{1}", diagnosticDescriptor.Id, diagnosticDescriptor.Title);
+                }
+            }
+            else
+            {
+                var rules = FormattingEngine.GetFormattingRules();
+                foreach (var rule in rules)
+                {
+                    Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
+                }
             }
         }
 
@@ -92,9 +104,19 @@ namespace CodeFormatter
             engine.AllowTables = options.AllowTables;
             engine.Verbose = options.Verbose;
 
-            if (!SetRuleMap(engine, options.RuleMap))
+            if (options.UseAnalyzers)
             {
-                return 1;
+                if (!SetDiagnosticsEnabledMap(engine, options.RuleMap))
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                if (!SetRuleMap(engine, options.RuleMap))
+                {
+                    return 1;
+                }
             }
 
             foreach (var item in options.FormatTargets)
@@ -155,6 +177,24 @@ namespace CodeFormatter
                 }
 
                 engine.ToggleRuleEnabled(rule, entry.Value);
+            }
+
+            return true;
+        }
+
+        private static bool SetDiagnosticsEnabledMap(IFormattingEngine engine, ImmutableDictionary<string, bool> ruleMap)
+        {
+            var comparer = StringComparer.OrdinalIgnoreCase;
+            foreach (var entry in ruleMap)
+            {
+                var diagnosticDescriptor = engine.AllSupportedDiagnostics.Where(x => comparer.Equals(x.Id, entry.Key)).FirstOrDefault();
+                if (diagnosticDescriptor == null)
+                {
+                    Console.WriteLine("Could not find diagnostic with ID {0}", entry.Key);
+                    return false;
+                }
+
+                engine.ToggleDiagnosticEnabled(diagnosticDescriptor.Id, entry.Value);
             }
 
             return true;
