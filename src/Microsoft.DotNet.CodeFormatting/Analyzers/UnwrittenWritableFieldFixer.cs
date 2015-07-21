@@ -4,23 +4,21 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
     public class UnwrittenWritableFieldThisFixer : CodeFixProvider
     {
-        private static SyntaxToken s_readOnlyToken =  SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
-
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             SyntaxNode root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -36,18 +34,18 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             context.RegisterCodeFix(
                 CodeAction.Create(
                     Resources.UnwrittenWritableFieldFixer_Title,
-                    c => AddReadonlyModifier(context.Document, root, fieldDeclarationNode)),
+                    c => AddReadonlyModifier(context.Document, root, fieldDeclarationNode, context.CancellationToken)),
                 diagnostic);
         }
 
-        private Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, FieldDeclarationSyntax fieldDeclaration)
+        private async Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, FieldDeclarationSyntax fieldDeclaration, CancellationToken cancellationToken)
         {
-            FieldDeclarationSyntax newFieldDeclaration = fieldDeclaration
-                .WithModifiers(fieldDeclaration.Modifiers.Add(s_readOnlyToken))
-                .WithAdditionalAnnotations(Formatter.Annotation);
-            SyntaxNode newRoot = root.ReplaceNode(fieldDeclaration, newFieldDeclaration);
-            Document newDocument = document.WithSyntaxRoot(newRoot);
-            return Task.FromResult(newDocument);
+            var docEditor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
+            var modifiers = docEditor.Generator.GetModifiers(fieldDeclaration);
+            docEditor.SetModifiers(fieldDeclaration, modifiers + DeclarationModifiers.ReadOnly);
+
+            return docEditor.GetChangedDocument();
+
         }
 
         public override FixAllProvider GetFixAllProvider()

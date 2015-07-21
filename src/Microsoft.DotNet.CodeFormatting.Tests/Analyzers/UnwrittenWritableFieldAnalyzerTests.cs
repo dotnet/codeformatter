@@ -468,7 +468,7 @@ class C
 ";
             Verify(Original(text), Readonly(text));
         }
-#if NOT_YET_PASSING
+
         [Fact]
         public void TestMarkReadonlyWithFieldWithNoAccessSpecifierPrecededByXmlComment()
         {
@@ -481,7 +481,7 @@ class C
 ";
             Verify(Original(text), Readonly(text));
         }
-#endif
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
