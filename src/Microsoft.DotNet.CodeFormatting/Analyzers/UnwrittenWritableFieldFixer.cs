@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.Text;
@@ -20,8 +19,6 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     [ExportCodeFixProvider(LanguageNames.CSharp)]
     public class UnwrittenWritableFieldThisFixer : CodeFixProvider
     {
-        private static readonly SyntaxToken s_readOnlyToken =  SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
-
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             SyntaxNode root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -43,9 +40,6 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
 
         private async Task<Document> AddReadonlyModifier(Document document, SyntaxNode root, FieldDeclarationSyntax fieldDeclaration, CancellationToken cancellationToken)
         {
-            SemanticModel model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-            ISymbol fieldSymbol = model.GetDeclaredSymbol(fieldDeclaration, cancellationToken);
-
             var docEditor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
             var modifiers = docEditor.Generator.GetModifiers(fieldDeclaration);
             docEditor.SetModifiers(fieldDeclaration, modifiers + DeclarationModifiers.ReadOnly);
