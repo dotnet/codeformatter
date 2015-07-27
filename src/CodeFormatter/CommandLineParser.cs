@@ -139,7 +139,7 @@ namespace CodeFormatter
         private const string RuleEnabledSwitch1 = "/rule+:";
         private const string RuleEnabledSwitch2 = "/rule:";
         private const string RuleDisabledSwitch = "/rule-:";
-        private const string Usage = 
+        private const string Usage =
 @"CodeFormatter [/file:<filename>] [/lang:<language>] [/c:<config>[,<config>...]>]
     [/copyright:<file> | /nocopyright] [/tables] [/nounicode] 
     [/rule(+|-):rule1,rule2,...]  [/verbose]

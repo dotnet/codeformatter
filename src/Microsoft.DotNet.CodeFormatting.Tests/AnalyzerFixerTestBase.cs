@@ -1,16 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Threading; 
-using System.Threading.Tasks; 
+using System.Threading;
+using System.Threading.Tasks;
 
-using Microsoft.CodeAnalysis; 
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
-{ 
-    public abstract class AnalyzerFixerTestBase : CodeFormattingTestBase 
-    { 
-        private IFormattingEngine _engine; 
+{
+    public abstract class AnalyzerFixerTestBase : CodeFormattingTestBase
+    {
+        private IFormattingEngine _engine;
 
         private IFormattingEngine Engine
         {
@@ -39,10 +39,10 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
 
         protected override async Task<Solution> Format(Solution solution, bool runFormatter)
-        { 
-            Workspace workspace = solution.Workspace; 
-            await _engine.FormatSolutionAsync(solution, useAnalyzers: true, cancellationToken: default(CancellationToken)).ConfigureAwait(false); 
-            return workspace.CurrentSolution; 
-        } 
-    } 
-} 
+        {
+            Workspace workspace = solution.Workspace;
+            await _engine.FormatSolutionAsync(solution, useAnalyzers: true, cancellationToken: default(CancellationToken)).ConfigureAwait(false);
+            return workspace.CurrentSolution;
+        }
+    }
+}

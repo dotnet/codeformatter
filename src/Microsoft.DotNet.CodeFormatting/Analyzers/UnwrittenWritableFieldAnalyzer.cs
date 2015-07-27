@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     /// </summary>
     [Export(typeof(DiagnosticAnalyzer))]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class UnwrittenWritableFieldAnalyzer: DiagnosticAnalyzer
+    public class UnwrittenWritableFieldAnalyzer : DiagnosticAnalyzer
     {
         internal const string DiagnosticId = "DNS0002";
         private static DiagnosticDescriptor s_rule = new DiagnosticDescriptor(DiagnosticId,
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                                             DiagnosticSeverity.Warning,
                                                                             true);
 
-        private static readonly SyntaxKind[] compoundAssignmentExpressionKinds =
+        private static readonly SyntaxKind[] s_compoundAssignmentExpressionKinds =
             {
                 SyntaxKind.SimpleAssignmentExpression,
                 SyntaxKind.AddAssignmentExpression,
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                 "System.Runtime.CompilerServices.InternalsVisibleToAttribute");
 
             context.RegisterSymbolAction(LocateCandidateReadonlyFields, SymbolKind.Field);
-            context.RegisterSyntaxNodeAction(CheckForAssignment, compoundAssignmentExpressionKinds);
+            context.RegisterSyntaxNodeAction(CheckForAssignment, s_compoundAssignmentExpressionKinds);
             context.RegisterSyntaxNodeAction(CheckForRefOrOutParameter, SyntaxKind.Argument);
             context.RegisterSyntaxNodeAction(CheckForExternMethodWithRefParameters, SyntaxKind.MethodDeclaration);
             context.RegisterSyntaxNodeAction(CheckForExternIndexer, SyntaxKind.IndexerDeclaration);

@@ -133,7 +133,7 @@ namespace CodeFormatter
             string language,
             bool useAnalyzers,
             CancellationToken cancellationToken)
-        { 
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
