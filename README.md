@@ -10,10 +10,11 @@ follow our coding styles, which are [documented here][corefx-coding-style].
 ## Prerequisites
 
 In order to build or run this tool you will need to have Microsoft Build Tools
-2015 Preview installed.  This comes as a part of Visual Studio 2015 Preview or
-can be installed separately from [here][vs-2015-download].
+2015 installed.  This comes as a part of [Visual Studio 2015](https://www.visualstudio.com/downloads/download-visual-studio-vs).
 
-[vs-2015-download]: http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs
+## Installation
+
+Download binaries from [GitHub Releases](https://github.com/dotnet/codeformatter/releases)
 
 ## Usage
 
