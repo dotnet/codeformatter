@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     public class ExplicitThisAnalyzer : DiagnosticAnalyzer
     {
         internal const string DiagnosticId = "DNS0001";
-        private static DiagnosticDescriptor rule = new DiagnosticDescriptor(DiagnosticId,
+        private static DiagnosticDescriptor s_rule = new DiagnosticDescriptor(DiagnosticId,
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_Title)),
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_MessageFormat)),
                                                                             "Style",
@@ -25,11 +25,11 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                                                                             true);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
-            => ImmutableArray.Create(rule);
+            => ImmutableArray.Create(s_rule);
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(syntaxContext => 
+            context.RegisterSyntaxNodeAction(syntaxContext =>
             {
                 var node = syntaxContext.Node as MemberAccessExpressionSyntax;
 
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                         node.Expression.Kind() == SyntaxKind.ThisExpression &&
                         IsPrivateField(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                     {
-                        syntaxContext.ReportDiagnostic(Diagnostic.Create(rule, node.GetLocation(), node.Name));
+                        syntaxContext.ReportDiagnostic(Diagnostic.Create(s_rule, node.GetLocation(), node.Name));
                     }
                 }
             }, SyntaxKind.SimpleMemberAccessExpression);
