@@ -88,6 +88,33 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use VariableTypeDeclaration.
+        /// </summary>
+        internal static string ExplicitVariableTypeAnalyzer_MessageFormat {
+            get {
+                return ResourceManager.GetString("ExplicitVariableTypeAnalyzer_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type .
+        /// </summary>
+        internal static string ExplicitVariableTypeAnalyzer_Title {
+            get {
+                return ResourceManager.GetString("ExplicitVariableTypeAnalyzer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replace the usage of &apos;var&apos; with explicit type.
+        /// </summary>
+        internal static string ExplicitVariableTypeFixer_Title {
+            get {
+                return ResourceManager.GetString("ExplicitVariableTypeFixer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The field &apos;{0}&apos; is never written to and can be marked readonly.
         /// </summary>
         internal static string UnwrittenWritableFieldAnalyzer_MessageFormat {
