@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type .
+        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type.
         /// </summary>
         internal static string ExplicitVariableTypeAnalyzer_Title {
             get {

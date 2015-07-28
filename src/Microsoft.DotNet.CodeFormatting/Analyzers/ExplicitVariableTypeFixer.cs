@@ -5,7 +5,9 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -13,12 +15,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Threading;
 
 namespace Microsoft.DotNet.CodeFormatting.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
-    class ExplicitVariableTypeFixer : CodeFixProvider
+    public class ExplicitVariableTypeFixer : CodeFixProvider
     {
         public override ImmutableArray<string> FixableDiagnosticIds
             => ImmutableArray.Create(ExplicitVariableTypeAnalyzer.DiagnosticId);
@@ -47,7 +48,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                     Debug.Assert(variableDeclarationNode != null);
                     oldTypeSyntaxNode = variableDeclarationNode.Type;
                     // Implicit typed variables cannot have multiple declartors
-                    newTypeSyntaxNode = GetTypeSyntaxNode(variableDeclarationNode.Variables.Single(), model, cancellationToken);
+                    newTypeSyntaxNode = CreateTypeSyntaxNode(variableDeclarationNode.Variables.Single(), model, cancellationToken);
                     break;
 
                 case RuleType.RuleForEachStatement:
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                         FirstAncestorOrSelf<ForEachStatementSyntax>();
                     Debug.Assert(forEachStatementNode != null);
                     oldTypeSyntaxNode = forEachStatementNode.Type;
-                    newTypeSyntaxNode = GetTypeSyntaxNode(forEachStatementNode, model, cancellationToken);
+                    newTypeSyntaxNode = CreateTypeSyntaxNode(forEachStatementNode, model, cancellationToken);
                     break;
 
                 case RuleType.None:
@@ -74,14 +75,14 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             }
         }
 
-        private Task<Document> ReplaceVarWithExplicitType(Document document, SyntaxNode root, SyntaxNode varNode, SyntaxNode ExplicitTypeNode)
+        private Task<Document> ReplaceVarWithExplicitType(Document document, SyntaxNode root, SyntaxNode varNode, SyntaxNode explicitTypeNode)
         {
             return Task.FromResult(
-                document.WithSyntaxRoot(root.ReplaceNode(varNode, ExplicitTypeNode.WithAdditionalAnnotations(Simplifier.Annotation))));
+                document.WithSyntaxRoot(root.ReplaceNode(varNode, explicitTypeNode.WithAdditionalAnnotations(Simplifier.Annotation))));
         }
 
         // return null if could not construct a TypeSyntax with explicit type.
-        private static TypeSyntax GetTypeSyntaxNode(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
+        private static TypeSyntax CreateTypeSyntaxNode(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
         {
             if (node == null || model == null)
             {
