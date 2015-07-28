@@ -99,9 +99,7 @@ class C1
     {
         var x = new U1();
         var y = new U2();
-        var z = U3.E1;
-        using (var x = new U1())
-        { }         
+        var z = U3.E1;         
     }
 }";
             const string expected = @"
@@ -119,9 +117,7 @@ class C1
     {
         U1 x = new U1();
         U2 y = new U2();
-        U3 z = U3.E1;
-        using (U1 x = new U1())
-        { }         
+        U3 z = U3.E1;         
     }
 }";
             Verify(text, expected, runFormatter: false);
