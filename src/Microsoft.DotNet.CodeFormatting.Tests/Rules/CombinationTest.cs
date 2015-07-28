@@ -75,7 +75,8 @@ internal class C
     {
         N(_field);
     }
-}";
+}
+";
 
             Verify(text, expected, runFormatter: false);
         }
@@ -160,7 +161,8 @@ internal class C
     {
         _field = 42;
     }
-}";
+}
+";
 
             Verify(text, expected, runFormatter: false);
         }
@@ -183,7 +185,8 @@ internal class C
 #if DOG
     void M() { } 
 #endif 
-}";
+}
+";
 
             Verify(text, expected, runFormatter: false);
         }
@@ -209,7 +212,8 @@ internal class C
     {
     }
 #endif
-}";
+}
+";
 
             _formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "DOG" } });
             Verify(text, expected, runFormatter: false);
@@ -243,7 +247,8 @@ internal class C
     void M() {
 }
 #endif 
-}";
+}
+";
 
             Verify(text, expected, runFormatter: false);
         }
@@ -283,7 +288,8 @@ internal class C
     void M() {
 }
 #endif 
-}";
+}
+";
 
             _formattingEngine.PreprocessorConfigurations = ImmutableArray.CreateRange(new[] { new[] { "TEST" } });
             Verify(text, expected, runFormatter: false);
@@ -326,7 +332,8 @@ internal class C
         {
         }
     }
-}";
+}
+";
 
             Verify(source, expected, runFormatter: false);
         }

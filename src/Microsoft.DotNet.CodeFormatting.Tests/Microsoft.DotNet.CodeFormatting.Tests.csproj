@@ -93,6 +93,7 @@
     <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
     <Compile Include="Rules\NewLineAboveRuleTests.cs" />
+    <Compile Include="Rules\NewLineAtEndOfFileRuleTests.cs" />
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\MarkReadonlyFieldTests.cs" />
