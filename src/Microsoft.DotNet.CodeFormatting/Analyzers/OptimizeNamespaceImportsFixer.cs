@@ -52,57 +52,5 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
 
         public override ImmutableArray<string> FixableDiagnosticIds
             => ImmutableArray.Create(OptimizeNamespaceImportsAnalyzer.DiagnosticId);
-
-        ////private static OptimizeNamespaceImportsFixAllProvider s_fixAllProvider = new OptimizeNamespaceImportsFixAllProvider();
-
-        ////private class OptimizeNamespaceImportsFixAllProvider : FixAllProvider
-        //{
-        //    public override async Task<CodeAction> GetFixAsync(FixAllContext fixAllContext)
-        //    {
-        //        var diagnosticsToFix = new List<KeyValuePair<Project, ImmutableArray<Diagnostic>>>();
-        //        string titleFormat = "Remove all unnecessary using directives in {0} {1}";
-        //        string title = null;
-
-        //        switch (fixAllContext.Scope)
-        //        {
-        //            case FixAllScope.Document:
-        //                {
-        //                    var diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document).ConfigureAwait(false);
-        //                    diagnosticsToFix.Add(new KeyValuePair<Project, ImmutableArray<Diagnostic>>(fixAllContext.Project, diagnostics));
-        //                    title = string.Format(titleFormat, "document", fixAllContext.Document.Name);
-        //                    break;
-        //                }
-
-        //            case FixAllScope.Project:
-        //                {
-        //                    var project = fixAllContext.Project;
-        //                    ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetAllDiagnosticsAsync(project).ConfigureAwait(false);
-        //                    diagnosticsToFix.Add(new KeyValuePair<Project, ImmutableArray<Diagnostic>>(fixAllContext.Project, diagnostics));
-        //                    title = string.Format(titleFormat, "project", fixAllContext.Project.Name);
-        //                    break;
-        //                }
-
-        //            case FixAllScope.Solution:
-        //                {
-        //                    foreach (var project in fixAllContext.Solution.Projects)
-        //                    {
-        //                        ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetAllDiagnosticsAsync(project).ConfigureAwait(false);
-        //                        diagnosticsToFix.Add(new KeyValuePair<Project, ImmutableArray<Diagnostic>>(project, diagnostics));
-        //                    }
-
-        //                    title = "Add all items in the solution to the public API";
-        //                    break;
-        //                }
-
-        //            case FixAllScope.Custom:
-        //                return null;
-
-        //            default:
-        //                break;
-        //        }
-
-        //        return new FixAllAdditionalDocumentChangeAction(title, fixAllContext.Solution, diagnosticsToFix);
-        //    }
-        //}
     }
 }
