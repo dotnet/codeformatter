@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ExplicitThisAnalyzer : DiagnosticAnalyzer
     {
-        internal const string DiagnosticId = "DNS0001";
+        internal const string DiagnosticId = AnalyzerIds.ExplicitThis;
         private static DiagnosticDescriptor s_rule = new DiagnosticDescriptor(DiagnosticId,
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_Title)),
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_MessageFormat)),

@@ -68,8 +68,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analyzers\AnalyzerIds.cs" />
     <Compile Include="Analyzers\ExplicitThisAnalyzer.cs" />
     <Compile Include="Analyzers\ExplicitThisFixer.cs" />
+    <Compile Include="Analyzers\OptimizeNamespaceImportsFixer.cs" />
+    <Compile Include="Analyzers\OptimizeNamespaceImportsAnalyzer.cs" />
     <Compile Include="Analyzers\UnwrittenWritableFieldAnalyzer.cs" />
     <Compile Include="Analyzers\UnwrittenWritableFieldFixer.cs" />
     <Compile Include="FormattingEngineDiagnosticProvider.cs" />
