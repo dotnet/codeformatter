@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.CodeFormatting
         }
 
         /// <summary>
-        /// Wait for the semaphore, and return a lock that, when diposed, will release it
+        /// Wait for the semaphore, and return a lock that, when disposed, will release it
         /// </summary>
         /// <param name="semaphore">Semphore to lock</param>
         /// <returns>Lock that can be Disposed to release the semaphore</returns>

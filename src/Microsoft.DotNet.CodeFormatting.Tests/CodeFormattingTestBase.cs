@@ -91,6 +91,5 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             Verify(new string[] { source }, new string[] { expected }, runFormatter, languageName);
         }
-
     }
 }

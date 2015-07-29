@@ -45,7 +45,6 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             docEditor.SetModifiers(fieldDeclaration, modifiers + DeclarationModifiers.ReadOnly);
 
             return docEditor.GetChangedDocument();
-
         }
 
         public override FixAllProvider GetFixAllProvider()
