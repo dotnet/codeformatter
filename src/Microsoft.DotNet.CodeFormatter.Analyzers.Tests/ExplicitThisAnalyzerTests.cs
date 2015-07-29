@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.CodeFormatting.Analyzers;
+using Microsoft.DotNet.CodeFormatter.Analyzers;
 
 using Xunit;
 
-namespace Microsoft.DotNet.CodeFormatting.Tests
+namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
 {
     public sealed class ExplicitThisAnalyzerTests : AnalyzerFixerTestBase
     {

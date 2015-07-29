@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.DotNet.CodeFormatting.Tests;
+using Microsoft.DotNet.CodeFormatting;
 
-namespace Microsoft.DotNet.CodeFormatting.Tests
+namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
 {
     public abstract class AnalyzerFixerTestBase : CodeFormattingTestBase
     {
@@ -18,7 +22,11 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             {
                 if (_engine == null)
                 {
-                    _engine = FormattingEngine.Create();
+                    _engine = FormattingEngine.Create(
+                        new Assembly[] {
+                            typeof(FormattingEngine).Assembly,
+                            typeof(OptimizeNamespaceImportsAnalyzer).Assembly}
+                        );
                 }
 
                 return _engine;

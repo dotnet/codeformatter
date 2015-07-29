@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 
-namespace Microsoft.DotNet.CodeFormatting.Analyzers
+namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
     public class OptimizeNamespaceImportsFixer : CodeFixProvider

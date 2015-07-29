@@ -1,74 +1,66 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\build.props" />
   <PropertyGroup>
-    <ProjectGuid>{B0E1A988-F762-459D-AD0D-56A3CF4FFF3F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{496B91F4-478D-4388-BA6B-1D945E3E7497}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CodeFormatter</RootNamespace>
-    <AssemblyName>CodeFormatter</AssemblyName>
+    <RootNamespace>Microsoft.DotNet.CodeFormatter.Analyzers</RootNamespace>
+    <AssemblyName>Microsoft.DotNet.CodeFormatter.Analyzers</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <!-- Default configurations to help VS understand -->
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.CSharp.Workspaces.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.VisualBasic, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.VisualBasic.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.CodeAnalysis.VisualBasic.Workspaces.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Workspaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Workspaces.Desktop, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.CodeAnalysis.Workspaces.Common.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.Workspaces.Desktop.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.1.36.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.1.36\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Composition.AttributedModel, Version=1.0.27.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\System.Collections.Immutable.1.1.36\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Composition.AttributedModel">
       <HintPath>..\packages\Microsoft.Composition.1.0.27\lib\portable-net45+win8+wp8+wpa81\System.Composition.AttributedModel.dll</HintPath>
     </Reference>
-    <Reference Include="System.Composition.Convention, Version=1.0.27.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Composition.Convention">
       <HintPath>..\packages\Microsoft.Composition.1.0.27\lib\portable-net45+win8+wp8+wpa81\System.Composition.Convention.dll</HintPath>
     </Reference>
-    <Reference Include="System.Composition.Hosting, Version=1.0.27.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Composition.Hosting">
       <HintPath>..\packages\Microsoft.Composition.1.0.27\lib\portable-net45+win8+wp8+wpa81\System.Composition.Hosting.dll</HintPath>
     </Reference>
-    <Reference Include="System.Composition.Runtime, Version=1.0.27.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Composition.Runtime">
       <HintPath>..\packages\Microsoft.Composition.1.0.27\lib\portable-net45+win8+wp8+wpa81\System.Composition.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="System.Composition.TypedParts, Version=1.0.27.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Composition.TypedParts">
       <HintPath>..\packages\Microsoft.Composition.1.0.27\lib\portable-net45+win8+wp8+wpa81\System.Composition.TypedParts.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Reflection.Metadata, Version=1.0.21.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\System.Reflection.Metadata.1.0.21\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -77,37 +69,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandLineParser.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="AnalyzerIds.cs" />
+    <Compile Include="ExplicitThisAnalyzer.cs" />
+    <Compile Include="ExplicitThisFixer.cs" />
+    <Compile Include="NameHelper.cs" />
+    <Compile Include="OptimizeNamespaceImportsAnalyzer.cs" />
+    <Compile Include="OptimizeNamespaceImportsFixer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ResourceHelper.cs" />
+    <Compile Include="UnwrittenWritableFieldAnalyzer.cs" />
+    <Compile Include="UnwrittenWritableFieldFixer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="CopyrightHeader.md" />
-    <None Include="IllegalHeaders.md" />
-    <None Include="packages.config" />
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.CodeFormatter.Analyzers\Microsoft.DotNet.CodeFormatter.Analyzers.csproj">
-      <Project>{496b91f4-478d-4388-ba6b-1d945e3e7497}</Project>
-      <Name>Microsoft.DotNet.CodeFormatter.Analyzers</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Microsoft.DotNet.CodeFormatting\Microsoft.DotNet.CodeFormatting.csproj">
-      <Project>{D535641F-A2D7-481C-930D-96C02F052B95}</Project>
+      <Project>{d535641f-a2d7-481c-930d-96c02f052b95}</Project>
       <Name>Microsoft.DotNet.CodeFormatting</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.0.0-rc3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.0.0-rc3\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
-  </Target>  -->
-  <Target Name="AfterBuild">
-    <Copy SourceFiles="$(ProjectDir)IllegalHeaders.md" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
-    <Copy SourceFiles="$(ProjectDir)CopyrightHeader.md" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
   </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
 </Project>

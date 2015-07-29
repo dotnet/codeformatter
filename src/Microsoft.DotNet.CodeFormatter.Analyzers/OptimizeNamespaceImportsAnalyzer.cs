@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Microsoft.DotNet.CodeFormatting.Analyzers
+namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [Export(typeof(DiagnosticAnalyzer))]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]

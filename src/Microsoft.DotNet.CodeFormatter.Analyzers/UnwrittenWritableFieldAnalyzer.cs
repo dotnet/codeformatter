@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Microsoft.DotNet.CodeFormatting.Analyzers
+namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     /// <summary>
     /// Mark any fields that can provably be marked as readonly.
