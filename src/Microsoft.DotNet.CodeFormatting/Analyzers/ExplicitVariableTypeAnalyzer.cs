@@ -77,7 +77,8 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
         // VariableDeclarationSyntax.Variables.Single().Initializer.Value or ForEachStatementSyntax.Expression is:
         //   1. LiteralExpressionSyntax, e.g. var x = 10;
         //   2. CastExpressionSyntax, e.g. var x = (Foo)f;
-        //   3. A object creation syntax node, which (at least) includes:
+        //   3. BinaryExpressionSyntax with Kind == AsExpression
+        //   4. A object creation syntax node, which (at least) includes:
         //          - ObjectCreationExpressionSyntax
         //          - ArrayCreationExpressionSyntax
         // 
@@ -104,10 +105,12 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
                 expressionNode = ((ForEachStatementSyntax)node).Expression;
             }
             return expressionNode != null &&
-                   (expressionNode is LiteralExpressionSyntax ||
-                    expressionNode is CastExpressionSyntax ||
-                    expressionNode is ObjectCreationExpressionSyntax ||
-                    expressionNode is ArrayCreationExpressionSyntax);
+                 ((expressionNode is BinaryExpressionSyntax &&
+                   expressionNode.Kind() == SyntaxKind.AsExpression) ||
+                   expressionNode is LiteralExpressionSyntax ||
+                   expressionNode is CastExpressionSyntax ||
+                   expressionNode is ObjectCreationExpressionSyntax ||
+                   expressionNode is ArrayCreationExpressionSyntax);
         }
     }
 }

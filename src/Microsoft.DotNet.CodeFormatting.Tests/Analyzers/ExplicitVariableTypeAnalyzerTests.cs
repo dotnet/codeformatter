@@ -387,5 +387,22 @@ class C1
 }";
             Verify(text, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void TestVarDeclarationWithAsExpression()
+        {
+            const string text = @"
+class C1
+{
+    void M(object o)
+    {
+        var x = o as string;
+ 
+        foreach (var i in o as int[])
+        { }
+    }
+}";
+            Verify(text, text, runFormatter: false);
+        }
     }
 }
