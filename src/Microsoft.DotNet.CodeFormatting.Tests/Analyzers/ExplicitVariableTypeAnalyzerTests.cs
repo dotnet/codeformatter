@@ -32,7 +32,7 @@ class C1
         }
 
         [Fact]
-        public void TestSimpleTypeVarDeclaration()
+        public void TestSimpleObviousTypeVarDeclaration()
         {
             const string text = @"
 class C1
@@ -40,8 +40,7 @@ class C1
     void M()
     {
         var x = 0;
-        var y = new[] { true, false };  
-        var z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
+        var y = new bool[] { true, false };
     }
 }";
             const string expected = @"
@@ -49,8 +48,43 @@ class C1
 {
     void M()
     {
-        Int32 x = 0;
-        Boolean[] y = new[] { true, false };  
+        var x = 0;
+        var y = new bool[] { true, false };
+    }
+}";
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestSimpleNonobviousTypeVarDeclaration()
+        {
+            const string text = @"
+class C1
+{
+    bool[] T() 
+    {
+        return new[] { true };
+    }
+
+    void M(int a, bool[] b)
+    {
+        var x = a;
+        var y = T();  
+        var z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
+    }
+}";
+            const string expected = @"
+class C1
+{
+    bool[] T() 
+    {
+        return new[] { true };
+    }
+
+    void M(int a, bool[] b)
+    {
+        Int32 x = a;
+        Boolean[] y = T();  
         Int32[][] z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
     }
 }";
@@ -82,7 +116,7 @@ class C1
         }
 
         [Fact]
-        public void TestUserDefinedTypeVarDeclaration()
+        public void TestUserDefinedObviousTypeVarDeclaration()
         {
             const string text = @"
 class C1
@@ -115,9 +149,51 @@ class C1
 
     void M()
     {
-        U1 x = new U1();
-        U2 y = new U2();
+        var x = new U1();
+        var y = new U2();
         U3 z = U3.E1;         
+    }
+}";
+            Verify(text, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestUserDefinedNonobviousTypeVarDeclaration()
+        {
+            const string text = @"
+class C1
+{
+    class U1
+    {}
+
+    struct U2
+    {}
+
+    enum U3 { E1, E2 }
+
+    void M(U1 u1, U2 u2, U3 u3)
+    {
+        var x = u1;
+        var y = u2;
+        var z = u3;         
+    }
+}";
+            const string expected = @"
+class C1
+{
+    class U1
+    {}
+
+    struct U2
+    {}
+
+    enum U3 { E1, E2 }
+
+    void M(U1 u1, U2 u2, U3 u3)
+    {
+        U1 x = u1;
+        U2 y = u2;
+        U3 z = u3;         
     }
 }";
             Verify(text, expected, runFormatter: false);
@@ -142,29 +218,57 @@ class C1
         }
 
         [Fact]
-        public void TestSimpleForEachVarDeclaration()
+        public void TestSimpleForEachObviousVarDeclaration()
         {
             const string text = @"
 class C1
 {
-    void M(string[] a1, string[][][] a2)
+    void M()
     {
-        foreach (var element in a1)
+        foreach (var element in new string[] { "" })
         { }  
  
-        foreach (var element in a2)
+        foreach (var element in new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } })
+        { }
+    }
+}";
+            Verify(text, text, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestSimpleForEachNonobviousVarDeclaration()
+        {
+            const string text = @"
+class C1
+{
+    int[][] T()
+    {
+        return new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } }
+    }
+
+    void M(string[] a)
+    {
+        foreach (var element in a)
+        { }  
+ 
+        foreach (var element in T())
         { }
     }
 }";
             const string expected = @"
 class C1
 {
-    void M(string[] a1, string[][][] a2)
+    int[][] T()
     {
-        foreach (String element in a1)
+        return new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } }
+    }
+
+    void M(string[] a)
+    {
+        foreach (String element in a)
         { }  
  
-        foreach (String[][] element in a2)
+        foreach (Int32[] element in T())
         { }
     }
 }";
@@ -199,12 +303,20 @@ class C1
         public void Dispose(){}
     }
 
+    U1 T()
+    {
+        return new U1();
+    }
+
     void M()
     {      
         using (U1 x = new U1())
         { } 
 
         using (var x = new U1())
+        { } 
+
+        using (var x = T())
         { }         
     }
 }";
@@ -216,12 +328,20 @@ class C1
         public void Dispose(){}
     }
 
+    U1 T()
+    {
+        return new U1();
+    }
+
     void M()
     {      
         using (U1 x = new U1())
         { } 
 
-        using (U1 x = new U1())
+        using (var x = new U1())
+        { } 
+
+        using (U1 x = T())
         { }         
     }
 }";
@@ -234,18 +354,34 @@ class C1
             const string text = @"
 class C1
 {
+    int T()
+    {
+        return 9;
+    }
+
     void M()
     {
         for (var i = 0; i < 9; ++i)
+        { }
+ 
+        for (var i = T(); i > 0; --i)
         { }
     }
 }";
             const string expected = @"
 class C1
 {
+    int T()
+    {
+        return 9;
+    }
+
     void M()
     {
-        for (Int32 i = 0; i < 9; ++i)
+        for (var i = 0; i < 9; ++i)
+        { }
+ 
+        for (Int32 i = T(); i > 0; --i)
         { }
     }
 }";

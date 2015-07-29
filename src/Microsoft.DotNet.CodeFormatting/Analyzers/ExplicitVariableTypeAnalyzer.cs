@@ -46,7 +46,9 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             {
                 var node = (VariableDeclarationSyntax)syntaxContext.Node;
                 // Implicit typed variables cannot have multiple declartors  
-                if (node.Type.IsVar && !IsAnonymousType(node.Variables.Single(), syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                if (node.Type.IsVar &&
+                    !IsTypeObvious(node) &&
+                    !IsAnonymousType(node.Variables.Single(), syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleVariableDeclaration, node.GetLocation(), node.Variables.Single().Identifier.Text));
                 }
@@ -55,7 +57,9 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
                 var node = (ForEachStatementSyntax)syntaxContext.Node; 
-                if (node.Type.IsVar && !IsAnonymousType(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                if (node.Type.IsVar &&
+                    !IsTypeObvious(node) &&
+                    !IsAnonymousType(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleForEachStatement, node.Identifier.GetLocation(), node.Identifier.Text));
                 }
@@ -67,6 +71,43 @@ namespace Microsoft.DotNet.CodeFormatting.Analyzers
         {
             ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken); 
             return ((ILocalSymbol)symbol).Type.IsAnonymousType;
+        }
+
+        // Return true if given SyntaxNode is either VariableDeclarationSyntax or ForEachStatementSyntax and 
+        // VariableDeclarationSyntax.Variables.Single().Initializer.Value or ForEachStatementSyntax.Expression is:
+        //   1. LiteralExpressionSyntax, e.g. var x = 10;
+        //   2. CastExpressionSyntax, e.g. var x = (Foo)f;
+        //   3. A object creation syntax node, which (at least) includes:
+        //          - ObjectCreationExpressionSyntax
+        //          - ArrayCreationExpressionSyntax
+        // 
+        //      ImplicitArrayCreationExpressionSyntax: This one is not included. e.g. new[] {}
+        //
+        // TODO: AnonymousObjectCreationExpressionSyntax could be filtered out here as well, maybe we want to do that?
+        //       The trade-off here is the logic we use to check syntax node is not as accurate as a query to SemanticModel, 
+        //       which is (presumbly) much slower
+        private static bool IsTypeObvious(SyntaxNode node)
+        {
+            
+            if (node == null)
+            {
+                return false;
+            }
+
+            ExpressionSyntax expressionNode = null;
+            if (node is VariableDeclarationSyntax)
+            {
+                expressionNode = ((VariableDeclarationSyntax)node).Variables.Single().Initializer.Value;
+            }
+            else if (node is ForEachStatementSyntax)
+            {
+                expressionNode = ((ForEachStatementSyntax)node).Expression;
+            }
+            return expressionNode != null &&
+                   (expressionNode is LiteralExpressionSyntax ||
+                    expressionNode is CastExpressionSyntax ||
+                    expressionNode is ObjectCreationExpressionSyntax ||
+                    expressionNode is ArrayCreationExpressionSyntax);
         }
     }
 }
