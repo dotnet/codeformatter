@@ -88,6 +88,33 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove unused namespaces.
+        /// </summary>
+        internal static string OptimizeNamespaceImportsAnalyzer_MessageFormat {
+            get {
+                return ResourceManager.GetString("OptimizeNamespaceImportsAnalyzer_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Namespace &apos;{0}&apos; is unused in this file.
+        /// </summary>
+        internal static string OptimizeNamespaceImportsAnalyzer_Title {
+            get {
+                return ResourceManager.GetString("OptimizeNamespaceImportsAnalyzer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove unused namespaces.
+        /// </summary>
+        internal static string OptimizeNamespaceImportsFixer_Title {
+            get {
+                return ResourceManager.GetString("OptimizeNamespaceImportsFixer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The field &apos;{0}&apos; is never written to and can be marked readonly.
         /// </summary>
         internal static string UnwrittenWritableFieldAnalyzer_MessageFormat {

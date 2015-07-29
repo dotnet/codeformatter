@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="AnalyzerFixerTestBase.cs" />
     <Compile Include="Analyzers\ExplicitThisAnalyzerTests.cs" />
+    <Compile Include="Analyzers\OptimizeNamespaceImportsTests.cs" />
     <Compile Include="Analyzers\UnwrittenWritableFieldAnalyzerTests.cs" />
     <Compile Include="CodeFormattingTestBase.cs" />
     <Compile Include="CommandLineParserTests.cs" />

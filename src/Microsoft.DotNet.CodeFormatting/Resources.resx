@@ -126,6 +126,15 @@
   <data name="ExplicitThisFixer_Title" xml:space="preserve">
     <value>Remove 'this' qualifier</value>
   </data>
+  <data name="OptimizeNamespaceImportsAnalyzer_MessageFormat" xml:space="preserve">
+    <value>Remove unused namespaces</value>
+  </data>
+  <data name="OptimizeNamespaceImportsAnalyzer_Title" xml:space="preserve">
+    <value>Namespace '{0}' is unused in this file</value>
+  </data>
+  <data name="OptimizeNamespaceImportsFixer_Title" xml:space="preserve">
+    <value>Remove unused namespaces</value>
+  </data>
   <data name="UnwrittenWritableFieldAnalyzer_MessageFormat" xml:space="preserve">
     <value>The field '{0}' is never written to and can be marked readonly</value>
   </data>
