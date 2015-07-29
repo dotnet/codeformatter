@@ -6,39 +6,43 @@ using System.Composition.Convention;
 using System.Composition.Hosting;
 
 using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingEngine
     {
-        public static IFormattingEngine Create()
+        public static IFormattingEngine Create(IEnumerable<Assembly> assemblies = null)
         {
-            var container = CreateCompositionContainer();
+            var container = CreateCompositionContainer(assemblies);
             var engine = container.GetExport<IFormattingEngine>();
             var consoleFormatLogger = new ConsoleFormatLogger();
             return engine;
         }
 
-        public static ImmutableArray<IRuleMetadata> GetFormattingRules()
+        public static ImmutableArray<IRuleMetadata> GetFormattingRules(IEnumerable<Assembly> assemblies = null)
         {
-            var container = CreateCompositionContainer();
+            var container = CreateCompositionContainer(assemblies);
             var engine = container.GetExport<IFormattingEngine>();
             return engine.AllRules;
         }
 
-        public static ImmutableArray<DiagnosticDescriptor> GetSupportedDiagnostics()
+        public static ImmutableArray<DiagnosticDescriptor> GetSupportedDiagnostics(IEnumerable<Assembly> assemblies)
         {
-            var container = CreateCompositionContainer();
+            var container = CreateCompositionContainer(assemblies);
             var engine = container.GetExport<IFormattingEngine>();
             return engine.AllSupportedDiagnostics;
         }
 
-        private static CompositionHost CreateCompositionContainer()
+        private static CompositionHost CreateCompositionContainer(IEnumerable<Assembly> assemblies = null)
         {
             ConventionBuilder conventions = GetConventions();
 
+            assemblies = assemblies ?? new Assembly[] { typeof(FormattingEngine).Assembly };
+
             return new ContainerConfiguration()
-                .WithAssembly(typeof(FormattingEngine).Assembly, conventions)
+                .WithAssemblies(assemblies, conventions)
                 .CreateContainer();
         }
 

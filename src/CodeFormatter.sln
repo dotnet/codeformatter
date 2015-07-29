@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.CodeFormatting", "Microsoft.DotNet.CodeFormatting\Microsoft.DotNet.CodeFormatting.csproj", "{D535641F-A2D7-481C-930D-96C02F052B95}"
 EndProject
@@ -23,6 +23,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadRegionAnalysis.Tests", "Microsoft.DotNet.DeadRegionAnalysis.Tests\Microsoft.DotNet.DeadRegionAnalysis.Tests.csproj", "{7C57FD95-030E-48B2-B369-6694BB922C8C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadRegions", "DeadRegions\DeadRegions.csproj", "{B65D5F61-64BF-4219-863C-74C2744AE8FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.CodeFormatter.Analyzers", "Microsoft.DotNet.CodeFormatter.Analyzers\Microsoft.DotNet.CodeFormatter.Analyzers.csproj", "{496B91F4-478D-4388-BA6B-1D945E3E7497}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.CodeFormatter.Analyzers.Tests", "Microsoft.DotNet.CodeFormatter.Analyzers.Tests\Microsoft.DotNet.CodeFormatter.Analyzers.Tests.csproj", "{BB29603F-951A-48B9-8E3E-E73E6DF74979}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,6 +66,14 @@ Global
 		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B65D5F61-64BF-4219-863C-74C2744AE8FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{496B91F4-478D-4388-BA6B-1D945E3E7497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{496B91F4-478D-4388-BA6B-1D945E3E7497}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{496B91F4-478D-4388-BA6B-1D945E3E7497}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{496B91F4-478D-4388-BA6B-1D945E3E7497}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB29603F-951A-48B9-8E3E-E73E6DF74979}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB29603F-951A-48B9-8E3E-E73E6DF74979}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB29603F-951A-48B9-8E3E-E73E6DF74979}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB29603F-951A-48B9-8E3E-E73E6DF74979}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
