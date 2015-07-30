@@ -88,24 +88,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type.
-        /// </summary>
-        internal static string ExplicitVariableTypeAnalyzer_MessageFormat {
-            get {
-                return ResourceManager.GetString("ExplicitVariableTypeAnalyzer_MessageFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Replace the usage of &apos;var&apos; with an explicit type.
-        /// </summary>
-        internal static string ExplicitVariableTypeAnalyzer_Title {
-            get {
-                return ResourceManager.GetString("ExplicitVariableTypeAnalyzer_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Remove unused namespaces.
         /// </summary>
         internal static string OptimizeNamespaceImportsAnalyzer_MessageFormat {
@@ -142,11 +124,20 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mark unwritten fields as readonly.
+        ///   Looks up a localized string similar to Mark unwritten fields readonly.
         /// </summary>
         internal static string UnwrittenWritableFieldAnalyzer_Title {
             get {
                 return ResourceManager.GetString("UnwrittenWritableFieldAnalyzer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mark field as readonly.
+        /// </summary>
+        internal static string UnwrittenWritableFieldFixer_Title {
+            get {
+                return ResourceManager.GetString("UnwrittenWritableFieldFixer_Title", resourceCulture);
             }
         }
     }

@@ -72,8 +72,6 @@
     <Compile Include="AnalyzerIds.cs" />
     <Compile Include="ExplicitThisAnalyzer.cs" />
     <Compile Include="ExplicitThisFixer.cs" />
-    <Compile Include="ExplicitVariableTypeAnalyzer.cs" />
-    <Compile Include="ExplicitVariableTypeFixer.cs" />
     <Compile Include="NameHelper.cs" />
     <Compile Include="OptimizeNamespaceImportsAnalyzer.cs" />
     <Compile Include="OptimizeNamespaceImportsFixer.cs" />

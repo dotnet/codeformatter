@@ -126,12 +126,6 @@
   <data name="ExplicitThisFixer_Title" xml:space="preserve">
     <value>Remove 'this' qualifier</value>
   </data>
-  <data name="ExplicitVariableTypeAnalyzer_MessageFormat" xml:space="preserve">
-    <value>Variable '{0}' should be declared with explicit type</value>
-  </data>
-  <data name="ExplicitVariableTypeAnalyzer_Title" xml:space="preserve">
-    <value>Replace the usage of 'var' with an explicit type</value>
-  </data>
   <data name="OptimizeNamespaceImportsAnalyzer_MessageFormat" xml:space="preserve">
     <value>Remove unused namespaces</value>
   </data>
@@ -145,6 +139,9 @@
     <value>The field '{0}' is never written to and can be marked readonly</value>
   </data>
   <data name="UnwrittenWritableFieldAnalyzer_Title" xml:space="preserve">
-    <value>Mark unwritten fields as readonly</value>
+    <value>Mark unwritten fields readonly</value>
+  </data>
+  <data name="UnwrittenWritableFieldFixer_Title" xml:space="preserve">
+    <value>Mark field as readonly</value>
   </data>
 </root>

@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    Resources.UnwrittenWritableFieldAnalyzer_Title,
+                    Resources.UnwrittenWritableFieldFixer_Title,
                     c => AddReadonlyModifier(context.Document, root, fieldDeclarationNode, context.CancellationToken)),
                 diagnostic);
         }
