@@ -83,9 +83,9 @@ class C1
 
     void M(int a, bool[] b)
     {
-        Int32 x = a;
-        Boolean[] y = T();  
-        Int32[][] z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
+        int x = a;
+        bool[] y = T();
+        int[][] z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
     }
 }";
             Verify(text, expected, runFormatter: false);
@@ -265,10 +265,10 @@ class C1
 
     void M(string[] a)
     {
-        foreach (String element in a)
+        foreach (string element in a)
         { }  
  
-        foreach (Int32[] element in T())
+        foreach (int[] element in T())
         { }
     }
 }";
@@ -381,7 +381,7 @@ class C1
         for (var i = 0; i < 9; ++i)
         { }
  
-        for (Int32 i = T(); i > 0; --i)
+        for (int i = T(); i > 0; --i)
         { }
     }
 }";

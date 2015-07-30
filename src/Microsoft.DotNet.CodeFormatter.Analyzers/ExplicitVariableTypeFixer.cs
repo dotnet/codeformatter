@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Editing;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -37,8 +38,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             Diagnostic diagnostic = context.Diagnostics.First();
             TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
-            TypeSyntax oldTypeSyntaxNode = null;
-            TypeSyntax newTypeSyntaxNode = null;
+            SyntaxNode typeSyntaxNode = null;
+            ILocalSymbol varSymbol = null;
             switch (GetRuleType(diagnostic))
             {
                 case RuleType.RuleVariableDeclaration:
@@ -46,9 +47,9 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                         FindNode(diagnosticSpan).
                         FirstAncestorOrSelf<VariableDeclarationSyntax>();
                     Debug.Assert(variableDeclarationNode != null);
-                    oldTypeSyntaxNode = variableDeclarationNode.Type;
+                    typeSyntaxNode = variableDeclarationNode.Type;
                     // Implicit typed variables cannot have multiple declartors
-                    newTypeSyntaxNode = CreateTypeSyntaxNode(variableDeclarationNode.Variables.Single(), model, cancellationToken);
+                    varSymbol = (ILocalSymbol)model.GetDeclaredSymbol(variableDeclarationNode.Variables.Single(), cancellationToken);
                     break;
 
                 case RuleType.RuleForEachStatement:
@@ -57,20 +58,22 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                         Parent.
                         FirstAncestorOrSelf<ForEachStatementSyntax>();
                     Debug.Assert(forEachStatementNode != null);
-                    oldTypeSyntaxNode = forEachStatementNode.Type;
-                    newTypeSyntaxNode = CreateTypeSyntaxNode(forEachStatementNode, model, cancellationToken);
+                    typeSyntaxNode = forEachStatementNode.Type;
+                    varSymbol = model.GetDeclaredSymbol(forEachStatementNode, cancellationToken);
                     break;
 
                 case RuleType.None:
                     break;
             }
-
-            if (oldTypeSyntaxNode != null && newTypeSyntaxNode != null)
+            if (varSymbol != null)
             {
-                context.RegisterCodeFix(
+                DocumentEditor documentEditor = await DocumentEditor.CreateAsync(context.Document, cancellationToken);context.RegisterCodeFix(
                     CodeAction.Create(
                         Resources.ExplicitVariableTypeFixer_Title,
-                        c => ReplaceVarWithExplicitType(context.Document, root, oldTypeSyntaxNode, newTypeSyntaxNode.WithTriviaFrom(oldTypeSyntaxNode))),
+                        c => ReplaceVarWithExplicitType(context.Document, 
+                                                        root, 
+                                                        typeSyntaxNode, 
+                                                        documentEditor.Generator.TypeExpression(varSymbol.Type).WithTriviaFrom(typeSyntaxNode))),
                     diagnostic);
             }
         }
@@ -79,49 +82,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         {
             return Task.FromResult(
                 document.WithSyntaxRoot(root.ReplaceNode(varNode, explicitTypeNode.WithAdditionalAnnotations(Simplifier.Annotation))));
-        }
-
-        // return null if could not construct a TypeSyntax with explicit type.
-        private static TypeSyntax CreateTypeSyntaxNode(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
-        {
-            if (node == null || model == null)
-            {
-                return null;
-            }
-
-            var symbol = (ILocalSymbol)model.GetDeclaredSymbol(node, cancellationToken); 
-            ITypeSymbol typeSymbol = symbol.Type;
-            // typeSymbol.IsAnonymousType is guaranteed to be false since we already filtered out anonymous type in analyzer
-            Debug.Assert(!typeSymbol.IsAnonymousType);
-            TypeSyntax newTypeSyntaxNode = null;
-            switch (typeSymbol.TypeKind)
-            {
-                case TypeKind.Class:
-                case TypeKind.Struct:
-                case TypeKind.Enum:
-                    newTypeSyntaxNode = SyntaxFactory.ParseTypeName(typeSymbol.Name, 0);
-                    break;
-                case TypeKind.Array:
-                    // Need to handle multi-dimentional array
-                    var arrayTypeSymbol = (IArrayTypeSymbol)typeSymbol;
-                    ITypeSymbol elementTypeSymbol = arrayTypeSymbol.ElementType;
-                    int dimension;
-                    for (dimension = 1; 
-                         elementTypeSymbol.TypeKind == TypeKind.Array; 
-                         arrayTypeSymbol = (IArrayTypeSymbol)elementTypeSymbol, elementTypeSymbol = arrayTypeSymbol.ElementType, ++dimension)
-                    { }
-                    TypeSyntax elementTypeSyntaxNode = SyntaxFactory.ParseTypeName(elementTypeSymbol.Name, 0);
-                    for (newTypeSyntaxNode = elementTypeSyntaxNode; dimension > 0; --dimension)
-                    { 
-                        newTypeSyntaxNode = SyntaxFactory.ArrayType(newTypeSyntaxNode).AddRankSpecifiers(SyntaxFactory.ArrayRankSpecifier());
-                    }
-                    break;
-                default:
-                    // TODO: Is there any other TypeKind needs to be implemented?
-                    return null;
-            }
-            Debug.Assert(newTypeSyntaxNode.IsMissing == false);
-            return newTypeSyntaxNode.WithTriviaFrom(node);
         }
 
         private static RuleType GetRuleType(Diagnostic diagnostic)
