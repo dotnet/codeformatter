@@ -6,11 +6,11 @@ using System.Composition;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.CodeFormatting.Analyzers;
+using Microsoft.DotNet.CodeFormatter.Analyzers;
 
 using Xunit;
 
-namespace Microsoft.DotNet.CodeFormatting.Tests
+namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
 {
     public sealed class UnwrittenWritableFieldAnalyzerTests : AnalyzerFixerTestBase
     {

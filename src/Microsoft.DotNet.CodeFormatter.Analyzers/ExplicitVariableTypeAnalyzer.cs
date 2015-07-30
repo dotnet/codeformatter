@@ -11,13 +11,13 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace Microsoft.DotNet.CodeFormatting.Analyzers
+namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [Export(typeof(DiagnosticAnalyzer))]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     class ExplicitVariableTypeAnalyzer : DiagnosticAnalyzer
     {
-        internal const string DiagnosticId = "DNS0003";
+        internal const string DiagnosticId = AnalyzerIds.ExplicitVariableType;
         internal const string VariableDeclarationCustomTag = "VariableDeclarationTag";
         internal const string ForEachStatementCustomTag = "ForEachStatementTag";
 

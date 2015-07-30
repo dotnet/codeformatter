@@ -3,7 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.CodeFormatting
+namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     internal static class ResourceHelper
     {

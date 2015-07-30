@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.DotNet.CodeFormatting {
+namespace Microsoft.DotNet.CodeFormatter.Analyzers {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.CodeFormatting {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.DotNet.CodeFormatting.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.DotNet.CodeFormatter.Analyzers.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use VariableTypeDeclaration.
+        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type.
         /// </summary>
         internal static string ExplicitVariableTypeAnalyzer_MessageFormat {
             get {
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.CodeFormatting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type.
+        ///   Looks up a localized string similar to Replace the usage of &apos;var&apos; with an explicit type.
         /// </summary>
         internal static string ExplicitVariableTypeAnalyzer_Title {
             get {
@@ -111,6 +111,33 @@ namespace Microsoft.DotNet.CodeFormatting {
         internal static string ExplicitVariableTypeFixer_Title {
             get {
                 return ResourceManager.GetString("ExplicitVariableTypeFixer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove unused namespaces.
+        /// </summary>
+        internal static string OptimizeNamespaceImportsAnalyzer_MessageFormat {
+            get {
+                return ResourceManager.GetString("OptimizeNamespaceImportsAnalyzer_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Namespace &apos;{0}&apos; is unused in this file.
+        /// </summary>
+        internal static string OptimizeNamespaceImportsAnalyzer_Title {
+            get {
+                return ResourceManager.GetString("OptimizeNamespaceImportsAnalyzer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove unused namespaces.
+        /// </summary>
+        internal static string OptimizeNamespaceImportsFixer_Title {
+            get {
+                return ResourceManager.GetString("OptimizeNamespaceImportsFixer_Title", resourceCulture);
             }
         }
         

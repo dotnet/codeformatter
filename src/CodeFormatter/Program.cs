@@ -8,14 +8,22 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
+using Microsoft.DotNet.CodeFormatter.Analyzers;
 
 namespace CodeFormatter
 {
     internal static class Program
     {
+        private static Assembly[] s_defaultCompositionAssemblies = 
+                                        new Assembly[] {
+                                            typeof(FormattingEngine).Assembly,
+                                            typeof(OptimizeNamespaceImportsAnalyzer).Assembly
+                                        };
+
         private static int Main(string[] args)
         {
             var result = CommandLineParser.Parse(args);
@@ -51,7 +59,7 @@ namespace CodeFormatter
 
             if (useAnalyzers)
             {
-                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics();
+                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics(s_defaultCompositionAssemblies);
                 foreach (var diagnosticDescriptor in diagnosticDescriptors)
                 {
                     Console.WriteLine("{0,-20} :{1}", diagnosticDescriptor.Id, diagnosticDescriptor.Title);
@@ -97,7 +105,8 @@ namespace CodeFormatter
 
         private static async Task<int> RunFormatAsync(CommandLineOptions options, CancellationToken cancellationToken)
         {
-            var engine = FormattingEngine.Create();
+            var engine = FormattingEngine.Create(s_defaultCompositionAssemblies);
+
             engine.PreprocessorConfigurations = options.PreprocessorConfigurations;
             engine.FileNames = options.FileNames;
             engine.CopyrightHeader = options.CopyrightHeader;

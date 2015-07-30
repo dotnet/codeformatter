@@ -8,9 +8,6 @@
     <RootNamespace>Microsoft.DotNet.CodeFormatting</RootNamespace>
     <AssemblyName>Microsoft.DotNet.CodeFormatting</AssemblyName>
   </PropertyGroup>
-  <!-- Default configurations to help VS understand -->
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -68,21 +65,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analyzers\ExplicitThisAnalyzer.cs" />
-    <Compile Include="Analyzers\ExplicitThisFixer.cs" />
-    <Compile Include="Analyzers\ExplicitVariableTypeAnalyzer.cs" />
-    <Compile Include="Analyzers\ExplicitVariableTypeFixer.cs" />
-    <Compile Include="Analyzers\UnwrittenWritableFieldAnalyzer.cs" />
-    <Compile Include="Analyzers\UnwrittenWritableFieldFixer.cs" />
     <Compile Include="FormattingEngineDiagnosticProvider.cs" />
     <Compile Include="IRuleMetadata.cs" />
     <Compile Include="NameHelper.cs" />
-    <Compile Include="ResourceHelper.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ResponseFileWorkspace.cs" />
     <Compile Include="Rules\MarkReadonlyFieldsRule.cs" />
     <Compile Include="SemaphoreLock.cs" />
@@ -124,13 +109,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

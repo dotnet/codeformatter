@@ -127,13 +127,22 @@
     <value>Remove 'this' qualifier</value>
   </data>
   <data name="ExplicitVariableTypeAnalyzer_MessageFormat" xml:space="preserve">
-    <value>Use VariableTypeDeclaration</value>
+    <value>Variable '{0}' should be declared with explicit type</value>
   </data>
   <data name="ExplicitVariableTypeAnalyzer_Title" xml:space="preserve">
-    <value>Variable '{0}' should be declared with explicit type</value>
+    <value>Replace the usage of 'var' with an explicit type</value>
   </data>
   <data name="ExplicitVariableTypeFixer_Title" xml:space="preserve">
     <value>Replace the usage of 'var' with explicit type</value>
+  </data>
+  <data name="OptimizeNamespaceImportsAnalyzer_MessageFormat" xml:space="preserve">
+    <value>Remove unused namespaces</value>
+  </data>
+  <data name="OptimizeNamespaceImportsAnalyzer_Title" xml:space="preserve">
+    <value>Namespace '{0}' is unused in this file</value>
+  </data>
+  <data name="OptimizeNamespaceImportsFixer_Title" xml:space="preserve">
+    <value>Remove unused namespaces</value>
   </data>
   <data name="UnwrittenWritableFieldAnalyzer_MessageFormat" xml:space="preserve">
     <value>The field '{0}' is never written to and can be marked readonly</value>

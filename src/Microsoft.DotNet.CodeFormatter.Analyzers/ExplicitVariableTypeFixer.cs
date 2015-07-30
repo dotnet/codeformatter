@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Microsoft.DotNet.CodeFormatting.Analyzers
+namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
     public class ExplicitVariableTypeFixer : CodeFixProvider
