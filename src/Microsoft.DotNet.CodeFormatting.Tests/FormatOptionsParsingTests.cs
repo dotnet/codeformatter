@@ -21,20 +21,17 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             result = 1;
             FormatOptions options = null;
 
-            using (var writer = new StringWriter())
+            var parser = new Parser(settings =>
             {
-                var parser = new Parser(settings =>
-                {
-                    // CommandLine library help output is not thread-safe. We
-                    // disable console output entirely by providing a null writer
-                    settings.HelpWriter = null;
-                });
+                // CommandLine library help output is not thread-safe. We
+                // disable console output entirely by providing a null writer
+                settings.HelpWriter = null;
+            });
 
-                result = parser.ParseArguments<FormatOptions>(args)
-                    .Return(
-                    (FormatOptions parsedOptions) => { options = parsedOptions; return 0; },
-                    errs => ReportErrors(errs));
-            }
+            result = parser.ParseArguments<FormatOptions>(args)
+                .Return(
+                (FormatOptions parsedOptions) => { options = parsedOptions; return 0; },
+                errs => ReportErrors(errs));
 
             return options;
         }
@@ -55,7 +52,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(0, result);
             Assert.NotNull(options);
             Assert.True(options.RuleMap["enabledRule"]);
-            Assert.True(options.RuleMap.Count == 1);
+            Assert.Equal(1, options.RuleMap.Count);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
         }
 
@@ -71,7 +68,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(0, result);
             Assert.NotNull(options);
             Assert.False(options.RuleMap["disabledRule"]);
-            Assert.True(options.RuleMap.Count == 1);
+            Assert.Equal(1, options.RuleMap.Count);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
         }
 
@@ -121,6 +118,8 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(0, result);
             Assert.NotNull(options);
             Assert.Equal(2, options.FormatTargets.Count());
+            Assert.True(options.FormatTargets.Contains("projectOne.csproj"));
+            Assert.True(options.FormatTargets.Contains("projectTwo.csproj"));
         }
 
         [Fact]
