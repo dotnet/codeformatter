@@ -9,7 +9,7 @@
     <AssemblyName>CodeFormatter</AssemblyName>
   </PropertyGroup>
   <!-- Default configurations to help VS understand -->
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup>
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
@@ -83,7 +83,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArgumentParser.cs" />
     <Compile Include="FormatOptions.cs" />
     <Compile Include="ListOptions.cs" />
     <Compile Include="Program.cs" />

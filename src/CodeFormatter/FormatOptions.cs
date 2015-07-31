@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using CommandLine;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System;
+
+using CommandLine;
 
 namespace CodeFormatter
 {
@@ -37,7 +37,7 @@ namespace CodeFormatter
         [Option(
             "copyright", 
             HelpText = "Specifies file containing copyright header.")]
-        public string Copyright { get; set;  }
+        public string CopyrightHeader { get; set;  }
 
         [Option(
             "enable", 

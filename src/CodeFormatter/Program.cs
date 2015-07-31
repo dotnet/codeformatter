@@ -108,18 +108,11 @@ namespace CodeFormatter
             var engine = FormattingEngine.Create(s_defaultCompositionAssemblies);
 
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
-            if (options.PreprocessorConfigurations != null)
-            {
-                foreach (string config in options.PreprocessorConfigurations)
-                {
-                    var configs = config.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    configBuilder.Add(configs);
-                }
-            }
+            configBuilder.Add(options.PreprocessorConfigurations.ToArray());            
             engine.PreprocessorConfigurations = configBuilder.ToImmutableArray();
 
             engine.FileNames = options.Files.ToImmutableArray();
-            engine.CopyrightHeader = ImmutableArray.ToImmutableArray<string>(new string[] { options.Copyright });
+            engine.CopyrightHeader = ImmutableArray.ToImmutableArray<string>(new string[] { options.CopyrightHeader });
             engine.AllowTables = options.DefineDotNetFormatter;
             engine.Verbose = options.Verbose;
 
