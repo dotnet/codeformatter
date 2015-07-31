@@ -30,7 +30,7 @@ namespace CodeFormatter
 
         [Option(
             'c', "config", 
-            HelpText = "Additional preprocessor configurations the formatter should run under.", 
+            HelpText = "Comma-separated list of preprocessor configurations the formatter should run under.", 
             Separator = ',')]
         public IEnumerable<string> PreprocessorConfigurations { get; set; }
 
@@ -41,7 +41,7 @@ namespace CodeFormatter
 
         [Option(
             "enable", 
-            HelpText = "Comma-separated list of rules to disable", 
+            HelpText = "Comma-separated list of rules to enable", 
             Separator = ',')]
         public IEnumerable<string> EnabledRules { get; set; }
 

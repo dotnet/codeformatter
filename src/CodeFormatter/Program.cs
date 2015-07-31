@@ -30,13 +30,13 @@ namespace CodeFormatter
         {            
             return Parser.Default.ParseArguments<ListOptions, FormatOptions>(args)
               .Return(
-                (ListOptions listOptions) => RunListCommandAndReturnExitCode(listOptions),
-                (FormatOptions formatOptions) => RunFormatCommandAndReturnExitCode(formatOptions),
+                (ListOptions listOptions) => RunListCommand(listOptions),
+                (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
                 errs => 1);
 
         }
 
-        private static int RunListCommandAndReturnExitCode(ListOptions options)
+        private static int RunListCommand(ListOptions options)
         {
             // If user did not explicitly reference either analyzers or
             // rules in list command, we will dump both sets.
@@ -46,12 +46,12 @@ namespace CodeFormatter
                 options.Rules = true;
             }
 
-            ListRulesAndAnalyzer(options.Analyzers, options.Rules);
+            ListRulesAndAnalyzers(options.Analyzers, options.Rules);
 
             return 0;
         }
 
-        private static void ListRulesAndAnalyzer(bool listAnalyzers, bool listRules)
+        private static void ListRulesAndAnalyzers(bool listAnalyzers, bool listRules)
         {
             Console.WriteLine("{0,-20} {1}", "Name", "Title");
             Console.WriteLine("==============================================");
@@ -75,7 +75,7 @@ namespace CodeFormatter
             }
         }
 
-        private static int RunFormatCommandAndReturnExitCode(FormatOptions options)
+        private static int RunFormatCommand(FormatOptions options)
         {
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
