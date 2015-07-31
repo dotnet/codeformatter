@@ -68,6 +68,8 @@
     <Compile Include="FormattingEngineDiagnosticProvider.cs" />
     <Compile Include="IRuleMetadata.cs" />
     <Compile Include="NameHelper.cs" />
+    <Compile Include="Options\ExportOptionsProvider.cs" />
+    <Compile Include="Options\IOptionsProvider.cs" />
     <Compile Include="ResponseFileWorkspace.cs" />
     <Compile Include="Rules\MarkReadonlyFieldsRule.cs" />
     <Compile Include="SemaphoreLock.cs" />

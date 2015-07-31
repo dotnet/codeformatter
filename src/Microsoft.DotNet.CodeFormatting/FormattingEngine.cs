@@ -8,6 +8,7 @@ using System.Composition.Hosting;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Reflection;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -59,7 +60,16 @@ namespace Microsoft.DotNet.CodeFormatting
                 .Export<ILocalSemanticFormattingRule>();
             conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
                 .Export<IGlobalSemanticFormattingRule>();
+            conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
+                            .Export<IGlobalSemanticFormattingRule>();
 
+
+            // New per-analyzer options mechanism, deriving
+            // from VS Workspaces functionality 
+            conventions.ForTypesDerivedFrom<IOptionsProvider>()
+                                        .Export<IOptionsProvider>();
+
+            // Legacy CodeFormatter rules options mechanism
             conventions.ForType<Options>()
                 .Export();
 

@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -26,9 +27,10 @@ namespace Microsoft.DotNet.CodeFormatting
         internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
 
         private readonly Options _options;
+        private readonly IEnumerable<CodeFixProvider> _fixers;
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<DiagnosticAnalyzer> _analyzers;
-        private readonly IEnumerable<CodeFixProvider> _fixers;
+        private readonly IEnumerable<IOptionsProvider> _optionsProviders;
         private readonly IEnumerable<ExportFactory<ISyntaxFormattingRule, SyntaxRule>> _syntaxRules;
         private readonly IEnumerable<ExportFactory<ILocalSemanticFormattingRule, LocalSemanticRule>> _localSemanticRules;
         private readonly IEnumerable<ExportFactory<IGlobalSemanticFormattingRule, GlobalSemanticRule>> _globalSemanticRules;
@@ -100,13 +102,15 @@ namespace Microsoft.DotNet.CodeFormatting
             IEnumerable<CodeFixProvider> fixers,
             IEnumerable<ExportFactory<ISyntaxFormattingRule, SyntaxRule>> syntaxRules,
             IEnumerable<ExportFactory<ILocalSemanticFormattingRule, LocalSemanticRule>> localSemanticRules,
-            IEnumerable<ExportFactory<IGlobalSemanticFormattingRule, GlobalSemanticRule>> globalSemanticRules)
+            IEnumerable<ExportFactory<IGlobalSemanticFormattingRule, GlobalSemanticRule>> globalSemanticRules,
+            IEnumerable<IOptionsProvider> optionProviders)
         {
             _options = options;
             _filters = filters;
             _analyzers = analyzers;
             _fixers = fixers;
             _syntaxRules = syntaxRules;
+            _optionsProviders = optionProviders;
             _localSemanticRules = localSemanticRules;
             _globalSemanticRules = globalSemanticRules;
 
@@ -374,7 +378,7 @@ namespace Microsoft.DotNet.CodeFormatting
         /// <summary>
         /// Semantics is not involved in this pass at all.  It is just a straight modification of the 
         /// parse tree so there are no issues about ensuring the version of <see cref="SemanticModel"/> and
-        /// the <see cref="SyntaxNode"/> line up.  Hence we do this by iteraning every <see cref="Document"/> 
+        /// the <see cref="SyntaxNode"/> line up.  Hence we do this by iterating every <see cref="Document"/> 
         /// and processing all rules against them at once 
         /// </summary>
         private async Task<Solution> RunSyntaxPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
