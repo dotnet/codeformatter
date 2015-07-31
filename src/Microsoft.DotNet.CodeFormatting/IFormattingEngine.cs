@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.CodeFormatting
         ImmutableArray<string> FileNames { get; set; }
         ImmutableArray<IRuleMetadata> AllRules { get; }
         ImmutableArray<DiagnosticDescriptor> AllSupportedDiagnostics { get; }
-        bool AllowTables { get; set; }
+        bool AllowTables { set; }
         bool Verbose { get; set; }
         void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled);
         void ToggleDiagnosticEnabled(string diagnosticId, bool enabled);

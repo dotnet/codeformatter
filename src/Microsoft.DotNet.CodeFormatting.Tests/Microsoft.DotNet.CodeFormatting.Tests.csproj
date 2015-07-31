@@ -14,6 +14,10 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
+    <Reference Include="CommandLine, Version=2.0.207.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CommandLineParser.2.0.207-alpha\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.1.0.0-rc3\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>True</Private>
@@ -84,7 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
-    <Compile Include="CommandLineParserTests.cs" />
+    <Compile Include="FormatOptionsParsingTests.cs" />
     <Compile Include="Rules\BracesRuleTests.cs" />
     <Compile Include="Rules\CombinationTest.cs" />
     <Compile Include="Rules\CopyrightHeaderRuleTests.cs" />

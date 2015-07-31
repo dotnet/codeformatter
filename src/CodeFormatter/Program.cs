@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using CommandLine;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
@@ -18,46 +20,43 @@ namespace CodeFormatter
 {
     internal static class Program
     {
-        private static Assembly[] s_defaultCompositionAssemblies = 
+        private static Assembly[] s_defaultCompositionAssemblies =
                                         new Assembly[] {
                                             typeof(FormattingEngine).Assembly,
                                             typeof(OptimizeNamespaceImportsAnalyzer).Assembly
                                         };
 
         private static int Main(string[] args)
+        {            
+            return Parser.Default.ParseArguments<ListOptions, FormatOptions>(args)
+              .Return(
+                (ListOptions listOptions) => RunListCommandAndReturnExitCode(listOptions),
+                (FormatOptions formatOptions) => RunFormatCommandAndReturnExitCode(formatOptions),
+                errs => 1);
+
+        }
+
+        private static int RunListCommandAndReturnExitCode(ListOptions options)
         {
-            var result = CommandLineParser.Parse(args);
-            if (result.IsError)
+            // If user did not explicitly reference either analyzers or
+            // rules in list command, we will dump both sets.
+            if (!options.Analyzers && !options.Rules)
             {
-                Console.Error.WriteLine(result.Error);
-                CommandLineParser.PrintUsage();
-                return -1;
+                options.Analyzers = true;
+                options.Rules = true;
             }
 
-            var options = result.Options;
-            int exitCode;
-            switch (options.Operation)
-            {
-                case Operation.ListRules:
-                    RunListRules(options.UseAnalyzers);
-                    exitCode = 0;
-                    break;
-                case Operation.Format:
-                    exitCode = RunFormat(options);
-                    break;
-                default:
-                    throw new Exception("Invalid enum value: " + options.Operation);
-            }
+            ListRulesAndAnalyzer(options.Analyzers, options.Rules);
 
             return 0;
         }
 
-        private static void RunListRules(bool useAnalyzers)
+        private static void ListRulesAndAnalyzer(bool listAnalyzers, bool listRules)
         {
             Console.WriteLine("{0,-20} {1}", "Name", "Title");
             Console.WriteLine("==============================================");
 
-            if (useAnalyzers)
+            if (listAnalyzers)
             {
                 ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics(s_defaultCompositionAssemblies);
                 foreach (var diagnosticDescriptor in diagnosticDescriptors)
@@ -65,7 +64,8 @@ namespace CodeFormatter
                     Console.WriteLine("{0,-20} :{1}", diagnosticDescriptor.Id, diagnosticDescriptor.Title);
                 }
             }
-            else
+
+            if (listRules)
             {
                 var rules = FormattingEngine.GetFormattingRules();
                 foreach (var rule in rules)
@@ -75,7 +75,7 @@ namespace CodeFormatter
             }
         }
 
-        private static int RunFormat(CommandLineOptions options)
+        private static int RunFormatCommandAndReturnExitCode(FormatOptions options)
         {
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
@@ -103,14 +103,24 @@ namespace CodeFormatter
             }
         }
 
-        private static async Task<int> RunFormatAsync(CommandLineOptions options, CancellationToken cancellationToken)
+        private static async Task<int> RunFormatAsync(FormatOptions options, CancellationToken cancellationToken)
         {
             var engine = FormattingEngine.Create(s_defaultCompositionAssemblies);
 
-            engine.PreprocessorConfigurations = options.PreprocessorConfigurations;
-            engine.FileNames = options.FileNames;
-            engine.CopyrightHeader = options.CopyrightHeader;
-            engine.AllowTables = options.AllowTables;
+            var configBuilder = ImmutableArray.CreateBuilder<string[]>();
+            if (options.PreprocessorConfigurations != null)
+            {
+                foreach (string config in options.PreprocessorConfigurations)
+                {
+                    var configs = config.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    configBuilder.Add(configs);
+                }
+            }
+            engine.PreprocessorConfigurations = configBuilder.ToImmutableArray();
+
+            engine.FileNames = options.Files.ToImmutableArray();
+            engine.CopyrightHeader = ImmutableArray.ToImmutableArray<string>(new string[] { options.Copyright });
+            engine.AllowTables = options.DefineDotNetFormatter;
             engine.Verbose = options.Verbose;
 
             if (options.UseAnalyzers)
