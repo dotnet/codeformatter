@@ -43,16 +43,7 @@ class C1
         var y = new bool[] { true, false };
     }
 }";
-            const string expected = @"
-class C1
-{
-    void M()
-    {
-        var x = 0;
-        var y = new bool[] { true, false };
-    }
-}";
-            Verify(text, expected, runFormatter: false);
+            Verify(text, text, runFormatter: false);
         }
 
         [Fact]

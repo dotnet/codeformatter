@@ -47,41 +47,43 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                         FindNode(diagnosticSpan).
                         FirstAncestorOrSelf<VariableDeclarationSyntax>();
                     Debug.Assert(variableDeclarationNode != null);
-                    typeSyntaxNode = variableDeclarationNode.Type;
-                    // Implicit typed variables cannot have multiple declartors
+                    typeSyntaxNode = variableDeclarationNode?.Type;
+                    // Implicitly typed variables cannot have multiple declarators (error situations should be filtered out by analyzer)
                     varSymbol = (ILocalSymbol)model.GetDeclaredSymbol(variableDeclarationNode.Variables.Single(), cancellationToken);
                     break;
 
                 case RuleType.RuleForEachStatement:
                     var forEachStatementNode = root.
                         FindToken(diagnosticSpan.Start).
-                        Parent.
+                        Parent?.
                         FirstAncestorOrSelf<ForEachStatementSyntax>();
                     Debug.Assert(forEachStatementNode != null);
-                    typeSyntaxNode = forEachStatementNode.Type;
+                    typeSyntaxNode = forEachStatementNode?.Type;
                     varSymbol = model.GetDeclaredSymbol(forEachStatementNode, cancellationToken);
                     break;
 
                 case RuleType.None:
                     break;
             }
-            if (varSymbol != null)
+            if (typeSyntaxNode!= null && varSymbol != null)
             {
-                DocumentEditor documentEditor = await DocumentEditor.CreateAsync(context.Document, cancellationToken);context.RegisterCodeFix(
+                context.RegisterCodeFix(
                     CodeAction.Create(
                         Resources.ExplicitVariableTypeFixer_Title,
-                        c => ReplaceVarWithExplicitType(context.Document, 
-                                                        root, 
+                        c => ReplaceVarWithExplicitType(context.Document,
                                                         typeSyntaxNode, 
-                                                        documentEditor.Generator.TypeExpression(varSymbol.Type).WithTriviaFrom(typeSyntaxNode))),
+                                                        varSymbol.Type,
+                                                        cancellationToken)),
                     diagnostic);
             }
         }
 
-        private Task<Document> ReplaceVarWithExplicitType(Document document, SyntaxNode root, SyntaxNode varNode, SyntaxNode explicitTypeNode)
+        private async Task<Document> ReplaceVarWithExplicitType(Document document, SyntaxNode varNode, ITypeSymbol explicitTypeSymbol, CancellationToken cancellationToken)
         {
-            return Task.FromResult(
-                document.WithSyntaxRoot(root.ReplaceNode(varNode, explicitTypeNode.WithAdditionalAnnotations(Simplifier.Annotation))));
+            DocumentEditor documentEditor = await DocumentEditor.CreateAsync(document, cancellationToken);
+            SyntaxNode explicitTypeNode = documentEditor.Generator.TypeExpression(explicitTypeSymbol).WithAdditionalAnnotations(Simplifier.Annotation);
+            documentEditor.ReplaceNode(varNode, explicitTypeNode);
+            return documentEditor.GetChangedDocument();
         }
 
         private static RuleType GetRuleType(Diagnostic diagnostic)
@@ -96,7 +98,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                         return RuleType.RuleVariableDeclaration;
                     case ExplicitVariableTypeAnalyzer.ForEachStatementCustomTag:
                         return RuleType.RuleForEachStatement;
-                    // Diagnostics corresponding to this fixer must has either one of these above two custom tags
+                    // Diagnostics corresponding to this fixer must have either one of these above two custom tags
                 }
             }
             Debug.Fail("This program location is thought to be unreachable.");

@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 using System.Composition;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [Export(typeof(DiagnosticAnalyzer))]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    class ExplicitVariableTypeAnalyzer : DiagnosticAnalyzer
+    public class ExplicitVariableTypeAnalyzer : DiagnosticAnalyzer
     {
         internal const string DiagnosticId = AnalyzerIds.ExplicitVariableType;
         internal const string VariableDeclarationCustomTag = "VariableDeclarationTag";
@@ -39,16 +40,18 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         private static readonly ImmutableArray<DiagnosticDescriptor> s_supportedRules = ImmutableArray.Create(s_ruleVariableDeclaration, s_ruleForEachStatement);
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => s_supportedRules;
-
+                                              
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
                 var node = (VariableDeclarationSyntax)syntaxContext.Node;
-                // Implicit typed variables cannot have multiple declartors  
-                if (node.Type.IsVar &&
+                // C# syntax doesn't allow implicitly typed variables have multiple declartors,
+                // but we need to handle error situations (incomplete or extra declarators).   
+                if (node.Type != null &&
+                    node.Type.IsVar &&
                     !IsTypeObvious(node) &&
-                    !IsAnonymousType(node.Variables.Single(), syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                    !IsAnonymousType(node.Variables.FirstOrDefault(), syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleVariableDeclaration, node.GetLocation(), node.Variables.Single().Identifier.Text));
                 }
@@ -57,7 +60,9 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
                 var node = (ForEachStatementSyntax)syntaxContext.Node; 
-                if (node.Type.IsVar &&
+                if (node.Type != null &&
+                    node.Identifier != null &&
+                    node.Type.IsVar &&
                     !IsTypeObvious(node) &&
                     !IsAnonymousType(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
                 {
@@ -66,30 +71,35 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             }, SyntaxKind.ForEachStatement);
         }
 
-        // Return true if given SyntaxNode has an anonymous type, which can't be replaced by an explicit type.
+        /// <summary>
+        /// Returns true if given SyntaxNode has an anonymous type, which can't be replaced by an explicit type.
+        /// </summary>
         private static bool IsAnonymousType(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
         {
             ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken); 
-            return ((ILocalSymbol)symbol).Type.IsAnonymousType;
+            bool? isAnonymousType = ((ILocalSymbol)symbol)?.Type?.IsAnonymousType;
+            return isAnonymousType.HasValue && isAnonymousType.Value;
         }
 
-        // Return true if given SyntaxNode is either VariableDeclarationSyntax or ForEachStatementSyntax and 
-        // VariableDeclarationSyntax.Variables.Single().Initializer.Value or ForEachStatementSyntax.Expression is:
-        //   1. LiteralExpressionSyntax, e.g. var x = 10;
-        //   2. CastExpressionSyntax, e.g. var x = (Foo)f;
-        //   3. BinaryExpressionSyntax with Kind == AsExpression
-        //   4. A object creation syntax node, which (at least) includes:
-        //          - ObjectCreationExpressionSyntax
-        //          - ArrayCreationExpressionSyntax
-        // 
-        //      ImplicitArrayCreationExpressionSyntax: This one is not included. e.g. new[] {}
-        //
+        /// <summary>
+        /// Returns true if given SyntaxNode is either VariableDeclarationSyntax or ForEachStatementSyntax and 
+        /// the variable is initialized with Non-obvious type.
+        /// 
+        ///  We define "non-obvious" as one of the following:
+        ///   1. LiteralExpressionSyntax, e.g. var x = 10;
+        ///   2. CastExpressionSyntax, e.g. var x = (Foo)f;
+        ///   3. BinaryExpressionSyntax with Kind == AsExpression
+        ///   4. A object creation syntax node, which (at least) includes:
+        ///      4.1 ObjectCreationExpressionSyntax
+        ///      4.2 ArrayCreationExpressionSyntax
+        /// 
+        ///  ImplicitArrayCreationExpressionSyntax: This one is not included. e.g. new[] {}
+        /// </summary>
         // TODO: AnonymousObjectCreationExpressionSyntax could be filtered out here as well, maybe we want to do that?
         //       The trade-off here is the logic we use to check syntax node is not as accurate as a query to SemanticModel, 
-        //       which is (presumbly) much slower
+        //       which is (presumbly) much slower. 
         private static bool IsTypeObvious(SyntaxNode node)
-        {
-            
+        {            
             if (node == null)
             {
                 return false;
@@ -98,13 +108,21 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             ExpressionSyntax expressionNode = null;
             if (node is VariableDeclarationSyntax)
             {
-                expressionNode = ((VariableDeclarationSyntax)node).Variables.Single().Initializer.Value;
+                expressionNode = ((VariableDeclarationSyntax)node)?.Variables.FirstOrDefault()?.Initializer?.Value;
             }
             else if (node is ForEachStatementSyntax)
             {
-                expressionNode = ((ForEachStatementSyntax)node).Expression;
+                expressionNode = ((ForEachStatementSyntax)node)?.Expression;
             }
-            return expressionNode != null &&
+            else
+            {
+                Debug.Fail("This program location is thought to be unreachable.");
+            }
+            // 'expressionNode == null' means the code under inspection has errors,
+            // so we return 'true' to avoid firing a warning.
+            return expressionNode == null ?
+                   true :
+                   expressionNode != null &&
                  ((expressionNode is BinaryExpressionSyntax &&
                    expressionNode.Kind() == SyntaxKind.AsExpression) ||
                    expressionNode is LiteralExpressionSyntax ||
