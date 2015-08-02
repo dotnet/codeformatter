@@ -146,6 +146,25 @@ class C
         }
 
         [Fact]
+        public void TestIgnoredReadonlyWithUnaryAssignmentReferences()
+        {
+            string text = @"
+class C
+{
+    private int postInc;
+    private int preInc;
+
+    public override void T()
+    {
+        postInc++;
+        ++preInc;
+    }
+}
+";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void TestMarkReadonlyWithReadReferences()
         {
             string text = @"
