@@ -41,11 +41,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 SyntaxKind.MultiplyAssignmentExpression,
                 SyntaxKind.OrAssignmentExpression,
                 SyntaxKind.RightShiftAssignmentExpression,
-                SyntaxKind.SubtractAssignmentExpression
-            };
-
-        private static readonly SyntaxKind[] s_unaryAssignmentKinds =
-            {
+                SyntaxKind.SubtractAssignmentExpression,
                 SyntaxKind.PreIncrementExpression,
                 SyntaxKind.PreDecrementExpression,
                 SyntaxKind.PostIncrementExpression,
@@ -79,7 +75,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
             context.RegisterSymbolAction(LocateCandidateReadonlyFields, SymbolKind.Field);
             context.RegisterSyntaxNodeAction(CheckForAssignment, s_compoundAssignmentExpressionKinds);
-            context.RegisterSyntaxNodeAction(CheckForUnaryAssignment, s_unaryAssignmentKinds);
             context.RegisterSyntaxNodeAction(CheckForRefOrOutParameter, SyntaxKind.Argument);
             context.RegisterSyntaxNodeAction(CheckForExternMethodWithRefParameters, SyntaxKind.MethodDeclaration);
             context.RegisterSyntaxNodeAction(CheckForExternIndexer, SyntaxKind.IndexerDeclaration);
@@ -98,16 +93,11 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
         private void CheckForAssignment(SyntaxNodeAnalysisContext context)
         {
-            var node = (AssignmentExpressionSyntax)context.Node;
-            CheckForFieldWrite(node.Left, context.SemanticModel);
-        }
-
-        private void CheckForUnaryAssignment(SyntaxNodeAnalysisContext context)
-        {
-            ExpressionSyntax node = (context.Node as PrefixUnaryExpressionSyntax)?.Operand ?? 
-                                    (context.Node as PostfixUnaryExpressionSyntax)?.Operand; 
+            ExpressionSyntax node = (context.Node as AssignmentExpressionSyntax)?.Left ?? 
+                                    (context.Node as PrefixUnaryExpressionSyntax)?.Operand ??
+                                    (context.Node as PostfixUnaryExpressionSyntax)?.Operand;
             CheckForFieldWrite(node, context.SemanticModel);
-        }
+        } 
 
         private void CheckForRefOrOutParameter(SyntaxNodeAnalysisContext context)
         {
