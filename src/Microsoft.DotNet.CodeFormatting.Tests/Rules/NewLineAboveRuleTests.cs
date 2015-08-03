@@ -58,8 +58,8 @@ namespace NS1
             var text = @"#pragma warning disable 1591
 using System;";
 
-            var expected = @"
-#pragma warning disable 1591
+            var expected = @"#pragma warning disable 1591
+
 using System;";
 
             Verify(text, expected);
@@ -158,8 +158,8 @@ using System;
 ";
             var expected = @"
 // copyright comment
-
 #pragma warning disable 1591
+
 using System;
 ";
             Verify(text, expected);
@@ -228,6 +228,7 @@ namespace N { }
 using System;
 
 #pragma warning disable 1591
+
 namespace N { }
 ";
             Verify(text, expected);
@@ -244,6 +245,24 @@ namespace N { }
 namespace N { }
 ";
             Verify(text, text);
+        }
+
+        [Fact]
+        public void Issue83()
+        {
+            var text = @"
+extern alias PDB;
+using System;
+namespace N { }";
+
+            var expected = @"
+extern alias PDB;
+
+using System;
+
+namespace N { }";
+
+            Verify(text, expected);
         }
     }
 }
