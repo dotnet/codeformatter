@@ -1,10 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 
 using CommandLine;
+
+using Microsoft.DotNet.CodeFormatting;
 
 namespace CodeFormatter
 {
@@ -37,7 +41,7 @@ namespace CodeFormatter
         [Option(
             "copyright", 
             HelpText = "Specifies file containing copyright header.")]
-        public string CopyrightHeader { get; set;  }
+        public string CopyrightHeaderFile { get; set;  }
 
         [Option(
             "enable", 
@@ -65,6 +69,35 @@ namespace CodeFormatter
             "useanalyzers",
             HelpText = "TEMPORARY: invoke built-in analyzers rather than rules to perform reformatting.")]
         public bool UseAnalyzers { get; set; }
+
+        private ImmutableArray<string> _copyrightHeaderText;
+        public ImmutableArray<string> CopyrightHeaderText
+        {
+            get
+            {
+                if (_copyrightHeaderText == null)
+                {
+                    _copyrightHeaderText = InitializeCopyrightHeaderText(CopyrightHeaderFile);
+                }
+                return _copyrightHeaderText;
+            }
+            internal set
+            {
+                _copyrightHeaderText = value;
+            }
+        }
+
+        private static ImmutableArray<string> InitializeCopyrightHeaderText(string copyrightHeaderFile)
+        {
+            ImmutableArray<string> copyrightHeaderText = FormattingDefaults.DefaultCopyrightHeader;
+
+            if (!String.IsNullOrEmpty(copyrightHeaderFile))
+            {
+                copyrightHeaderText = ImmutableArray.CreateRange(File.ReadAllLines(copyrightHeaderFile));
+            }
+
+            return copyrightHeaderText;
+        }
 
         private ImmutableDictionary<string, bool> _ruleMap;
         public ImmutableDictionary<string, bool> RuleMap
