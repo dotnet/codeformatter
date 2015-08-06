@@ -82,8 +82,8 @@
     </Compile>
     <Compile Include="UnwrittenWritableFieldAnalyzer.cs" />
     <Compile Include="UnwrittenWritableFieldFixer.cs" />
-    <Compile Include="ExplicitVariableTypeAnalyzer.cs" />
-    <Compile Include="ExplicitVariableTypeFixer.cs" />
+    <Compile Include="ProvideExplicitVariableTypeAnalyzer.cs" />
+    <Compile Include="ProvideExplicitVariableTypeFixer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceHelper.cs" />
   </ItemGroup>

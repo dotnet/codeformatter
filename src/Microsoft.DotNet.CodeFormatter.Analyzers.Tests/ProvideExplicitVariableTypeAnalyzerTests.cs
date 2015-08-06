@@ -7,18 +7,18 @@ using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
 {
-    public sealed class ExplicitVariableTypeAnalyzerTests : AnalyzerFixerTestBase
+    public sealed class ProvideExplicitVariableTypeAnalyzerTests : AnalyzerFixerTestBase
     {
-        public ExplicitVariableTypeAnalyzerTests()
+        public ProvideExplicitVariableTypeAnalyzerTests()
         {
             DisableAllDiagnostics();
-            EnableDiagnostic(ExplicitVariableTypeAnalyzer.DiagnosticId);
+            EnableDiagnostic(ProvideExplicitVariableTypeAnalyzer.DiagnosticId);
         }
 
         [Fact]
         public void TestSimpleTypeExplicitDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     void M()
@@ -27,14 +27,15 @@ class C1
         bool[] y = { true };  
         int[][] z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
     }
-}"; 
-            Verify(text, text, runFormatter: false);
+}";
+            const string expected = input; 
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestSimpleObviousTypeVarDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     void M()
@@ -43,13 +44,14 @@ class C1
         var y = new bool[] { true, false };
     }
 }";
-            Verify(text, text, runFormatter: false);
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestSimpleNonobviousTypeVarDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     bool[] T() 
@@ -79,13 +81,13 @@ class C1
         int[][] z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
     }
 }";
-            Verify(text, expected, runFormatter: false);
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestUserDefinedTypeExplicitDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     class U1
@@ -103,13 +105,14 @@ class C1
         U3 z = U3.E1;        
     }
 }";
-            Verify(text, text, runFormatter: false);
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestUserDefinedObviousTypeVarDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     class U1
@@ -145,13 +148,13 @@ class C1
         U3 z = U3.E1;         
     }
 }";
-            Verify(text, expected, runFormatter: false);
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestUserDefinedNonobviousTypeVarDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     class U1
@@ -187,13 +190,13 @@ class C1
         U3 z = u3;         
     }
 }";
-            Verify(text, expected, runFormatter: false);
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestSimpleForEachExplicitDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     void M(string[] a1, string[][] a2)
@@ -205,13 +208,14 @@ class C1
         { }
     }
 }";
-            Verify(text, text, runFormatter: false);
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestSimpleForEachObviousVarDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     void M()
@@ -223,13 +227,14 @@ class C1
         { }
     }
 }";
-            Verify(text, text, runFormatter: false);
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestSimpleForEachNonobviousVarDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     int[][] T()
@@ -263,13 +268,13 @@ class C1
         { }
     }
 }";
-            Verify(text, expected, runFormatter: false);
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestAnonymousTypeDeclaration()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     void M()
@@ -280,13 +285,14 @@ class C1
         { }
     }
 }";
-            Verify(text, text, runFormatter: false);
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestVarDeclarationInUsing()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     class U1 : IDisposable
@@ -336,13 +342,13 @@ class C1
         { }         
     }
 }";
-            Verify(text, expected, runFormatter: false);
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestVarDeclarationInSimpleLoop()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     int T()
@@ -376,13 +382,13 @@ class C1
         { }
     }
 }";
-            Verify(text, expected, runFormatter: false);
+            Verify(input, expected, runFormatter: false);
         }
 
         [Fact]
         public void TestVarDeclarationWithAsExpression()
         {
-            const string text = @"
+            const string input = @"
 class C1
 {
     void M(object o)
@@ -393,7 +399,8 @@ class C1
         { }
     }
 }";
-            Verify(text, text, runFormatter: false);
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
         }
     }
 }

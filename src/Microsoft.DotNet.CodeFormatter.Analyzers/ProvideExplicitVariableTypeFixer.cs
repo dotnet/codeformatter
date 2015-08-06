@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -20,10 +19,10 @@ using Microsoft.CodeAnalysis.Editing;
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [ExportCodeFixProvider(LanguageNames.CSharp)]
-    public class ExplicitVariableTypeFixer : CodeFixProvider
+    public class ProvideExplicitVariableTypeFixer : CodeFixProvider
     {
         public override ImmutableArray<string> FixableDiagnosticIds
-            => ImmutableArray.Create(ExplicitVariableTypeAnalyzer.DiagnosticId);
+            => ImmutableArray.Create(ProvideExplicitVariableTypeAnalyzer.DiagnosticId);
 
         public override FixAllProvider GetFixAllProvider()
         {
@@ -94,9 +93,9 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             {
                 switch (customTag)
                 {
-                    case ExplicitVariableTypeAnalyzer.VariableDeclarationCustomTag:
+                    case ProvideExplicitVariableTypeAnalyzer.VariableDeclarationCustomTag:
                         return RuleType.RuleVariableDeclaration;
-                    case ExplicitVariableTypeAnalyzer.ForEachStatementCustomTag:
+                    case ProvideExplicitVariableTypeAnalyzer.ForEachStatementCustomTag:
                         return RuleType.RuleForEachStatement;
                     // Diagnostics corresponding to this fixer must have either one of these above two custom tags
                 }

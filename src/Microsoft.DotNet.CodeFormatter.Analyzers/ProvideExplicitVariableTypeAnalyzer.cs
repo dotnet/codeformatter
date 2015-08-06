@@ -2,8 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Composition;
-using System.Diagnostics;
+using System.Composition; 
 using System.Linq;
 using System.Threading;
 
@@ -16,9 +15,9 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [Export(typeof(DiagnosticAnalyzer))]
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class ExplicitVariableTypeAnalyzer : DiagnosticAnalyzer
+    public class ProvideExplicitVariableTypeAnalyzer : DiagnosticAnalyzer
     {
-        internal const string DiagnosticId = AnalyzerIds.ExplicitVariableType;
+        internal const string DiagnosticId = AnalyzerIds.ProvideExplicitVariableType;
         internal const string VariableDeclarationCustomTag = "VariableDeclarationTag";
         internal const string ForEachStatementCustomTag = "ForEachStatementTag";
 
@@ -46,7 +45,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
                 var node = (VariableDeclarationSyntax)syntaxContext.Node;
-                // C# syntax doesn't allow implicitly typed variables have multiple declartors,
+                // C# syntax doesn't allow implicitly typed variables to have multiple declarators,
                 // but we need to handle error situations (incomplete or extra declarators).   
                 if (node.Type != null &&
                     node.Type.IsVar &&
@@ -82,10 +81,12 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         }
 
         /// <summary>
-        /// Returns true if given SyntaxNode is either VariableDeclarationSyntax or ForEachStatementSyntax and 
-        /// the variable is initialized with Non-obvious type.
+        /// Returns true if:
+        ///   1. given SyntaxNode is either VariableDeclarationSyntax or ForEachStatementSyntax and 
+        ///      the variable is initialized with obvious type, OR,
+        ///   2. the node under inspection has errors.
         /// 
-        ///  We define "non-obvious" as one of the following:
+        ///  We define "obvious" as one of the following:
         ///   1. LiteralExpressionSyntax, e.g. var x = 10;
         ///   2. CastExpressionSyntax, e.g. var x = (Foo)f;
         ///   3. BinaryExpressionSyntax with Kind == AsExpression
@@ -104,31 +105,20 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             {
                 return false;
             }
+                                                   
+            ExpressionSyntax expressionNode = node is VariableDeclarationSyntax ?
+                                ((VariableDeclarationSyntax)node)?.Variables.FirstOrDefault()?.Initializer?.Value :
+                                (node as ForEachStatementSyntax)?.Expression;
 
-            ExpressionSyntax expressionNode = null;
-            if (node is VariableDeclarationSyntax)
-            {
-                expressionNode = ((VariableDeclarationSyntax)node)?.Variables.FirstOrDefault()?.Initializer?.Value;
-            }
-            else if (node is ForEachStatementSyntax)
-            {
-                expressionNode = ((ForEachStatementSyntax)node)?.Expression;
-            }
-            else
-            {
-                Debug.Fail("This program location is thought to be unreachable.");
-            }
             // 'expressionNode == null' means the code under inspection has errors,
             // so we return 'true' to avoid firing a warning.
             return expressionNode == null ?
                    true :
-                   expressionNode != null &&
-                 ((expressionNode is BinaryExpressionSyntax &&
-                   expressionNode.Kind() == SyntaxKind.AsExpression) ||
+                   expressionNode.Kind() == SyntaxKind.AsExpression ||
                    expressionNode is LiteralExpressionSyntax ||
                    expressionNode is CastExpressionSyntax ||
                    expressionNode is ObjectCreationExpressionSyntax ||
-                   expressionNode is ArrayCreationExpressionSyntax);
+                   expressionNode is ArrayCreationExpressionSyntax;
         }
     }
 }

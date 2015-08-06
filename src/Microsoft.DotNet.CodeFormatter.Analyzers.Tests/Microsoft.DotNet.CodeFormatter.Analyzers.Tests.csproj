@@ -84,7 +84,7 @@
     <Compile Include="ExplicitThisAnalyzerTests.cs" />
     <Compile Include="OptimizeNamespaceImportsTests.cs" />
     <Compile Include="UnwrittenWritableFieldAnalyzerTests.cs" />
-    <Compile Include="ExplicitVariableTypeAnalyzerTests.cs" />
+    <Compile Include="ProvideExplicitVariableTypeAnalyzerTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

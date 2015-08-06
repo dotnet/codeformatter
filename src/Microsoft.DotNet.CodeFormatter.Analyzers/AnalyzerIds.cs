@@ -9,6 +9,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         public const string UnwrittenWritableField   = "DNS1001";
         public const string OrderModifiers           = "DNS1002";
         public const string OptimizeNamespaceImports = "DNS1003";
-        public const string ExplicitVariableType     = "DNS1004";
+        public const string ProvideExplicitVariableType     = "DNS1004";
     }
 }
