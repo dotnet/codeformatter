@@ -126,6 +126,15 @@
   <data name="ExplicitThisFixer_Title" xml:space="preserve">
     <value>Remove 'this' qualifier</value>
   </data>
+  <data name="ExplicitVariableTypeAnalyzer_MessageFormat" xml:space="preserve">
+    <value>Variable '{0}' should be declared with an explicit type</value>
+  </data>
+  <data name="ExplicitVariableTypeAnalyzer_Title" xml:space="preserve">
+    <value>Replace the usage of 'var' with an explicit type</value>
+  </data>
+  <data name="ExplicitVariableTypeFixer_Title" xml:space="preserve">
+    <value>Replace the usage of 'var' with an explicit type</value>
+  </data>
   <data name="OptimizeNamespaceImportsAnalyzer_MessageFormat" xml:space="preserve">
     <value>Remove unused namespaces</value>
   </data>
