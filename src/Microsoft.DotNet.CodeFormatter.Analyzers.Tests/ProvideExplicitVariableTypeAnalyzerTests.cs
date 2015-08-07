@@ -402,5 +402,24 @@ class C1
             const string expected = input;
             Verify(input, expected, runFormatter: false);
         }
+
+        [Fact]
+        public void TestVarDeclarationWithMissingNodes()
+        {
+            const string input = @"
+class C1
+{
+    void M()
+    {
+        var x = ;
+        var = 10;
+        var y 10;
+        foreach (var z in ){}
+        foreach (var in ){}
+    }
+}";
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
+        }
     }
 }

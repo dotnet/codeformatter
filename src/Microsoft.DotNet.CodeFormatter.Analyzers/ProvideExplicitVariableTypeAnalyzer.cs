@@ -101,9 +101,13 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         //       which is (presumbly) much slower. 
         private static bool IsTypeObvious(SyntaxNode node)
         {            
-            if (node == null)
+            // Since parser would generate the missing node (IsMissing == true) and attach a diagnostic to it,
+            // we traverse the sub tree only if a diagnostic is attached as optimization
+            if (node == null || 
+               (node.ContainsDiagnostics && 
+                node.DescendantNodesAndTokensAndSelf().Where(n => n.IsMissing).Any()))
             {
-                return false;
+                return true;
             }
                                                    
             ExpressionSyntax expressionNode = node is VariableDeclarationSyntax ?
