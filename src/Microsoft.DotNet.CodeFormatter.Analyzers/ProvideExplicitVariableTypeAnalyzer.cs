@@ -100,25 +100,31 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         //       The trade-off here is the logic we use to check syntax node is not as accurate as a query to SemanticModel, 
         //       which is (presumbly) much slower. 
         private static bool IsTypeObvious(SyntaxNode node)
-        {            
+        {   
             if (node == null)
             {
-                return false;
+                return true;
             }
                                                    
             ExpressionSyntax expressionNode = node is VariableDeclarationSyntax ?
                                 ((VariableDeclarationSyntax)node)?.Variables.FirstOrDefault()?.Initializer?.Value :
                                 (node as ForEachStatementSyntax)?.Expression;
 
-            // 'expressionNode == null' means the code under inspection has errors,
-            // so we return 'true' to avoid firing a warning.
             return expressionNode == null ?
+                   // 'expressionNode == null' means the code under inspection has errors,
+                   // so we return 'true' to avoid firing a warning.
                    true :
+                   // Check for obvious type.
                    expressionNode.Kind() == SyntaxKind.AsExpression ||
                    expressionNode is LiteralExpressionSyntax ||
                    expressionNode is CastExpressionSyntax ||
                    expressionNode is ObjectCreationExpressionSyntax ||
-                   expressionNode is ArrayCreationExpressionSyntax;
+                   expressionNode is ArrayCreationExpressionSyntax ||
+                   // Check if there's any missing node in the subtree.
+                   // Since parser would generate the missing node (IsMissing == true) and attach a diagnostic to it,
+                   // we traverse the subtree only if a diagnostic is attached as optimization.
+                   (node.ContainsDiagnostics &&
+                    node.DescendantNodesAndTokensAndSelf().Where(n => n.IsMissing).Any());
         }
     }
 }
