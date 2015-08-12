@@ -4,8 +4,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+
 using Microsoft.CodeAnalysis.Options;
-using Microsoft.CodeAnalysis.Options.Providers;
  
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -25,6 +25,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         /// <summary>
         /// This option enables removal of namespace imports that aren't required for compilation
         /// </summary>
-        public static Option<bool> RemoveUnnecessaryImports { get; } = new Option<bool>(AnalyzerName, "RemoveUnnecessaryImports", true);
+        public static PerLanguageOption<bool> RemoveUnnecessaryImports { get; } = new PerLanguageOption<bool>(AnalyzerName, "RemoveUnnecessaryImports", defaultValue: true);
     }
 }

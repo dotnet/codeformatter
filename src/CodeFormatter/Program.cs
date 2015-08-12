@@ -31,9 +31,14 @@ namespace CodeFormatter
             return Parser.Default.ParseArguments<ListOptions, FormatOptions>(args)
               .Return(
                 (ListOptions listOptions) => RunListCommand(listOptions),
+                (ExportOptions exportIons) => RunExportOptionsCommand(exportOptions),
                 (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
                 errs => 1);
 
+        }
+
+        private static object RunExportOptionsCommand(object exportOptions)
+        {
         }
 
         private static int RunListCommand(ListOptions options)

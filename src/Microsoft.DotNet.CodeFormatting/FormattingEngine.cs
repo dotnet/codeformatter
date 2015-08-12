@@ -36,6 +36,12 @@ namespace Microsoft.DotNet.CodeFormatting
             return engine.AllSupportedDiagnostics;
         }
 
+        public static ImmutableArray<IOptionsProvider> GetOptionsProviders(IEnumerable<Assembly> assemblies)
+        {
+            var container = CreateCompositionContainer(assemblies);
+            return container.GetExports<IOptionsProvider>().ToImmutableArray();
+        }
+
         private static CompositionHost CreateCompositionContainer(IEnumerable<Assembly> assemblies = null)
         {
             ConventionBuilder conventions = GetConventions();
