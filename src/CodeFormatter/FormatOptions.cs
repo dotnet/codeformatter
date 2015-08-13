@@ -11,11 +11,17 @@ namespace CodeFormatter
     [Verb("format", HelpText = "Apply code formatting rules and analyzers to specified project.")]
     public class FormatOptions
     {
-        [Option(
-            't', "target", 
+        [Value(
+            0,
             HelpText = "Project, solution or response file to drive code formatting.", 
             Required = true)]
         public IEnumerable<string> FormatTargets { get; set; }
+
+        [Option(
+            'o',
+            "options",
+            HelpText = "Path to an options file that should be used to configure analysis")]
+        public string OptionsFile { get; set; }
    
         [Option(
             "fileFilter", 

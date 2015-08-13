@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
 using Microsoft.DotNet.CodeFormatter.Analyzers;
+using Microsoft.CodeAnalysis.Options;
 
 namespace CodeFormatter
 {
@@ -28,17 +29,44 @@ namespace CodeFormatter
 
         private static int Main(string[] args)
         {            
-            return Parser.Default.ParseArguments<ListOptions, FormatOptions>(args)
+            return Parser.Default.ParseArguments<
+                ListOptions, 
+                ExportOptions,
+                FormatOptions>(args)
               .Return(
                 (ListOptions listOptions) => RunListCommand(listOptions),
-                (ExportOptions exportIons) => RunExportOptionsCommand(exportOptions),
+                (ExportOptions exportOptions) => RunExportOptionsCommand(exportOptions),
                 (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
                 errs => 1);
-
         }
 
-        private static object RunExportOptionsCommand(object exportOptions)
+        private static int RunExportOptionsCommand(ExportOptions exportOptions)
         {
+            int result = 1;
+
+            try
+            {
+                PropertyBag allOptions = new PropertyBag();
+ 
+                // The export command could be updated in the future to accept an arbitrary set
+                // of analyzers for which to build an options XML file suitable for configuring them.
+                foreach (IOptionsProvider provider in FormattingEngine.GetOptionsProviders(s_defaultCompositionAssemblies))
+                {
+                    foreach (IOption option in provider.GetOptions())
+                    {
+                        allOptions.SetProperty(option, option.DefaultValue);
+                    }
+                }
+                allOptions.SaveTo(exportOptions.OutputPath, id: "codeformatter-options");
+                Console.WriteLine("Options file saved to:" + Path.GetFullPath(exportOptions.OutputPath));
+                result = 0;
+            }
+            catch (IOException) { }
+            catch (TypeLoadException) { }
+            catch (BadImageFormatException) { }
+            catch (UnauthorizedAccessException) { }
+
+            return result;
         }
 
         private static int RunListCommand(ListOptions options)
@@ -119,6 +147,7 @@ namespace CodeFormatter
             engine.FileNames = options.Files.ToImmutableArray();
             engine.CopyrightHeader = ImmutableArray.ToImmutableArray<string>(new string[] { options.CopyrightHeader });
             engine.AllowTables = options.DefineDotNetFormatter;
+            engine.AnalyzerOptionsFile = options.OptionsFile;
             engine.Verbose = options.Verbose;
 
             if (options.UseAnalyzers)

@@ -65,13 +65,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdditionalTextFile.cs" />
     <Compile Include="FormattingEngineDiagnosticProvider.cs" />
     <Compile Include="IRuleMetadata.cs" />
     <Compile Include="NameHelper.cs" />
+    <Compile Include="Options\StringSet.cs" />
+    <Compile Include="Options\PropertyBagExtensionMethods.cs" />
     <Compile Include="Options\ExportOptionsProvider.cs" />
     <Compile Include="Options\IOptionsProvider.cs" />
+    <Compile Include="Options\PropertyBag.cs" />
+    <Compile Include="Options\TypedPropertyBag.cs" />
     <Compile Include="ResponseFileWorkspace.cs" />
     <Compile Include="Rules\MarkReadonlyFieldsRule.cs" />
+    <Compile Include="Rules\RuleOptions.cs" />
     <Compile Include="SemaphoreLock.cs" />
     <Compile Include="SyntaxUtil.cs" />
     <Compile Include="Filters\FilenameFilter.cs" />

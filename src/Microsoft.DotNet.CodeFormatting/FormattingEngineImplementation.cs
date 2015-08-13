@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -38,8 +39,6 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly Dictionary<string, bool> _ruleEnabledMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, bool> _diagnosticEnabledMap;
         private readonly ImmutableDictionary<string, CodeFixProvider> _diagnosticIdToFixerMap;
-        private bool _allowTables;
-        private bool _verbose;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -65,17 +64,11 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _options.FormatLogger = value; }
         }
 
-        public bool AllowTables
-        {
-            get { return _allowTables; }
-            set { _allowTables = value; }
-        }
+        public bool AllowTables { get; set; }
 
-        public bool Verbose
-        {
-            get { return _verbose; }
-            set { _verbose = value; }
-        }
+        public bool Verbose { get; set; }
+
+        public string AnalyzerOptionsFile { get; set; }
 
         public ImmutableArray<IRuleMetadata> AllRules
         {
@@ -305,7 +298,7 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             var solution = originalSolution;
 
-            if (_allowTables)
+            if (AllowTables)
             {
                 solution = AddTablePreprocessorSymbol(originalSolution);
             }
@@ -314,7 +307,7 @@ namespace Microsoft.DotNet.CodeFormatting
             solution = await RunLocalSemanticPass(solution, documentIds, cancellationToken).ConfigureAwait(false);
             solution = await RunGlobalSemanticPass(solution, documentIds, cancellationToken).ConfigureAwait(false);
 
-            if (_allowTables)
+            if (AllowTables)
             {
                 solution = RemoveTablePreprocessorSymbol(solution, originalSolution);
             }
@@ -324,8 +317,16 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<ImmutableArray<Diagnostic>> GetDiagnostics(Project project, CancellationToken cancellationToken)
         {
+            AnalyzerOptions analyzerOptions = null;
+
+            if (!string.IsNullOrEmpty(AnalyzerOptionsFile))
+            {
+                var additionalTextFile = new AdditionalTextFile(AnalyzerOptionsFile);
+                analyzerOptions = new AnalyzerOptions(new AdditionalText[] { additionalTextFile }.ToImmutableArray());
+            }
+
             var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
-            var compilationWithAnalyzers = compilation.WithAnalyzers(_analyzers.ToImmutableArray());
+            var compilationWithAnalyzers = compilation.WithAnalyzers(_analyzers.ToImmutableArray(), analyzerOptions);
             return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().ConfigureAwait(false);
         }
 
@@ -369,7 +370,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private void EndDocument(Document document)
         {
             _watch.Stop();
-            if (_verbose)
+            if (Verbose)
             {
                 FormatLogger.WriteLine("    {0} {1} seconds", document.Name, _watch.Elapsed.TotalSeconds);
             }
@@ -434,7 +435,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunLocalSemanticPass(Solution originalSolution, IReadOnlyList<DocumentId> documentIds, ILocalSemanticFormattingRule localSemanticRule, CancellationToken cancellationToken)
         {
-            if (_verbose)
+            if (Verbose)
             {
                 FormatLogger.WriteLine("  {0}", localSemanticRule.GetType().Name);
             }
@@ -475,7 +476,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task<Solution> RunGlobalSemanticPass(Solution solution, IReadOnlyList<DocumentId> documentIds, IGlobalSemanticFormattingRule globalSemanticRule, CancellationToken cancellationToken)
         {
-            if (_verbose)
+            if (Verbose)
             {
                 FormatLogger.WriteLine("  {0}", globalSemanticRule.GetType().Name);
             }

@@ -9,6 +9,6 @@ namespace CodeFormatter
     internal class ExportOptions
     {
         [Value(0, HelpText = "List available built-in rules", Required = true)]
-        public bool OutputPath { get; set; }
+        public string OutputPath { get; set; }
     }
 }

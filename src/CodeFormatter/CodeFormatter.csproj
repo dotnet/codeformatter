@@ -83,7 +83,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExportOptionsOptions.cs" />
+    <Compile Include="ExportOptions.cs" />
     <Compile Include="FormatOptions.cs" />
     <Compile Include="ListOptions.cs" />
     <Compile Include="Program.cs" />
