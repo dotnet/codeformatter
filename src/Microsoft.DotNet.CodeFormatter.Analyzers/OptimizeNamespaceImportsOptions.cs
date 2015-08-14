@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Options;
  
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
-    [ExportOptionsProvider, Shared]
+    [Export(typeof(IOptionsProvider)), Shared]
     internal class OptimizeNamespaceImportsOptions : IOptionsProvider
     {        
         public IEnumerable<IOption> GetOptions()

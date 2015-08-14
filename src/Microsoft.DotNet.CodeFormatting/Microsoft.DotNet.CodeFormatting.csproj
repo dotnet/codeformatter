@@ -71,7 +71,6 @@
     <Compile Include="NameHelper.cs" />
     <Compile Include="Options\StringSet.cs" />
     <Compile Include="Options\PropertyBagExtensionMethods.cs" />
-    <Compile Include="Options\ExportOptionsProvider.cs" />
     <Compile Include="Options\IOptionsProvider.cs" />
     <Compile Include="Options\PropertyBag.cs" />
     <Compile Include="Options\TypedPropertyBag.cs" />

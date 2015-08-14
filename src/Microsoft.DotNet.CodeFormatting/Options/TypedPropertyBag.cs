@@ -14,7 +14,9 @@ namespace Microsoft.CodeAnalysis.Options
     [Serializable]
     public class TypedPropertyBag<T> : Dictionary<string, T> where T : new()
     {
-        public TypedPropertyBag() : this(null, StringComparer.OrdinalIgnoreCase) { }
+        public TypedPropertyBag() : this(null, StringComparer.Ordinal)
+        {
+        }
 
         public TypedPropertyBag(PropertyBag initializer, IEqualityComparer<string> comparer) : base(comparer)
         {
@@ -32,20 +34,6 @@ namespace Microsoft.CodeAnalysis.Options
         {
         }
 
-        public new T this[string key]
-        {
-            get
-            {
-                T result;
-
-                if (!base.TryGetValue(key, out result))
-                {
-                    result = base[key] = new T();
-                }
-                return result;
-            }
-            set { base[key] = value; }
-        }
 
         public virtual T GetProperty(PerLanguageOption<T> setting, bool cacheDefault = true)
         {

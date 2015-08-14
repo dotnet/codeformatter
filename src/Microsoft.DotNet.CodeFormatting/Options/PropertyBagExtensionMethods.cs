@@ -27,9 +27,6 @@ namespace Microsoft.CodeAnalysis.Options
                 propertyBagTypeName = NormalizeTypeName(propertyBag.GetType().FullName);
             }
 
-            if (propertyBag.Count == 0)
-                return;
-
             writer.WriteStartElement(PROPERTIES_ID);
             writer.WriteAttributeString(KEY_ID, name);
 
@@ -60,9 +57,6 @@ namespace Microsoft.CodeAnalysis.Options
                     ((IDictionary)pb).SavePropertyBagToStream(writer, settings, key);
                     continue;
                 }
-
-                if (property == null)
-                    continue;
 
                 writer.WriteStartElement(PROPERTY_ID);
                 writer.WriteAttributeString(KEY_ID, key);
@@ -141,7 +135,7 @@ namespace Microsoft.CodeAnalysis.Options
 
                     if (String.IsNullOrEmpty(typeName))
                     {
-                        nestedPropertyBag = new PropertyBag(null, StringComparer.OrdinalIgnoreCase);
+                        nestedPropertyBag = new PropertyBag();
                     }
                     else
                     {
@@ -153,7 +147,7 @@ namespace Microsoft.CodeAnalysis.Options
                     isEmpty = reader.IsEmptyElement;
                     reader.ReadStartElement(PROPERTIES_ID);
                     LoadPropertiesFromXmlStream(nestedPropertyBag, reader);
-                    if (!isEmpty) reader.ReadEndElement();
+                    if (!isEmpty) { reader.ReadEndElement(); }
                 }
                 else
                 {
@@ -179,7 +173,8 @@ namespace Microsoft.CodeAnalysis.Options
 
                     object propertyValue = tc.ConvertFromString(value);
                     propertyBag[key] = propertyValue;
-                    if (!isEmpty) { reader.ReadEndElement(); }
+
+                    Debug.Assert(isEmpty);
                 }
             }
         }
@@ -219,9 +214,6 @@ namespace Microsoft.CodeAnalysis.Options
 
         private static Type GetType(string typeName)
         {
-            if (String.IsNullOrEmpty(typeName))
-                return typeof(string);
-
             Type propertyType = null;
             if (!s_typesCache.Contains(typeName))
             {
@@ -256,9 +248,6 @@ namespace Microsoft.CodeAnalysis.Options
         private const string STRING_SET_ID = "StringSet";
         internal const string PROPERTIES_ID = "Properties";
 
-        // internal for unit-testing...
-        internal static Version s_currentVersion = new Version("1.0.0.0");
-        internal static Version CurrentVersion { get { return s_currentVersion; } }
         private static HybridDictionary s_typesCache = new HybridDictionary();
     }
 }

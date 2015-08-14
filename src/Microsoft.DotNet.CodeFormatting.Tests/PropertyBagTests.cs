@@ -28,6 +28,28 @@ namespace Microsoft.CodeAnalysis.Options
         }
 
         [TestMethod]
+        public void PropertyBag_NoCache()
+        {
+            var propertyBag = new PropertyBag();
+
+            TestEnum testEnum = propertyBag.GetProperty(TestEnumOptionTwo, cacheDefault: false);
+
+            Assert.AreEqual(TestEnumOptionTwo.DefaultValue, testEnum);
+            Assert.AreEqual(propertyBag.Count, 0);
+        }
+
+        [TestMethod]
+        public void PropertyBag_TypedPropertyBagNoCache()
+        {
+            var propertyBag = new TestEnumPropertyBag();
+
+            TestEnum testEnum = propertyBag.GetProperty(TestEnumOptionTwo, cacheDefault: false);
+
+            Assert.AreEqual(TestEnumOptionTwo.DefaultValue, testEnum);
+            Assert.AreEqual(propertyBag.Count, 0);
+        }
+
+        [TestMethod]
         public void PropertyBag_InitializeFromPropertyBag()
         {
             int expectedValue = 72;
@@ -40,7 +62,12 @@ namespace Microsoft.CodeAnalysis.Options
             Assert.IsTrue(propertyBag.TryGetProperty("TestValue", out converted));
             Assert.AreEqual(expectedValue, converted, "String conversion to primitive type did not succeed.");
 
-            Assert.IsTrue(propertyBag.TryGetProperty("testvalue", out converted));
+            Assert.IsFalse(propertyBag.TryGetProperty("testvalue", out converted));
+
+            Assert.IsTrue(copiedPropertyBag.TryGetProperty("TestValue", out converted));
+            Assert.AreEqual(expectedValue, converted, "String conversion to primitive type did not succeed.");
+
+            Assert.IsTrue(copiedPropertyBag.TryGetProperty("testvalue", out converted));
             Assert.AreEqual(expectedValue, converted, "String conversion to primitive type did not succeed.");
         }
 
@@ -90,7 +117,7 @@ namespace Microsoft.CodeAnalysis.Options
         }
 
         [TestMethod]
-        public void PropertyBag_ArgumentNullChecks()
+        public void PropertyBag_ArgumentNullChecks()        
         {
             bool argumentNull = false;
 
@@ -118,8 +145,45 @@ namespace Microsoft.CodeAnalysis.Options
             var propertyBag = new PropertyBag();
             testData.InitializePropertyBag(propertyBag);
 
+            propertyBag = PersistAndReloadPropertyBag(propertyBag);
+            testData.ValidatePropertyBag(propertyBag);
+
             string path = Path.GetTempFileName();
 
+            try
+            {
+                propertyBag.SaveTo(path, "TestId");
+                propertyBag = new PropertyBag();
+                propertyBag.LoadFrom(path);
+                testData.ValidatePropertyBag(propertyBag);
+            }
+            finally
+            {
+                if (File.Exists(path)) { File.Delete(path); }
+            }
+
+            TestEnumPropertyBag typedPropertyBag = propertyBag.GetProperty(TypedPropertyBagOption);
+
+            typedPropertyBag.SetProperty(TestEnumOptionThree, TestEnum.ValueOne);
+            Assert.AreEqual(TestEnum.ValueOne, typedPropertyBag.GetProperty(TestEnumOptionThree));
+            Assert.AreNotEqual(TestEnumOptionThree.DefaultValue, typedPropertyBag.GetProperty(TestEnumOptionThree));
+
+            Assert.AreEqual(TestEnumOptionTwo.DefaultValue, typedPropertyBag.GetProperty(TestEnumOptionTwo));
+
+            propertyBag.SetProperty(TypedPropertyBagOption, null);
+            typedPropertyBag = propertyBag.GetProperty(TypedPropertyBagOption);
+
+            // The Roslyn options pattern has a design flaw in that it does not provide for handing out new 
+            // default instances of references type. Instead, the option instance retains a singleton
+            // value. In ModernCop, we replaced DefaultValue with a delegate that returns the appropriate type.
+            // This allowed for multiple constructions of empty default values.
+            //Assert.AreEqual(TestEnumOptionThree.DefaultValue, typedPropertyBag.GetProperty(TestEnumOptionThree));                
+        }
+
+        public PropertyBag PersistAndReloadPropertyBag(PropertyBag propertyBag)
+        {
+            PropertyBag result = null;
+            string path = Path.GetTempFileName();
             try
             {
                 using (var writer = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -127,27 +191,109 @@ namespace Microsoft.CodeAnalysis.Options
                     propertyBag.SaveTo(writer, "TestProperties");
                 }
 
-                // reset to empty property bag
-                propertyBag = new PropertyBag();
+                result = new PropertyBag();
 
                 using (var reader = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
-                    propertyBag.LoadFrom(reader);
-                    testData.ValidatePropertyBag(propertyBag);
+                    result.LoadFrom(reader);
                 }
-
-                propertyBag.SaveTo(path, "PropertiesId");
-
-                // reset to empty property bag
-                propertyBag = new PropertyBag();
-                propertyBag.LoadFrom(path);
-                testData.ValidatePropertyBag(propertyBag);
             }
             finally
             {
                 try { File.Delete(path); } catch (IOException) { }
             }
+            return result;
         }
+
+        [TestMethod]
+        public void PropertyBag_RemoveFromTypedPropertyBag()
+        {
+            var typedPropertyBag = new TypedPropertyBag<PropertyBag>();
+            var propertyBag = typedPropertyBag.GetProperty(PropertyBagOption);
+
+            Assert.AreEqual(1, typedPropertyBag.Count);
+
+            typedPropertyBag.SetProperty(PropertyBagOption, null);
+            Assert.AreEqual(0, typedPropertyBag.Count);
+        }
+
+        [ExpectedException(typeof(ArgumentNullException))]
+        [TestMethod]
+        public void PropertyBag_SaveToNull()
+        {
+            var propertyBag = new PropertyBag();
+            propertyBag.SaveTo((string)null, "testId");
+        }
+
+        [ExpectedException(typeof(ArgumentNullException))]
+        [TestMethod]
+        public void PropertyBag_TypedPropertyBagGetNull()
+        {
+            var propertyBag = new TestEnumPropertyBag();
+            propertyBag.GetProperty(null);
+        }
+
+        [ExpectedException(typeof(ArgumentNullException))]
+        [TestMethod]
+        public void PropertyBag_TypedPropertyBagSetNull()
+        {
+            var propertyBag = new TestEnumPropertyBag();
+            propertyBag.SetProperty(null, 0);
+        }
+
+        [TestMethod]
+        public void PropertyBag_SaveEmptyStream()
+        {
+            var propertyBag = new PropertyBag();
+            propertyBag = PersistAndReloadPropertyBag(propertyBag);
+            Assert.AreEqual(0, propertyBag.Count);
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                propertyBag.SaveTo(path, "TestId");
+                propertyBag = new PropertyBag();
+                propertyBag.LoadFrom(path);
+                Assert.AreEqual(0, propertyBag.Count);
+            }
+            finally
+            {
+                if (File.Exists(path)) { File.Delete(path); }
+            }
+        }
+
+        [TestMethod]
+        public void PropertyBag_SaveNullPropertyValue()
+        {
+            var propertyBag = new PropertyBag();
+            propertyBag = PersistAndReloadPropertyBag(propertyBag);
+        }
+
+        [TestMethod]
+        public void PropertyBag_SetNullKey()
+        {
+            var propertyBag = new PropertyBag();
+            propertyBag["test"] = null;
+
+            string stringResult;
+            Assert.IsFalse(propertyBag.TryGetProperty<string>("test", out stringResult));
+            Assert.IsNull(stringResult);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(NotSupportedException))]
+        public void PropertyBag_UnsupportedTypeConversion()
+        {
+            var propertyBag = new PropertyBag();
+            propertyBag["test"] = null;
+
+            TestData testDataResult;
+            propertyBag["test"] = "ThisStringCannotBeConvertedToAPropertyBag";
+            Assert.IsFalse(propertyBag.TryGetProperty<TestData>("test", out testDataResult));
+            Assert.IsNull(testDataResult);
+        }
+
+        struct MyStruct { }
 
         class TestData
         {
@@ -217,20 +363,20 @@ namespace Microsoft.CodeAnalysis.Options
             {
                 propertyBag.SetProperty(DoubleOption, DoubleValue);
                 propertyBag.SetProperty(BooleanOption, BooleanValue);
-                propertyBag.SetProperty(TestEnumOption, TestEnumValue);
+                propertyBag.SetProperty(TestEnumOptionThree, TestEnumValue);
                 propertyBag.SetProperty(StringSetOption, StringSetValue);
 
                 PropertyBagValue = new PropertyBag();
                 PropertyBagValue.SetProperty(DoubleOption, EmbeddedDoubleValue);
                 PropertyBagValue.SetProperty(BooleanOption, EmbeddedBooleanValue);
-                PropertyBagValue.SetProperty(TestEnumOption, EmbeddedTestEnumValue);
+                PropertyBagValue.SetProperty(TestEnumOptionThree, EmbeddedTestEnumValue);
                 PropertyBagValue.SetProperty(StringSetOption, EmbeddedStringSetValue);
 
 
                 propertyBag.SetProperty(PropertyBagOption, PropertyBagValue);
 
                 TypedPropertyBagValue = propertyBag.GetProperty(TypedPropertyBagOption);
-                TypedPropertyBagValue.SetProperty(TestEnumOption, EmbeddedTestEnumValue);
+                TypedPropertyBagValue.SetProperty(TestEnumOptionThree, EmbeddedTestEnumValue);
 
                 propertyBag.SetProperty(TypedPropertyBagOption, TypedPropertyBagValue);
             }
@@ -239,13 +385,13 @@ namespace Microsoft.CodeAnalysis.Options
             {
                 Assert.AreEqual(DoubleValue, propertyBag.GetProperty(DoubleOption));
                 Assert.AreEqual(BooleanValue, propertyBag.GetProperty(BooleanOption));
-                Assert.AreEqual(TestEnumValue, propertyBag.GetProperty(TestEnumOption));
+                Assert.AreEqual(TestEnumValue, propertyBag.GetProperty(TestEnumOptionThree));
 
                 ValidateStringSet(StringSetValue, propertyBag.GetProperty(StringSetOption));
 
                 Assert.AreEqual(EmbeddedDoubleValue, propertyBag.GetProperty(PropertyBagOption).GetProperty(DoubleOption));
                 Assert.AreEqual(EmbeddedBooleanValue, propertyBag.GetProperty(PropertyBagOption).GetProperty(BooleanOption));
-                Assert.AreEqual(EmbeddedTestEnumValue, propertyBag.GetProperty(PropertyBagOption).GetProperty(TestEnumOption));
+                Assert.AreEqual(EmbeddedTestEnumValue, propertyBag.GetProperty(PropertyBagOption).GetProperty(TestEnumOptionThree));
 
                 ValidateStringSet(EmbeddedStringSetValue, propertyBag.GetProperty(PropertyBagOption).GetProperty(StringSetOption));
 
@@ -255,25 +401,31 @@ namespace Microsoft.CodeAnalysis.Options
         }
 
         private static PerLanguageOption<bool> BooleanOption = 
-            new PerLanguageOption<bool>("PropertyBagTests", "BooleanSetting", false);
+            new PerLanguageOption<bool>("TestFeature", "BooleanOption", false);
 
         private static PerLanguageOption<double> DoubleOption = 
-            new PerLanguageOption<double>("PropertyBagTests", "DoubleSetting", 4.7d);
+            new PerLanguageOption<double>("TestFeature", "DoubleOption", 4.7d);
 
         private static PerLanguageOption<PropertyBag> PropertyBagOption = 
-            new PerLanguageOption<PropertyBag>("PropertyBagTests", "PropertyBagSetting", new PropertyBag());
+            new PerLanguageOption<PropertyBag>("TestFeature", "PropertyBagOption", new PropertyBag());
 
-        private static PerLanguageOption<TestEnum> TestEnumOption =
-            new PerLanguageOption<TestEnum>("PropertyBagTests", "TestEnumSetting", TestEnum.ValueThree);
+        private static PerLanguageOption<TestEnum> TestEnumOptionTwo =
+            new PerLanguageOption<TestEnum>("TestFeature", "TestEnumOptionTwo", TestEnum.ValueTwo);
+
+        private static PerLanguageOption<TestEnum> TestEnumOptionThree =
+            new PerLanguageOption<TestEnum>("TestFeature", "TestEnumOptionThree", TestEnum.ValueThree);
 
         private static PerLanguageOption<StringSet> StringSetOption =
-            new PerLanguageOption<StringSet>("PropertyBagTests", "StringSetSetting", new StringSet(new string[] { "one", "two" }));
+            new PerLanguageOption<StringSet>("TestFeature", "StringSetOption", new StringSet(new string[] { "one", "two" }));
+
+        private static PerLanguageOption<string> StringOption =
+            new PerLanguageOption<string>("TestFeature", "StringOption", null);
 
         [Serializable]
         enum TestEnum { ValueOne = 1, ValueTwo, ValueThree }
 
         private static PerLanguageOption<TestEnumPropertyBag> TypedPropertyBagOption =
-            new PerLanguageOption<TestEnumPropertyBag>("PropertyBagTests", "TypePropertyBagSetting", new TestEnumPropertyBag());
+            new PerLanguageOption<TestEnumPropertyBag>("TestFeature", "TypePropertyBagOption", new TestEnumPropertyBag());
 
         [Serializable]
         class TestEnumPropertyBag : TypedPropertyBag<TestEnum>

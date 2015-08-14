@@ -16,7 +16,9 @@ namespace Microsoft.CodeAnalysis.Options
     {
         public PropertyBag() : base() { }
 
-        public PropertyBag(PropertyBag initializer, IEqualityComparer<string> comparer)
+        public PropertyBag(
+            PropertyBag initializer = null, 
+            IEqualityComparer<string> comparer = null)
             : base(initializer, comparer)
         {
         }
@@ -32,7 +34,7 @@ namespace Microsoft.CodeAnalysis.Options
         {
             if (setting == null) { throw new ArgumentNullException("setting"); }
 
-            PropertyBag properties = GetSettingsContainer(setting);
+            PropertyBag properties = GetSettingsContainer(setting, cacheDefault);
 
             T value;
             if (!properties.TryGetProperty(setting.Name, out value) && setting.DefaultValue != null)
@@ -48,7 +50,7 @@ namespace Microsoft.CodeAnalysis.Options
         {
             if (setting == null) { throw new ArgumentNullException("setting"); }
 
-            PropertyBag properties = GetSettingsContainer(setting);
+            PropertyBag properties = GetSettingsContainer(setting, true);
 
             if (value == null && properties.ContainsKey(setting.Name))
             {
@@ -76,17 +78,19 @@ namespace Microsoft.CodeAnalysis.Options
             return false;
         }
 
-        private PropertyBag GetSettingsContainer(IOption setting)
+        private PropertyBag GetSettingsContainer(IOption setting, bool cacheDefault)
         {
             PropertyBag properties = this;
 
             if (String.IsNullOrEmpty(Name))
             {
                 object propertiesObject;
-                if (!TryGetValue(setting.Feature, out propertiesObject))
+                string featureOptionsName = setting.Feature + ".Options";
+                if (!TryGetValue(featureOptionsName, out propertiesObject))
                 {
-                    this[setting.Feature] = properties = new PropertyBag();
-                    properties.Name = setting.Feature;
+                    properties = new PropertyBag();
+                    if (cacheDefault) { this[featureOptionsName] = properties; }
+                    properties.Name = featureOptionsName;
                 }
                 else
                 {
@@ -101,16 +105,12 @@ namespace Microsoft.CodeAnalysis.Options
             destination = default(T);
             if (source == null) return false;
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
-            if (converter == null) return false;
             destination = (T)converter.ConvertFrom(source);
             return destination != null;
         }
 
         public void SaveTo(string filePath, string id)
-        {
-            if (filePath == null)
-                return;
-
+        {            
             using (var writer = new FileStream(filePath, FileMode.Create, FileAccess.Write))
                 SaveTo(writer, id);
         }
@@ -132,21 +132,20 @@ namespace Microsoft.CodeAnalysis.Options
 
         public void LoadFrom(Stream stream)
         {
-            if (stream == null || stream.Length <= 3)
-                return;
-
             using (XmlReader reader = XmlReader.Create(stream))
             {
                 if (reader.IsStartElement(PropertyBagExtensionMethods.PROPERTIES_ID))
                 {
+                    bool isEmpty = reader.IsEmptyElement;
                     this.Clear();
                     
                     // Note: we do not recover the property bag id
                     //       as there is no current product use for the value
 
                     reader.ReadStartElement(PropertyBagExtensionMethods.PROPERTIES_ID);
+
                     this.LoadPropertiesFromXmlStream(reader);
-                    reader.ReadEndElement();
+                    if (!isEmpty) reader.ReadEndElement();
                 }
             }
         }
