@@ -107,6 +107,8 @@ namespace Microsoft.DotNet.CodeFormatting
             _localSemanticRules = localSemanticRules;
             _globalSemanticRules = globalSemanticRules;
 
+            Debug.Assert(options.CopyrightHeader != null);
+
             foreach (var rule in AllRules)
             {
                 _ruleEnabledMap[rule.Name] = rule.DefaultRule;

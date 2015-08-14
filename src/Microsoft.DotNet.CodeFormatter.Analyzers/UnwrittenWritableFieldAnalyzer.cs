@@ -41,7 +41,11 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 SyntaxKind.MultiplyAssignmentExpression,
                 SyntaxKind.OrAssignmentExpression,
                 SyntaxKind.RightShiftAssignmentExpression,
-                SyntaxKind.SubtractAssignmentExpression
+                SyntaxKind.SubtractAssignmentExpression,
+                SyntaxKind.PreIncrementExpression,
+                SyntaxKind.PreDecrementExpression,
+                SyntaxKind.PostIncrementExpression,
+                SyntaxKind.PostDecrementExpression
             };
 
         private ISymbol _internalsVisibleToAttribute;
@@ -89,9 +93,11 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
         private void CheckForAssignment(SyntaxNodeAnalysisContext context)
         {
-            var node = (AssignmentExpressionSyntax)context.Node;
-            CheckForFieldWrite(node.Left, context.SemanticModel);
-        }
+            ExpressionSyntax node = (context.Node as AssignmentExpressionSyntax)?.Left ?? 
+                                    (context.Node as PrefixUnaryExpressionSyntax)?.Operand ??
+                                    (context.Node as PostfixUnaryExpressionSyntax)?.Operand;
+            CheckForFieldWrite(node, context.SemanticModel);
+        } 
 
         private void CheckForRefOrOutParameter(SyntaxNodeAnalysisContext context)
         {

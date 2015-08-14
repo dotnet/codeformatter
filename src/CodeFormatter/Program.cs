@@ -67,6 +67,7 @@ namespace CodeFormatter
             catch (UnauthorizedAccessException) { }
 
             return result;
+
         }
 
         private static int RunListCommand(ListOptions options)
@@ -144,11 +145,11 @@ namespace CodeFormatter
             configBuilder.Add(options.PreprocessorConfigurations.ToArray());            
             engine.PreprocessorConfigurations = configBuilder.ToImmutableArray();
 
-            engine.FileNames = options.Files.ToImmutableArray();
-            engine.CopyrightHeader = ImmutableArray.ToImmutableArray<string>(new string[] { options.CopyrightHeader });
-            engine.AllowTables = options.DefineDotNetFormatter;
             engine.AnalyzerOptionsFile = options.OptionsFile;
             engine.Verbose = options.Verbose;
+            engine.AllowTables = options.DefineDotNetFormatter;
+            engine.FileNames = options.Files.ToImmutableArray();
+            engine.CopyrightHeader = options.CopyrightHeaderText;
 
             if (options.UseAnalyzers)
             {
