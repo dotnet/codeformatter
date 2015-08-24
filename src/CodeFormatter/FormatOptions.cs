@@ -13,7 +13,7 @@ using Microsoft.DotNet.CodeFormatting;
 namespace CodeFormatter
 {
     [Verb("format", HelpText = "Apply code formatting rules and analyzers to specified project.")]
-    public class FormatOptions
+    internal class FormatOptions
     {
         [Value(
             0,

@@ -27,8 +27,11 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 // disable console output entirely by providing a null writer
                 settings.HelpWriter = null;
             });
-
-            result = parser.ParseArguments<FormatOptions>(args)
+                            
+            // We are only interested in formatting options, but we must provide
+            // at least two verbs to ParseArguments in order to realize appropriate
+            // behavior around parsing the verb name...
+            result = parser.ParseArguments<ExportOptions, FormatOptions>(args)
                 .Return(
                 (FormatOptions parsedOptions) => { options = parsedOptions; return 0; },
                 errs => ReportErrors(errs));
@@ -46,8 +49,8 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             int result;
 
-            // CodeFormatter format --enable enabledRule -t test.csproj
-            var options = Parse(out result, "format", "--enable", "enabledRule", "-t", "test.csproj");
+            // CodeFormatter format test.csproj --enable enabledRule 
+            var options = Parse(out result, "format", "test.csproj", "--enable", "enabledRule");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
@@ -62,8 +65,8 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             int result;
 
-            // CodeFormatter format --disable disabledRule -t test.csproj
-            var options = Parse(out result, "format", "--disable", "disabledRule", "-t", "test.csproj");
+            // CodeFormatter format test.csproj --disable disabledRule
+            var options = Parse(out result, "format", "test.csproj", "--disable", "disabledRule");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
@@ -77,8 +80,8 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             int result;
 
-            // CodeFormatter format --enable e1,e2 --disable d1,d2,d3 --enable e3 -t test.csproj
-            var options = Parse(out result, "format", "--enable", "e1,e2,e3", "--disable", "d1,d2,d3", "-t", "test.csproj");
+            // CodeFormatter format --enable e1,e2 --disable d1,d2,d3 test.csproj
+            var options = Parse(out result, "format", "test.csproj", "--enable", "e1,e2,e3", "--disable", "d1,d2,d3");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
@@ -113,7 +116,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             int result;
 
             // CodeFormatter format --enable enabledRule
-            var options = Parse(out result, "format", "-t", "projectOne.csproj", "projectTwo.csproj");
+            var options = Parse(out result, "format", "projectOne.csproj", "projectTwo.csproj");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
@@ -128,7 +131,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             int result;
 
             // CodeFormatter format --target test.csproj --useanalyzers
-            var options = Parse(out result, "--target", "test.csproj", "--useanalyzers");
+            var options = Parse(out result, "format", "test.csproj", "--useanalyzers");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
@@ -141,7 +144,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             int result;
 
             // CodeFormatter format --target test.csproj --useanalyzers
-            var options = Parse(out result, "--target", "test.csproj");
+            var options = Parse(out result, "format", "test.csproj");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
