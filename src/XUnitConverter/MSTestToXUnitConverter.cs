@@ -163,7 +163,7 @@ namespace XUnitConverter
                     }
                     else
                     {
-                        transformationRoot = transformationRoot.RemoveNode(attributeListSyntax, SyntaxRemoveOptions.KeepNoTrivia);
+                        transformationRoot = transformationRoot.RemoveNode(attributeListSyntax, SyntaxRemoveOptions.KeepLeadingTrivia);
                     }
                 }
                 return transformationRoot;
