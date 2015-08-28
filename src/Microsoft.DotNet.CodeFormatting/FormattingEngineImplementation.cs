@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public bool Verbose { get; set; }
 
-        public string AnalyzerOptionsFile { get; set; }
+        public string FormattingOptionsFilePath { get; set; }
 
         public ImmutableArray<IRuleMetadata> AllRules
         {
@@ -321,9 +321,9 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             AnalyzerOptions analyzerOptions = null;
 
-            if (!string.IsNullOrEmpty(AnalyzerOptionsFile))
+            if (!string.IsNullOrEmpty(FormattingOptionsFilePath))
             {
-                var additionalTextFile = new AdditionalTextFile(AnalyzerOptionsFile);
+                var additionalTextFile = new AdditionalTextFile(FormattingOptionsFilePath);
                 analyzerOptions = new AnalyzerOptions(new AdditionalText[] { additionalTextFile }.ToImmutableArray());
             }
 

@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.CodeFormatting
         ImmutableArray<DiagnosticDescriptor> AllSupportedDiagnostics { get; }
         bool AllowTables { get; set; }
         bool Verbose { get; set; }
-        string AnalyzerOptionsFile { get; set; }
+        string FormattingOptionsFilePath { get; set; }
         void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled);
         void ToggleDiagnosticEnabled(string diagnosticId, bool enabled);
         Task FormatSolutionAsync(Solution solution, bool useAnalyzers, CancellationToken cancellationToken);

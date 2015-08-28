@@ -400,32 +400,34 @@ namespace Microsoft.CodeAnalysis.Options
             }
         }
 
+        private const string TEST_FEATURE = "TestFeature";
+
         private static PerLanguageOption<bool> BooleanOption = 
-            new PerLanguageOption<bool>("TestFeature", "BooleanOption", false);
+            new PerLanguageOption<bool>(TEST_FEATURE, nameof(BooleanOption), false);
 
         private static PerLanguageOption<double> DoubleOption = 
-            new PerLanguageOption<double>("TestFeature", "DoubleOption", 4.7d);
+            new PerLanguageOption<double>(TEST_FEATURE, nameof(DoubleOption), 4.7d);
 
         private static PerLanguageOption<PropertyBag> PropertyBagOption = 
-            new PerLanguageOption<PropertyBag>("TestFeature", "PropertyBagOption", new PropertyBag());
+            new PerLanguageOption<PropertyBag>(TEST_FEATURE, nameof(PropertyBagOption), new PropertyBag());
 
         private static PerLanguageOption<TestEnum> TestEnumOptionTwo =
-            new PerLanguageOption<TestEnum>("TestFeature", "TestEnumOptionTwo", TestEnum.ValueTwo);
+            new PerLanguageOption<TestEnum>(TEST_FEATURE, nameof(TestEnumOptionTwo), TestEnum.ValueTwo);
 
         private static PerLanguageOption<TestEnum> TestEnumOptionThree =
-            new PerLanguageOption<TestEnum>("TestFeature", "TestEnumOptionThree", TestEnum.ValueThree);
+            new PerLanguageOption<TestEnum>(TEST_FEATURE, nameof(TestEnumOptionThree), TestEnum.ValueThree);
 
         private static PerLanguageOption<StringSet> StringSetOption =
-            new PerLanguageOption<StringSet>("TestFeature", "StringSetOption", new StringSet(new string[] { "one", "two" }));
+            new PerLanguageOption<StringSet>(TEST_FEATURE, nameof(StringSetOption), new StringSet(new string[] { "one", "two" }));
 
         private static PerLanguageOption<string> StringOption =
-            new PerLanguageOption<string>("TestFeature", "StringOption", null);
+            new PerLanguageOption<string>(TEST_FEATURE, nameof(StringOption), null);
 
         [Serializable]
         enum TestEnum { ValueOne = 1, ValueTwo, ValueThree }
 
         private static PerLanguageOption<TestEnumPropertyBag> TypedPropertyBagOption =
-            new PerLanguageOption<TestEnumPropertyBag>("TestFeature", "TypePropertyBagOption", new TestEnumPropertyBag());
+            new PerLanguageOption<TestEnumPropertyBag>(TEST_FEATURE, nameof(TypedPropertyBagOption), new TestEnumPropertyBag());
 
         [Serializable]
         class TestEnumPropertyBag : TypedPropertyBag<TestEnum>

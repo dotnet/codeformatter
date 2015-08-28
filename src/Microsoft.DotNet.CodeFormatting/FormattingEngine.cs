@@ -66,9 +66,6 @@ namespace Microsoft.DotNet.CodeFormatting
                 .Export<ILocalSemanticFormattingRule>();
             conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
                 .Export<IGlobalSemanticFormattingRule>();
-            conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
-                            .Export<IGlobalSemanticFormattingRule>();
-
 
             // New per-analyzer options mechanism, deriving
             // from VS Workspaces functionality 

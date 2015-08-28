@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 Enabled,
                 RemoveUnnecessaryImports,
                 SortImports,
-                MoveImportsOutsideNamespaceDeclaration,
+                PlaceImportsOutsideNamespaceDeclaration,
                 PlaceSystemImportsFirst,
                 InsertLineBetweenImportGroups
             }.ToImmutableArray();
@@ -28,32 +28,33 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         private const string AnalyzerName = AnalyzerIds.OptimizeNamespaceImports + "." + "OptimizeNamespaceImports";
 
         /// <summary>
-        /// Enable namepsace optimization
+        /// Enable namespace import optimization.
         /// </summary>
-        public static PerLanguageOption<bool> Enabled { get; } = new PerLanguageOption<bool>(AnalyzerName, "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> Enabled { get; } = new PerLanguageOption<bool>(AnalyzerName, nameof(Enabled), defaultValue: true);
 
         /// <summary>
-        /// Remove  imports that aren't required for compilation
+        /// Remove imports that aren't required for compilation.
         /// </summary>
-        public static PerLanguageOption<bool> RemoveUnnecessaryImports { get; } = new PerLanguageOption<bool>(AnalyzerName, "RemoveUnnecessaryImports", defaultValue: true);
+        public static PerLanguageOption<bool> RemoveUnnecessaryImports { get; } = new PerLanguageOption<bool>(AnalyzerName, nameof(RemoveUnnecessaryImports), defaultValue: true);
 
         /// <summary>
-        /// Sort namespaces
+        /// Sort import directives by namespace
         /// </summary>
-        public static PerLanguageOption<bool> SortImports { get; } = new PerLanguageOption<bool>(AnalyzerName, "SortImports", defaultValue: true);
+        public static PerLanguageOption<bool> SortImports { get; } = new PerLanguageOption<bool>(AnalyzerName, nameof(SortImports), defaultValue: true);
 
         /// <summary>
-        /// Write namepsaces outside namespace declaration (or within if value is false)
+        /// Place import directives outside namespace declaration (or within if value is false).
         /// </summary>
-        public static PerLanguageOption<bool> MoveImportsOutsideNamespaceDeclaration { get; } = new PerLanguageOption<bool>(AnalyzerName, "MoveImportsOutsideNamespaceDeclaration", defaultValue: true);
+        public static PerLanguageOption<bool> PlaceImportsOutsideNamespaceDeclaration { get; } = new PerLanguageOption<bool>(AnalyzerName, nameof(PlaceImportsOutsideNamespaceDeclaration), defaultValue: true);
 
         /// <summary>
-        /// Place system namespaces first when writing import directives
+        /// Place system namespaces first when writing import directives.
         /// </summary>
-        public static PerLanguageOption<bool> PlaceSystemImportsFirst { get; } = new PerLanguageOption<bool>(AnalyzerName, "PlaceSystemImportsFirst", defaultValue: true);
+        public static PerLanguageOption<bool> PlaceSystemImportsFirst { get; } = new PerLanguageOption<bool>(AnalyzerName, nameof(PlaceSystemImportsFirst), defaultValue: true);
+
         /// <summary>
-        /// Insert a line-break between first-order namespaces groups, System.*, Microsoft.*, etc.
+        /// Insert a line-break between import first-order namespace groups, System.*, Microsoft.*, etc.
         /// </summary>
-        public static PerLanguageOption<bool> InsertLineBetweenImportGroups { get; } = new PerLanguageOption<bool>(AnalyzerName, "InsertLineBetweenImportGroups", defaultValue: true);
+        public static PerLanguageOption<bool> InsertLineBetweenImportGroups { get; } = new PerLanguageOption<bool>(AnalyzerName, nameof(InsertLineBetweenImportGroups), defaultValue: true);
     }
 }

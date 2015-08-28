@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             int result;
 
             // CodeFormatter format --target test.csproj --useanalyzers
-            var options = Parse(out result, "format", "test.csproj", "--useanalyzers");
+            var options = Parse(out result, "format", "test.csproj", "--use-analyzers");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);

@@ -5,10 +5,10 @@ using CommandLine;
 
 namespace CodeFormatter
 {
-    [Verb("options", HelpText = "Export rule options to an XML file that can edited and used to configure subsequents formattings.")]
+    [Verb("options", HelpText = "Export rule options to an XML file that can be edited and used to configure subsequent formattings.")]
     internal class ExportOptions
     {
-        [Value(0, HelpText = "List available built-in rules", Required = true)]
+        [Value(0, HelpText = "Output path for exported formatting options", Required = true)]
         public string OutputPath { get; set; }
     }
 }
