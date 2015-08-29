@@ -75,6 +75,9 @@
     <Compile Include="ExplicitThisFixer.cs" />
     <Compile Include="OptimizeNamespaceImportsAnalyzer.cs" />
     <Compile Include="OptimizeNamespaceImportsFixer.cs" />
+    <Compile Include="OptimizeNamespaceImportsOptions.cs" />
+    <Compile Include="OptionsHelper.cs" />
+    <Compile Include="ProvideExplicitVariableTypeOptions.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -86,6 +89,7 @@
     <Compile Include="ProvideExplicitVariableTypeFixer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceHelper.cs" />
+    <Compile Include="UnwrittenWritableFieldOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

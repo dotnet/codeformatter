@@ -13,19 +13,25 @@ using Microsoft.DotNet.CodeFormatting;
 namespace CodeFormatter
 {
     [Verb("format", HelpText = "Apply code formatting rules and analyzers to specified project.")]
-    public class FormatOptions
+    internal class FormatOptions
     {
-        [Option(
-            't', "target", 
+        [Value(
+            0,
             HelpText = "Project, solution or response file to drive code formatting.", 
             Required = true)]
         public IEnumerable<string> FormatTargets { get; set; }
+
+        [Option(
+            'o',
+            "options-file-path",
+            HelpText = "Path to an options file that should be used to configure analysis")]
+        public string OptionsFilePath { get; set; }
    
         [Option(
-            "fileFilter", 
+            "file-filters", 
             HelpText = "Only apply changes to files with specified name(s).", 
             Separator = ',')]
-        public IEnumerable<string> Files { get; set; }
+        public IEnumerable<string> FileFilters { get; set; }
 
         [Option(
             'l', "lang", 
@@ -33,7 +39,7 @@ namespace CodeFormatter
         public string Language { get; set; }
 
         [Option(
-            'c', "config", 
+            'c', "configs", 
             HelpText = "Comma-separated list of preprocessor configurations the formatter should run under.", 
             Separator = ',')]
         public IEnumerable<string> PreprocessorConfigurations { get; set; }
@@ -61,12 +67,12 @@ namespace CodeFormatter
         public bool Verbose { get; set; }
 
         [Option(
-            "definedotnetformatter", 
+            "define-dotnet_formatter", 
             HelpText = "Define DOTNET_FORMATTER in order to allow #if !DOTNET_FORMATTER constructs in code (to opt out of reformatting).")]
         public bool DefineDotNetFormatter { get; set; }
         
         [Option(
-            "useanalyzers",
+            "use-analyzers",
             HelpText = "TEMPORARY: invoke built-in analyzers rather than rules to perform reformatting.")]
         public bool UseAnalyzers { get; set; }
 

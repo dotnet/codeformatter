@@ -9,6 +9,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -33,6 +34,16 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             {
                 SyntaxNode root;
                 SemanticModel semanticModel;
+
+                PropertyBag properties = OptionsHelper.GetProperties(semanticModelAnalysisContext.Options);
+
+                if (!properties.GetProperty(OptimizeNamespaceImportsOptions.Enabled) ||
+                    !properties.GetProperty(OptimizeNamespaceImportsOptions.RemoveUnnecessaryImports))
+                {
+                    // We have no work to do based on configured options
+                    // vs. currently implemented analysis/fix-ups
+                    return;
+                }
 
                 semanticModel = semanticModelAnalysisContext.SemanticModel;
                 root = semanticModel.SyntaxTree.GetRoot();

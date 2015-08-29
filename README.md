@@ -1,5 +1,5 @@
 # CodeFormatter
-
+# 
 [![Build status](http://dotnet-ci.cloudapp.net/job/dotnet_codeformatter/badge/icon)](http://dotnet-ci.cloudapp.net/job/dotnet_codeformatter/)
 
 CodeFormatter is a tool that uses Roslyn to automatically rewrite the source to

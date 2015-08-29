@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 [assembly: AssemblyCopyright("\x00a9 Microsoft Corporation.  All rights reserved.")]
 [assembly: AssemblyCompany("Microsoft Corporation")]
@@ -15,4 +16,7 @@ using System.Reflection;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+
+[assembly: InternalsVisibleTo("Microsoft.DotNet.CodeFormatter.Analyzers.Tests")]
+[assembly: InternalsVisibleTo("Microsoft.DotNet.CodeFormatting.Tests")]
 

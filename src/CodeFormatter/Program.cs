@@ -15,11 +15,15 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
 using Microsoft.DotNet.CodeFormatter.Analyzers;
+using Microsoft.CodeAnalysis.Options;
 
 namespace CodeFormatter
 {
     internal static class Program
     {
+        private const int FAILED = 1;
+        private const int SUCCEEDED = 0;
+
         private static Assembly[] s_defaultCompositionAssemblies =
                                         new Assembly[] {
                                             typeof(FormattingEngine).Assembly,
@@ -28,11 +32,39 @@ namespace CodeFormatter
 
         private static int Main(string[] args)
         {            
-            return Parser.Default.ParseArguments<ListOptions, FormatOptions>(args)
+            return Parser.Default.ParseArguments<
+                ListOptions, 
+                ExportOptions,
+                FormatOptions>(args)
               .Return(
                 (ListOptions listOptions) => RunListCommand(listOptions),
+                (ExportOptions exportOptions) => RunExportOptionsCommand(exportOptions),
                 (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
-                errs => 1);
+                errs => FAILED);
+        }
+
+        private static int RunExportOptionsCommand(ExportOptions exportOptions)
+        {
+            int result = FAILED;
+            PropertyBag allOptions = new PropertyBag();
+
+            // The export command could be updated in the future to accept an arbitrary set
+            // of analyzers for which to build an options XML file suitable for configuring them.
+            // Currently, we perform discovery against the built-in CodeFormatter rules
+            // and analyzers only.
+            foreach (IOptionsProvider provider in FormattingEngine.GetOptionsProviders(s_defaultCompositionAssemblies))
+            {
+                foreach (IOption option in provider.GetOptions())
+                {
+                    allOptions.SetProperty(option, option.DefaultValue);
+                }
+            }
+            allOptions.SaveTo(exportOptions.OutputPath, id: "codeformatter-options");
+            Console.WriteLine("Options file saved to: " + Path.GetFullPath(exportOptions.OutputPath));
+
+            result = SUCCEEDED;
+
+            return result;
         }
 
         private static int RunListCommand(ListOptions options)
@@ -47,7 +79,7 @@ namespace CodeFormatter
 
             ListRulesAndAnalyzers(options.Analyzers, options.Rules);
 
-            return 0;
+            return SUCCEEDED;
         }
 
         private static void ListRulesAndAnalyzers(bool listAnalyzers, bool listRules)
@@ -85,7 +117,7 @@ namespace CodeFormatter
             {
                 RunFormatAsync(options, ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
-                return 0;
+                return SUCCEEDED;
             }
             catch (AggregateException ex)
             {
@@ -98,7 +130,7 @@ namespace CodeFormatter
                 foreach (var message in messages)
                     Console.WriteLine("- {0}", message);
 
-                return 1;
+                return FAILED;
             }
         }
 
@@ -110,23 +142,24 @@ namespace CodeFormatter
             configBuilder.Add(options.PreprocessorConfigurations.ToArray());            
             engine.PreprocessorConfigurations = configBuilder.ToImmutableArray();
 
+            engine.FormattingOptionsFilePath = options.OptionsFilePath;
             engine.Verbose = options.Verbose;
             engine.AllowTables = options.DefineDotNetFormatter;
-            engine.FileNames = options.Files.ToImmutableArray();
+            engine.FileNames = options.FileFilters.ToImmutableArray();
             engine.CopyrightHeader = options.CopyrightHeaderText;
 
             if (options.UseAnalyzers)
             {
                 if (!SetDiagnosticsEnabledMap(engine, options.RuleMap))
                 {
-                    return 1;
+                    return FAILED;
                 }
             }
             else
             {
                 if (!SetRuleMap(engine, options.RuleMap))
                 {
-                    return 1;
+                    return FAILED;
                 }
             }
 
@@ -135,7 +168,7 @@ namespace CodeFormatter
                 await RunFormatItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
             }
 
-            return 0;
+            return SUCCEEDED;
         }
 
         private static async Task RunFormatItemAsync(

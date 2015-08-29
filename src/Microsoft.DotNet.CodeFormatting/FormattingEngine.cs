@@ -8,6 +8,7 @@ using System.Composition.Hosting;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Reflection;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -35,6 +36,12 @@ namespace Microsoft.DotNet.CodeFormatting
             return engine.AllSupportedDiagnostics;
         }
 
+        public static ImmutableArray<IOptionsProvider> GetOptionsProviders(IEnumerable<Assembly> assemblies)
+        {
+            var container = CreateCompositionContainer(assemblies);
+            return container.GetExports<IOptionsProvider>().ToImmutableArray();
+        }
+
         private static CompositionHost CreateCompositionContainer(IEnumerable<Assembly> assemblies = null)
         {
             ConventionBuilder conventions = GetConventions();
@@ -60,6 +67,12 @@ namespace Microsoft.DotNet.CodeFormatting
             conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
                 .Export<IGlobalSemanticFormattingRule>();
 
+            // New per-analyzer options mechanism, deriving
+            // from VS Workspaces functionality 
+            conventions.ForTypesDerivedFrom<IOptionsProvider>()
+                                        .Export<IOptionsProvider>();
+
+            // Legacy CodeFormatter rules options mechanism
             conventions.ForType<Options>()
                 .Export();
 
