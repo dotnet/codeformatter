@@ -201,6 +201,12 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public async Task FormatProjectWithAnalyzersAsync(Project project, CancellationToken cancellationToken)
         {
+            if (!project.Documents.Any())
+            {
+                FormatLogger.WriteLine($"Skipping {project.Name}: no files to format.");
+                return;
+            }
+
             var watch = new Stopwatch();
             watch.Start();
 
