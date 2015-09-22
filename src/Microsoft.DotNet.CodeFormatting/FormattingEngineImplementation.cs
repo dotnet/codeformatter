@@ -15,7 +15,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -334,8 +333,17 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
-            var compilationWithAnalyzers = compilation.WithAnalyzers(_analyzers.ToImmutableArray(), analyzerOptions);
-            return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().ConfigureAwait(false);
+
+            IEnumerable<DiagnosticAnalyzer> analyzersToRun = _analyzers.Where(a => a.SupportsLanguage(project.Language));
+            if (analyzersToRun.Any())
+            {
+                var compilationWithAnalyzers = compilation.WithAnalyzers(analyzersToRun.ToImmutableArray(), analyzerOptions);
+                return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                return ImmutableArray<Diagnostic>.Empty;
+            }
         }
 
         private bool ShouldBeProcessed(Document document)

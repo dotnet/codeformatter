@@ -89,6 +89,7 @@
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
     <Compile Include="FormatOptionsParsingTests.cs" />
+    <Compile Include="DiagnosticAnalyzerExtensionsTests.cs" />
     <Compile Include="PropertyBagTests.cs" />
     <Compile Include="Rules\BracesRuleTests.cs" />
     <Compile Include="Rules\CombinationTest.cs" />
