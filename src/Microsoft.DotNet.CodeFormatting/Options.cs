@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.CodeFormatting
     /// This is a MEF importable type which contains all of the options for formatting
     /// </summary>
     [Shared]
-    internal sealed class Options
+    internal sealed class FormattingOptions
     {
         internal ImmutableArray<string> CopyrightHeader { get; set; }
         internal ImmutableArray<string[]> PreprocessorConfigurations { get; set; }
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         internal IFormatLogger FormatLogger { get; set; }
 
-        public Options()
+        public FormattingOptions()
         {
             CopyrightHeader = FormattingDefaults.DefaultCopyrightHeader;
             FileNames = ImmutableArray<string>.Empty;

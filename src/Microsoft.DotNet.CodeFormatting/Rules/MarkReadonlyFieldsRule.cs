@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     [GlobalSemanticRule(Name = MarkReadonlyFieldsRule.Name, Description = MarkReadonlyFieldsRule.Description, Order = GlobalSemanticRuleOrder.MarkReadonlyFieldsRule, DefaultRule = false)]
     internal sealed class MarkReadonlyFieldsRule : IGlobalSemanticFormattingRule
     {
-        internal const string Name = "ReadonlyFields";
+        internal const string Name = "MarkReadonlyFields";
         internal const string Description = "Mark fields which can be readonly as readonly";
 
         private readonly SemaphoreSlim _processUsagesLock = new SemaphoreSlim(1, 1);

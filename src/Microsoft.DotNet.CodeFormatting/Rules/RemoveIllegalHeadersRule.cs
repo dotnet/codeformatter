@@ -15,10 +15,10 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(Name = HasNoIllegalHeadersFormattingRule.Name, Description = HasNoIllegalHeadersFormattingRule.Description, Order = LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
-    internal sealed class HasNoIllegalHeadersFormattingRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
+    [LocalSemanticRule(Name = HasNoIllegalHeadersRule.Name, Description = HasNoIllegalHeadersRule.Description, Order = LocalSemanticRuleOrder.HasNoIllegalHeadersFormattingRule)]
+    internal sealed class HasNoIllegalHeadersRule : CSharpOnlyFormattingRule, ILocalSemanticFormattingRule
     {
-        internal const string Name = "IllegalHeaders";
+        internal const string Name = "RemoveIllegalHeaders";
         internal const string Description = "Remove illegal headers from files";
 
         // We are going to replace this header with the actual filename of the document being processed

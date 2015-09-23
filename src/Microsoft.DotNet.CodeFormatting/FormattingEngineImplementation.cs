@@ -15,7 +15,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -27,7 +26,7 @@ namespace Microsoft.DotNet.CodeFormatting
         /// </summary>
         internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
 
-        private readonly Options _options;
+        private readonly FormattingOptions _options;
         private readonly IEnumerable<CodeFixProvider> _fixers;
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<DiagnosticAnalyzer> _analyzers;
@@ -37,7 +36,6 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly IEnumerable<ExportFactory<IGlobalSemanticFormattingRule, GlobalSemanticRule>> _globalSemanticRules;
         private readonly Stopwatch _watch = new Stopwatch();
         private readonly Dictionary<string, bool> _ruleEnabledMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, bool> _diagnosticEnabledMap;
         private readonly ImmutableDictionary<string, CodeFixProvider> _diagnosticIdToFixerMap;
 
         public ImmutableArray<string> CopyrightHeader
@@ -89,7 +87,7 @@ namespace Microsoft.DotNet.CodeFormatting
                     .ToImmutableArray();
 
         public FormattingEngineImplementation(
-            Options options,
+            FormattingOptions options,
             IEnumerable<IFormattingFilter> filters,
             IEnumerable<DiagnosticAnalyzer> analyzers,
             IEnumerable<CodeFixProvider> fixers,
@@ -115,7 +113,6 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             _diagnosticIdToFixerMap = CreateDiagnosticIdToFixerMap();
-            _diagnosticEnabledMap = CreateDiagnosticEnabledMap();
         }
 
         private IEnumerable<TRule> GetOrderedRules<TRule, TMetadata>(IEnumerable<ExportFactory<TRule, TMetadata>> rules)
@@ -143,17 +140,6 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             return diagnosticIdToFixerMap.ToImmutable();
-        }
-
-        private Dictionary<string, bool> CreateDiagnosticEnabledMap()
-        {
-            var diagnosticEnabledMap = new Dictionary<string, bool>();
-            foreach (var diagnosticDescriptor in AllSupportedDiagnostics)
-            {
-                diagnosticEnabledMap[diagnosticDescriptor.Id] = true;
-            }
-
-            return diagnosticEnabledMap;
         }
 
         public async Task FormatSolutionAsync(Solution solution, bool useAnalyzers, CancellationToken cancellationToken)
@@ -216,7 +202,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
             var context = new FixAllContext(
                 project.Documents.First(), // TODO: Shouldn't this be the whole project?
-                new UberCodeFixer(_diagnosticIdToFixerMap, _diagnosticEnabledMap),
+                new UberCodeFixer(_diagnosticIdToFixerMap),
                 FixAllScope.Project,
                 null,
                 diagnostics.Select(d => d.Id),
@@ -240,11 +226,6 @@ namespace Microsoft.DotNet.CodeFormatting
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
         {
             _ruleEnabledMap[ruleMetaData.Name] = enabled;
-        }
-
-        public void ToggleDiagnosticEnabled(string diagnosticId, bool enabled)
-        {
-            _diagnosticEnabledMap[diagnosticId] = enabled;
         }
 
         private async Task FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)

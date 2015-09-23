@@ -111,6 +111,12 @@
       <Link>IllegalHeaders.md</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="AllDisabled.formatconfig">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="AllEnabled.formatconfig">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>

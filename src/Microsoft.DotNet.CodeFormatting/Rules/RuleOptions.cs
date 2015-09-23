@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.Composition;
 
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.DotNet.CodeFormatting.Rules;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -20,6 +21,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 CopyrightHeaderEnabled,
                 ExplicitThisEnabled,
                 ExplicitVisibilityEnabled,
+                FieldNamesEnabled,
                 FormatDocumentEnabled,
                 RemoveCustomCopyrightEnabled,
                 RemoveIllegalHeadersEnabled,
@@ -32,16 +34,17 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
         private const string _feature = "CodeFormatterRules";
 
-        public static PerLanguageOption<bool> BraceNewLineEnabled { get; } = new PerLanguageOption<bool>(_feature, "BraceNewLine.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> CopyrightHeaderEnabled { get; } = new PerLanguageOption<bool>(_feature, "CopyrightHeader.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> ExplicitThisEnabled { get; } = new PerLanguageOption<bool>(_feature, "ExplicitThis.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> ExplicitVisibilityEnabled { get; } = new PerLanguageOption<bool>(_feature, "ExplicitVisibility.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> FormatDocumentEnabled { get; } = new PerLanguageOption<bool>(_feature, "FormatDocument.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> RemoveCustomCopyrightEnabled { get; } = new PerLanguageOption<bool>(_feature, "RemoveCustomCopyright.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> RemoveIllegalHeadersEnabled { get; } = new PerLanguageOption<bool>(_feature, "RemoveIllegalHeaders.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> MarkReadonlyFieldsEnabled { get; } = new PerLanguageOption<bool>(_feature, "MarkReadonly.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> NewLineAboveEnabled { get; } = new PerLanguageOption<bool>(_feature, "NewLineAbove.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> UnicodeLiteralsEnabled { get; } = new PerLanguageOption<bool>(_feature, "UnicodeLiterals.Enabled", defaultValue: true);
-        public static PerLanguageOption<bool> UsingLocationEnabled { get; } = new PerLanguageOption<bool>(_feature, "UsingLocation.Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> BraceNewLineEnabled { get; } = new PerLanguageOption<bool>(_feature, BraceNewLineRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> CopyrightHeaderEnabled { get; } = new PerLanguageOption<bool>(_feature, CopyrightHeaderRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> ExplicitThisEnabled { get; } = new PerLanguageOption<bool>(_feature, ExplicitThisRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> ExplicitVisibilityEnabled { get; } = new PerLanguageOption<bool>(_feature, ExplicitVisibilityRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> FieldNamesEnabled { get; } = new PerLanguageOption<bool>(_feature, PrivateFieldNamingRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> FormatDocumentEnabled { get; } = new PerLanguageOption<bool>(_feature, FormatDocumentRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> RemoveCustomCopyrightEnabled { get; } = new PerLanguageOption<bool>(_feature, RemoveCustomCopyrightRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> RemoveIllegalHeadersEnabled { get; } = new PerLanguageOption<bool>(_feature, HasNoIllegalHeadersRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> MarkReadonlyFieldsEnabled { get; } = new PerLanguageOption<bool>(_feature, MarkReadonlyFieldsRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> NewLineAboveEnabled { get; } = new PerLanguageOption<bool>(_feature, NewLineAboveRule.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> UnicodeLiteralsEnabled { get; } = new PerLanguageOption<bool>(_feature, NonAsciiCharactersAreEscapedInLiterals.Name + "." + "Enabled", defaultValue: true);
+        public static PerLanguageOption<bool> UsingLocationEnabled { get; } = new PerLanguageOption<bool>(_feature, UsingLocationRule.Name + "." + "Enabled", defaultValue: true);
     }
 }

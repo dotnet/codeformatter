@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -11,6 +9,7 @@ using CodeFormatter;
 using CommandLine;
 
 using Xunit;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
@@ -45,57 +44,41 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
 
         [Fact]
-        public void EnableRule()
+        public void AllRulesEnabled()
         {
             int result;
 
-            // CodeFormatter format test.csproj --enable enabledRule 
-            var options = Parse(out result, "format", "test.csproj", "--enable", "enabledRule");
+            // CodeFormatter format test.csproj --options-file-path AllEnabled.formatconfig
+            var options = Parse(out result, "format", "test.csproj", "--options-file-path", "AllEnabled.formatconfig");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
-            Assert.True(options.RuleMap["enabledRule"]);
-            Assert.Equal(1, options.RuleMap.Count);
+            Assert.Equal(12, options.RuleMap.Count);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
-        }
 
-
-        [Fact]
-        public void DisableRule()
-        {
-            int result;
-
-            // CodeFormatter format test.csproj --disable disabledRule
-            var options = Parse(out result, "format", "test.csproj", "--disable", "disabledRule");
-
-            Assert.Equal(0, result);
-            Assert.NotNull(options);
-            Assert.False(options.RuleMap["disabledRule"]);
-            Assert.Equal(1, options.RuleMap.Count);
-            Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+            foreach (bool enabledSetting in options.RuleMap.Values)
+            {
+                Assert.True(enabledSetting);
+            }
         }
 
         [Fact]
-        public void EnableAndDisableMultipleRules()
+        public void AllRulesDisabled()
         {
             int result;
 
-            // CodeFormatter format --enable e1,e2 --disable d1,d2,d3 test.csproj
-            var options = Parse(out result, "format", "test.csproj", "--enable", "e1,e2,e3", "--disable", "d1,d2,d3");
+            // CodeFormatter format test.csproj --options-file-path AllDisabled.formatconfig
+            var options = Parse(out result, "format", "test.csproj", "--options-file-path", "AllDisabled.formatconfig");
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
-
-            Assert.True(options.RuleMap["e1"]);
-            Assert.True(options.RuleMap["e2"]);
-            Assert.True(options.RuleMap["e3"]);
-
-            Assert.False(options.RuleMap["d1"]);
-            Assert.False(options.RuleMap["d2"]);
-            Assert.False(options.RuleMap["d3"]);
-
-            Assert.True(options.RuleMap.Count == 6);
+            Assert.Equal(12, options.RuleMap.Count);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+
+            foreach(bool enabledSetting in options.RuleMap.Values)
+            {
+                Assert.False(enabledSetting);
+            }
         }
 
         [Fact]

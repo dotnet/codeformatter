@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Properties Key="codeformatter-options">
+  <Properties Key="CodeFormatterRules.Options">
+    <Property Key="BraceNewLine.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="CopyrightHeader.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="ExplicitThis.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="ExplicitVisibility.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="FieldNames.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="FormatDocument.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="MarkReadonlyFields.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="NewLineAbove.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="RemoveCustomCopyright.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="RemoveIllegalHeaders.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="UnicodeLiterals.Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="UsingLocation.Enabled" Value="False" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1000.ExplicitThis.Options">
+    <Property Key="Enabled" Value="False" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1001.UnwrittenWritableField.Options">
+    <Property Key="Enabled" Value="False" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1003.OptimizeNamespaceImports.Options">
+    <Property Key="Enabled" Value="False" Type="System.Boolean" />
+    <Property Key="InsertLineBetweenImportGroups" Value="False" Type="System.Boolean" />
+    <Property Key="PlaceImportsOutsideNamespaceDeclaration" Value="False" Type="System.Boolean" />
+    <Property Key="PlaceSystemImportsFirst" Value="False" Type="System.Boolean" />
+    <Property Key="RemoveUnnecessaryImports" Value="False" Type="System.Boolean" />
+    <Property Key="SortImports" Value="False" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1004.ProvideExplicitVariableType.Options">
+    <Property Key="Enabled" Value="False" Type="System.Boolean" />
+  </Properties>
+</Properties>

@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis
 {

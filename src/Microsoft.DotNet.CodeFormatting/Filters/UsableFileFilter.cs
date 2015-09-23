@@ -9,9 +9,9 @@ namespace Microsoft.DotNet.CodeFormatting.Filters
 {
     internal sealed class UsableFileFilter : IFormattingFilter
     {
-        private readonly Options _options;
+        private readonly FormattingOptions _options;
 
-        public UsableFileFilter(Options options)
+        public UsableFileFilter(FormattingOptions options)
         {
             _options = options;
         }

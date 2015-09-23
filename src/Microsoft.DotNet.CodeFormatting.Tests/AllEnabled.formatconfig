@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Properties Key="codeformatter-options">
+  <Properties Key="CodeFormatterRules.Options">
+    <Property Key="BraceNewLine.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="CopyrightHeader.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="ExplicitThis.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="ExplicitVisibility.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="FieldNames.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="FormatDocument.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="MarkReadonlyFields.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="NewLineAbove.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="RemoveCustomCopyright.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="RemoveIllegalHeaders.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="UnicodeLiterals.Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="UsingLocation.Enabled" Value="True" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1000.ExplicitThis.Options">
+    <Property Key="Enabled" Value="True" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1001.UnwrittenWritableField.Options">
+    <Property Key="Enabled" Value="True" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1003.OptimizeNamespaceImports.Options">
+    <Property Key="Enabled" Value="True" Type="System.Boolean" />
+    <Property Key="InsertLineBetweenImportGroups" Value="True" Type="System.Boolean" />
+    <Property Key="PlaceImportsOutsideNamespaceDeclaration" Value="True" Type="System.Boolean" />
+    <Property Key="PlaceSystemImportsFirst" Value="True" Type="System.Boolean" />
+    <Property Key="RemoveUnnecessaryImports" Value="True" Type="System.Boolean" />
+    <Property Key="SortImports" Value="True" Type="System.Boolean" />
+  </Properties>
+  <Properties Key="DNS1004.ProvideExplicitVariableType.Options">
+    <Property Key="Enabled" Value="True" Type="System.Boolean" />
+  </Properties>
+</Properties>

@@ -4,10 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 
 using CommandLine;
 
+using Microsoft.CodeAnalysis.Options;
+using Microsoft.DotNet.CodeFormatter.Analyzers;
 using Microsoft.DotNet.CodeFormatting;
 
 namespace CodeFormatter
@@ -48,18 +51,6 @@ namespace CodeFormatter
             "copyright", 
             HelpText = "Specifies file containing copyright header.")]
         public string CopyrightHeaderFile { get; set;  }
-
-        [Option(
-            "enable", 
-            HelpText = "Comma-separated list of rules to enable", 
-            Separator = ',')]
-        public IEnumerable<string> EnabledRules { get; set; }
-
-        [Option(
-            "disable", 
-            HelpText = "Comma-separated list of rules to disable", 
-            Separator = ',')]
-        public IEnumerable<string> DisabledRules { get; set; }
 
         [Option(
             'v', "verbose", 
@@ -117,21 +108,24 @@ namespace CodeFormatter
         private ImmutableDictionary<string, bool> BuildRuleMapFromOptions()
         {
             _ruleMap = ImmutableDictionary<string, bool>.Empty;
-            if (EnabledRules != null)
+
+            var propertyBag = OptionsHelper.BuildDefaultPropertyBag();
+            if (!string.IsNullOrEmpty(OptionsFilePath))
             {
-                foreach (string rule in EnabledRules)
-                {
-                    _ruleMap = _ruleMap.SetItem(rule, true);
-                }
+                propertyBag.LoadFrom(OptionsFilePath);
             }
 
-            if (DisabledRules != null)
+            propertyBag = (PropertyBag)propertyBag["CodeFormatterRules.Options"];
+            foreach (string key in propertyBag.Keys)
             {
-                foreach (string rule in DisabledRules)
-                {
-                    _ruleMap = _ruleMap.SetItem(rule, false);
-                }
+                string[] tokens = key.Split('.');
+                Debug.Assert(tokens.Length == 2);
+                Debug.Assert(tokens[1].Equals("Enabled"));
+
+                string rule = tokens[0];                
+                _ruleMap = _ruleMap.SetItem(rule, (bool)propertyBag[key]);
             }
+
             return _ruleMap;
         }
     }

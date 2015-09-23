@@ -6,8 +6,7 @@ using System.Composition;
 using System.Linq;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.CodeFormatter.Analyzers;
-
+using Microsoft.CodeAnalysis.Options;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
@@ -16,8 +15,12 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
     {
         public UnwrittenWritableFieldAnalyzerTests()
         {
-            DisableAllDiagnostics();
-            EnableDiagnostic(UnwrittenWritableFieldAnalyzer.DiagnosticId);
+            OptionsHelper.GetPropertiesImplementation = (analyzerOptions) =>
+            {
+                PropertyBag properties = BuildAllRulesDisabledPolicy();
+                properties.SetProperty(OptionsHelper.BuildDefaultEnabledProperty(UnwrittenWritableFieldAnalyzer.AnalyzerName), true);
+                return properties;
+            };
         }
 
         // The tests for this analyzer depend on being able to access the type

@@ -162,11 +162,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             protected abstract SyntaxTrivia CreateNewLine();
         }
 
-        private readonly Options _options;
+        private readonly FormattingOptions _options;
         private ImmutableArray<string> _cachedHeader;
         private ImmutableArray<string> _cachedHeaderSource;
 
-        public CopyrightHeaderRule(Options options)
+        public CopyrightHeaderRule(FormattingOptions options)
         {
             _options = options;
         }

@@ -80,6 +80,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnalyzerDisabledTests.cs" />
     <Compile Include="AnalyzerFixerTestBase.cs" />
     <Compile Include="ExplicitThisAnalyzerTests.cs" />
     <Compile Include="OptimizeNamespaceImportsTests.cs" />

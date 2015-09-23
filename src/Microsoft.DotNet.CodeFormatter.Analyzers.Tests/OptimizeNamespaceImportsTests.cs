@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.CodeFormatter.Analyzers;
+using Microsoft.CodeAnalysis.Options;
 
 using Xunit;
 
@@ -11,10 +11,13 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
     {
         public OptimizeNamespaceImportsTests()
         {
-            DisableAllDiagnostics();
-            EnableDiagnostic(OptimizeNamespaceImportsAnalyzer.DiagnosticId);
+            OptionsHelper.GetPropertiesImplementation = (analyzerOptions) => 
+            {
+                PropertyBag properties = BuildAllRulesDisabledPolicy();
+                properties.SetProperty(OptionsHelper.BuildDefaultEnabledProperty(OptimizeNamespaceImportsAnalyzer.AnalyzerName), true);
+                return properties;
+            };
         }
-
 
         [Fact]
         public void OptimizeNamespaceImports_SimpleRemoveUnusedImports()

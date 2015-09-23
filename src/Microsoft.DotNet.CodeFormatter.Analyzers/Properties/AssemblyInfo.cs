@@ -20,3 +20,4 @@ using System.Runtime.InteropServices;
 
 
 [assembly: InternalsVisibleTo("Microsoft.DotNet.CodeFormatter.Analyzers.Tests")]
+[assembly: InternalsVisibleTo("CodeFormatter")]

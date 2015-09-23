@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -11,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -60,6 +60,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);
 
+        public const string AnalyzerName = AnalyzerIds.UnwrittenWritableField + "." + nameof(AnalyzerIds.UnwrittenWritableField);
+
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterCompilationStartAction(OnCompilationStart);
@@ -67,6 +69,14 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
         private void OnCompilationStart(CompilationStartAnalysisContext context)
         {
+            PropertyBag properties = OptionsHelper.GetProperties(context.Options);
+
+            if (!properties.GetProperty(
+                OptionsHelper.BuildDefaultEnabledProperty(UnwrittenWritableFieldAnalyzer.AnalyzerName)))
+            {
+                return;
+            }
+
             _candidateReadonlyFields = new HashSet<IFieldSymbol>();
             _writtenFields = new HashSet<IFieldSymbol>();
 
