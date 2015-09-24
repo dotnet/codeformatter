@@ -107,7 +107,7 @@ namespace CodeFormatter
 
         private ImmutableDictionary<string, bool> BuildRuleMapFromOptions()
         {
-            _ruleMap = ImmutableDictionary<string, bool>.Empty;
+            var result = new Dictionary<string, bool>();
 
             var propertyBag = OptionsHelper.BuildDefaultPropertyBag();
             if (!string.IsNullOrEmpty(OptionsFilePath))
@@ -123,9 +123,10 @@ namespace CodeFormatter
                 Debug.Assert(tokens[1].Equals("Enabled"));
 
                 string rule = tokens[0];                
-                _ruleMap = _ruleMap.SetItem(rule, (bool)propertyBag[key]);
+                result[rule] = (bool)propertyBag[key];
             }
 
+            _ruleMap = result.ToImmutableDictionary();
             return _ruleMap;
         }
     }

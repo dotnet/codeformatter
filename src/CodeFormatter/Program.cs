@@ -73,7 +73,7 @@ namespace CodeFormatter
 
             if (listAnalyzers)
             {
-                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics(OptionsHelper.s_defaultCompositionAssemblies);
+                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics(OptionsHelper.DefaultCompositionAssemblies);
                 foreach (var diagnosticDescriptor in diagnosticDescriptors)
                 {
                     Console.WriteLine("{0,-20} :{1}", diagnosticDescriptor.Id, diagnosticDescriptor.Title);
@@ -120,7 +120,7 @@ namespace CodeFormatter
 
         private static async Task<int> RunFormatAsync(FormatOptions options, CancellationToken cancellationToken)
         {
-            var engine = FormattingEngine.Create(OptionsHelper.s_defaultCompositionAssemblies);
+            var engine = FormattingEngine.Create(OptionsHelper.DefaultCompositionAssemblies);
 
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             configBuilder.Add(options.PreprocessorConfigurations.ToArray());            

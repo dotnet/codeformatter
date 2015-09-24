@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
         {
             OptionsHelper.GetPropertiesImplementation = (analyzerOptions) =>
             {
-                PropertyBag properties = BuildAllRulesDisabledPolicy();
+                PropertyBag properties = CreatePolicyThatDisablesAllAnalysis();
                 properties.SetProperty(OptionsHelper.BuildDefaultEnabledProperty(UnwrittenWritableFieldAnalyzer.AnalyzerName), true);
                 return properties;
             };

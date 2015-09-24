@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
             }
         }
 
-        protected PropertyBag BuildAllRulesDisabledPolicy()
+        protected PropertyBag CreatePolicyThatDisablesAllAnalysis()
         {
             PropertyBag propertyBag = OptionsHelper.BuildDefaultPropertyBag();
 

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     internal static class OptionsHelper
     {
-        public static Assembly[] s_defaultCompositionAssemblies =
+        public static Assembly[] DefaultCompositionAssemblies =
                                         new Assembly[] {
                                             typeof(FormattingEngine).Assembly,
                                             typeof(OptimizeNamespaceImportsAnalyzer).Assembly
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             // of analyzers for which to build an options XML file suitable for configuring them.
             // Currently, we perform discovery against the built-in CodeFormatter rules
             // and analyzers only.
-            foreach (IOptionsProvider provider in FormattingEngine.GetOptionsProviders(s_defaultCompositionAssemblies))
+            foreach (IOptionsProvider provider in FormattingEngine.GetOptionsProviders(DefaultCompositionAssemblies))
             {
                 foreach (IOption option in provider.GetOptions())
                 {

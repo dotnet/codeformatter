@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
         {
             OptionsHelper.GetPropertiesImplementation = (analyzerOptions) =>
             {
-                PropertyBag properties = BuildAllRulesDisabledPolicy();
+                PropertyBag properties = CreatePolicyThatDisablesAllAnalysis();
                 return properties;
             };
         }
