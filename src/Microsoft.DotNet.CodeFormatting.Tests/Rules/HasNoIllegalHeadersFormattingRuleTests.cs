@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
@@ -11,7 +9,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     {
         internal override ILocalSemanticFormattingRule Rule
         {
-            get { return new Rules.HasNoIllegalHeadersFormattingRule(); }
+            get { return new Rules.HasNoIllegalHeadersRule(); }
         }
 
         [Fact]

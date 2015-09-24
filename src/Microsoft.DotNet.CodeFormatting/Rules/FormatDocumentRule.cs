@@ -14,14 +14,14 @@ using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(Name = FormatDocumentFormattingRule.Name, Description = FormatDocumentFormattingRule.Description, Order = LocalSemanticRuleOrder.IsFormattedFormattingRule)]
-    internal sealed class FormatDocumentFormattingRule : ILocalSemanticFormattingRule
+    [LocalSemanticRule(Name = FormatDocumentRule.Name, Description = FormatDocumentRule.Description, Order = LocalSemanticRuleOrder.IsFormattedFormattingRule)]
+    internal sealed class FormatDocumentRule : ILocalSemanticFormattingRule
     {
         internal const string Name = "FormatDocument";
         internal const string Description = "Run the language specific formatter on every document";
-        private readonly Options _options;
+        private readonly FormattingOptions _options;
 
-        public FormatDocumentFormattingRule(Options options)
+        public FormatDocumentRule(FormattingOptions options)
         {
             _options = options;
         }

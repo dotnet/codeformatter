@@ -16,6 +16,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
 using Microsoft.DotNet.CodeFormatter.Analyzers;
 using Microsoft.CodeAnalysis.Options;
+using System.Diagnostics;
 
 namespace CodeFormatter
 {
@@ -23,12 +24,6 @@ namespace CodeFormatter
     {
         private const int FAILED = 1;
         private const int SUCCEEDED = 0;
-
-        private static Assembly[] s_defaultCompositionAssemblies =
-                                        new Assembly[] {
-                                            typeof(FormattingEngine).Assembly,
-                                            typeof(OptimizeNamespaceImportsAnalyzer).Assembly
-                                        };
 
         private static int Main(string[] args)
         {            
@@ -46,19 +41,8 @@ namespace CodeFormatter
         private static int RunExportOptionsCommand(ExportOptions exportOptions)
         {
             int result = FAILED;
-            PropertyBag allOptions = new PropertyBag();
+            PropertyBag allOptions = OptionsHelper.BuildDefaultPropertyBag();
 
-            // The export command could be updated in the future to accept an arbitrary set
-            // of analyzers for which to build an options XML file suitable for configuring them.
-            // Currently, we perform discovery against the built-in CodeFormatter rules
-            // and analyzers only.
-            foreach (IOptionsProvider provider in FormattingEngine.GetOptionsProviders(s_defaultCompositionAssemblies))
-            {
-                foreach (IOption option in provider.GetOptions())
-                {
-                    allOptions.SetProperty(option, option.DefaultValue);
-                }
-            }
             allOptions.SaveTo(exportOptions.OutputPath, id: "codeformatter-options");
             Console.WriteLine("Options file saved to: " + Path.GetFullPath(exportOptions.OutputPath));
 
@@ -89,7 +73,7 @@ namespace CodeFormatter
 
             if (listAnalyzers)
             {
-                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics(s_defaultCompositionAssemblies);
+                ImmutableArray<DiagnosticDescriptor> diagnosticDescriptors = FormattingEngine.GetSupportedDiagnostics(OptionsHelper.DefaultCompositionAssemblies);
                 foreach (var diagnosticDescriptor in diagnosticDescriptors)
                 {
                     Console.WriteLine("{0,-20} :{1}", diagnosticDescriptor.Id, diagnosticDescriptor.Title);
@@ -136,7 +120,7 @@ namespace CodeFormatter
 
         private static async Task<int> RunFormatAsync(FormatOptions options, CancellationToken cancellationToken)
         {
-            var engine = FormattingEngine.Create(s_defaultCompositionAssemblies);
+            var engine = FormattingEngine.Create(OptionsHelper.DefaultCompositionAssemblies);
 
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             configBuilder.Add(options.PreprocessorConfigurations.ToArray());            
@@ -148,14 +132,11 @@ namespace CodeFormatter
             engine.FileNames = options.FileFilters.ToImmutableArray();
             engine.CopyrightHeader = options.CopyrightHeaderText;
 
-            if (options.UseAnalyzers)
-            {
-                if (!SetDiagnosticsEnabledMap(engine, options.RuleMap))
-                {
-                    return FAILED;
-                }
-            }
-            else
+
+            // Analyzers will hydrate rule enabled/disabled settings
+            // directly from the options referenced by file path
+            // in options.OptionsFilePath
+            if (!options.UseAnalyzers)
             {
                 if (!SetRuleMap(engine, options.RuleMap))
                 {
@@ -222,24 +203,7 @@ namespace CodeFormatter
 
                 engine.ToggleRuleEnabled(rule, entry.Value);
             }
-
-            return true;
-        }
-
-        private static bool SetDiagnosticsEnabledMap(IFormattingEngine engine, ImmutableDictionary<string, bool> ruleMap)
-        {
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            foreach (var entry in ruleMap)
-            {
-                var diagnosticDescriptor = engine.AllSupportedDiagnostics.Where(x => comparer.Equals(x.Id, entry.Key)).FirstOrDefault();
-                if (diagnosticDescriptor == null)
-                {
-                    Console.WriteLine("Could not find diagnostic with ID {0}", entry.Key);
-                    return false;
-                }
-
-                engine.ToggleDiagnosticEnabled(diagnosticDescriptor.Id, entry.Value);
-            }
+            Debug.Assert(ruleMap.Count == engine.AllRules.Count());
 
             return true;
         }

@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -27,10 +28,21 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);
 
+        public const string AnalyzerName = AnalyzerIds.ExplicitThis + "." + nameof(AnalyzerIds.ExplicitThis);
+
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
+                PropertyBag properties = OptionsHelper.GetProperties(syntaxContext.Options);
+
+                if (!properties.GetProperty(
+                    OptionsHelper.BuildDefaultEnabledProperty(ExplicitThisAnalyzer.AnalyzerName)))
+                {
+                    // Analyzer is entirely disabled
+                    return;
+                }
+
                 var node = syntaxContext.Node as MemberAccessExpressionSyntax;
 
                 if (node != null)

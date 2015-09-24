@@ -28,6 +28,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);
 
+        public const string AnalyzerName = AnalyzerIds.OptimizeNamespaceImports + "." + nameof(AnalyzerIds.OptimizeNamespaceImports);
+
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSemanticModelAction(semanticModelAnalysisContext =>
@@ -37,11 +39,17 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
                 PropertyBag properties = OptionsHelper.GetProperties(semanticModelAnalysisContext.Options);
 
-                if (!properties.GetProperty(OptimizeNamespaceImportsOptions.Enabled) ||
-                    !properties.GetProperty(OptimizeNamespaceImportsOptions.RemoveUnnecessaryImports))
+                if (!properties.GetProperty(
+                    OptionsHelper.BuildDefaultEnabledProperty(OptimizeNamespaceImportsAnalyzer.AnalyzerName)))
                 {
-                    // We have no work to do based on configured options
-                    // vs. currently implemented analysis/fix-ups
+                    // Analyzer is entirely disabled
+                    return;
+                }
+
+                if (!properties.GetProperty(OptimizeNamespaceImportsOptions.RemoveUnnecessaryImports))
+                {
+                    // All currently implemented analyzer behaviors are disabled,
+                    // and so therefore have no work to do.
                     return;
                 }
 

@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.DotNet.CodeFormatter.Analyzers;
 
+using Microsoft.CodeAnalysis.Options;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
@@ -11,8 +11,12 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
     {
         public ExplicitThisAnalyzerTests()
         {
-            DisableAllDiagnostics();
-            EnableDiagnostic(ExplicitThisAnalyzer.DiagnosticId);
+            OptionsHelper.GetPropertiesImplementation = (analyzerOptions) =>
+            {
+                PropertyBag properties = CreatePolicyThatDisablesAllAnalysis();
+                properties.SetProperty(OptionsHelper.BuildDefaultEnabledProperty(ExplicitThisAnalyzer.AnalyzerName), true);
+                return properties;
+            };
         }
 
         public const string TestFieldUse_Input = @"class C1

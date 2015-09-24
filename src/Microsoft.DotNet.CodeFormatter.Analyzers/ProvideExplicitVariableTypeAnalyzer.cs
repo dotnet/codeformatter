@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Composition; 
+using System.Composition;
 using System.Linq;
 using System.Threading;
 
@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -39,11 +40,18 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         private static readonly ImmutableArray<DiagnosticDescriptor> s_supportedRules = ImmutableArray.Create(s_ruleVariableDeclaration, s_ruleForEachStatement);
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => s_supportedRules;
-                                              
+
+        public const string AnalyzerName = AnalyzerIds.ProvideExplicitVariableType + "." + nameof(AnalyzerIds.ProvideExplicitVariableType);
+
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
+                if (!RuleEnabled(syntaxContext))
+                {
+                    return;
+                }
+
                 var node = (VariableDeclarationSyntax)syntaxContext.Node;
                 // C# syntax doesn't allow implicitly typed variables to have multiple declarators,
                 // but we need to handle error situations (incomplete or extra declarators).   
@@ -58,6 +66,11 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
             context.RegisterSyntaxNodeAction(syntaxContext =>
             {
+                if (!RuleEnabled(syntaxContext))
+                {
+                    return;
+                }
+
                 var node = (ForEachStatementSyntax)syntaxContext.Node; 
                 if (node.Type != null &&
                     node.Identifier != null &&
@@ -68,6 +81,14 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleForEachStatement, node.Identifier.GetLocation(), node.Identifier.Text));
                 }
             }, SyntaxKind.ForEachStatement);
+        }
+
+        private bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
+        {
+            PropertyBag properties = OptionsHelper.GetProperties(syntaxContext.Options);
+
+            return properties.GetProperty(
+                OptionsHelper.BuildDefaultEnabledProperty(ProvideExplicitVariableTypeAnalyzer.AnalyzerName));
         }
 
         /// <summary>

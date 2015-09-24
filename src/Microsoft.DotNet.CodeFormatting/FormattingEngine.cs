@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.CodeFormatting
                                         .Export<IOptionsProvider>();
 
             // Legacy CodeFormatter rules options mechanism
-            conventions.ForType<Options>()
+            conventions.ForType<FormattingOptions>()
                 .Export();
 
             conventions.ForTypesDerivedFrom<IFormattingEngine>()

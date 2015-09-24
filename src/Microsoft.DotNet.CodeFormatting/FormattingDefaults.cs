@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.CodeFormatting
 {
     public static class FormattingDefaults
     {
-        public const string CopyrightRuleName = "Copyright";
+        public const string CopyrightRuleName = "CopyrightHeader";
         public const string UnicodeLiteralsRuleName = "UnicodeLiterals";
 
         private static readonly string[] s_defaultCopyrightHeader =

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.DotNet.CodeFormatting.Tests;
 using Microsoft.DotNet.CodeFormatting;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
 {
@@ -33,23 +33,21 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers.Tests
             }
         }
 
-        protected void DisableAllDiagnostics()
+        protected PropertyBag CreatePolicyThatDisablesAllAnalysis()
         {
-            foreach (var supportedDiagnostic in Engine.AllSupportedDiagnostics)
-            {
-                Engine.ToggleDiagnosticEnabled(supportedDiagnostic.Id, false);
-            }
-        }
+            PropertyBag propertyBag = OptionsHelper.BuildDefaultPropertyBag();
 
-        protected void EnableDiagnostic(string diagnosticId)
-        {
-            Engine.ToggleDiagnosticEnabled(diagnosticId, true);
+            foreach (string analyzerName in OptionsHelper.AllAnalyzerNames)
+            {
+                propertyBag.SetProperty(OptionsHelper.BuildDefaultEnabledProperty(analyzerName), false);
+            }
+            return propertyBag;
         }
 
         protected override async Task<Solution> Format(Solution solution, bool runFormatter)
         {
             Workspace workspace = solution.Workspace;
-            await _engine.FormatSolutionAsync(solution, useAnalyzers: true, cancellationToken: default(CancellationToken)).ConfigureAwait(false);
+            await Engine.FormatSolutionAsync(solution, useAnalyzers: true, cancellationToken: default(CancellationToken)).ConfigureAwait(false);
             return workspace.CurrentSolution;
         }
     }

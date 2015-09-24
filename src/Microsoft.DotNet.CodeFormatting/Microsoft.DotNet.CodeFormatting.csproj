@@ -105,11 +105,11 @@
     <Compile Include="Rules\ExplicitVisibilityRule.cs" />
     <Compile Include="Rules\CopyrightHeaderRule.cs" />
     <Compile Include="Rules\NewLineAboveRule.cs" />
-    <Compile Include="Rules\HasNoIllegalHeadersFormattingRule.cs" />
-    <Compile Include="Rules\HasNoCustomCopyrightHeaderFormattingRule.cs" />
+    <Compile Include="Rules\RemoveIllegalHeadersRule.cs" />
+    <Compile Include="Rules\RemoveCustomCopyrightRule.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.cs" />
     <Compile Include="Rules\UsingLocationRule.cs" />
-    <Compile Include="Rules\FormatDocumentFormattingRule.cs" />
+    <Compile Include="Rules\FormatDocumentRule.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
     <Compile Include="Rules\ExplicitThisRule.cs" />
     <Compile Include="Rules\RuleOrder.cs" />

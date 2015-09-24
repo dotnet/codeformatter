@@ -2,19 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
     public sealed class CopyrightHeaderRuleTests : SyntaxRuleTestBase
     {
-        private readonly Options _options = new Options();
+        private readonly FormattingOptions _options = new FormattingOptions();
 
         internal override ISyntaxFormattingRule Rule
         {
