@@ -128,11 +128,11 @@ namespace XUnitConverter
 
         protected override async Task<Solution> ProcessAsync(
             Document document,
-            SyntaxNode syntaxRoot,
+            SyntaxNode syntaxNode,
             CancellationToken cancellationToken)
         {
             var rewriter = new Rewriter(await document.GetSemanticModelAsync(cancellationToken));
-            var newNode = rewriter.Visit(syntaxRoot);
+            var newNode = rewriter.Visit(syntaxNode);
 
             return document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newNode);
         }

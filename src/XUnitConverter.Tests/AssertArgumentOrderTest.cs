@@ -1,20 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
-
 using Xunit;
 
 namespace XUnitConverter.Tests
 {
     public class AssertArgumentOrderTest : ConverterTestBase
     {
-        protected override XUnitConverter.ConverterBase CreateConverter()
+        protected override ConverterBase CreateConverter()
         {
-            return new XUnitConverter.AssertArgumentOrderConverter();
+            return new AssertArgumentOrderConverter();
         }
 
         [Fact]

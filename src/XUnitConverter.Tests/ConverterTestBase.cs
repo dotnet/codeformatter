@@ -1,17 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
-using XUnitConverter;
 
 namespace XUnitConverter.Tests
 {
@@ -39,10 +35,10 @@ namespace XUnitConverter.Tests
                 }
             }
 
-            return solution.GetProject(project.Id); ;
+            return solution.GetProject(project.Id);
         }
 
-        private Project CreateSolution(string source)
+        private static Project CreateSolution(string source)
         {
             var testProjectName = "Test";
             var projectId = ProjectId.CreateNewId(testProjectName);
