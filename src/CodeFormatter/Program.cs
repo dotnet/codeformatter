@@ -26,12 +26,12 @@ namespace CodeFormatter
         private const int SUCCEEDED = 0;
 
         private static int Main(string[] args)
-        {            
+        {
             return Parser.Default.ParseArguments<
-                ListOptions, 
+                ListOptions,
                 ExportOptions,
                 FormatOptions>(args)
-              .Return(
+            .MapResult(
                 (ListOptions listOptions) => RunListCommand(listOptions),
                 (ExportOptions exportOptions) => RunExportOptionsCommand(exportOptions),
                 (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
