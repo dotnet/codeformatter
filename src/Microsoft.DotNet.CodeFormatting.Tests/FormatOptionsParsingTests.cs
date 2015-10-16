@@ -9,7 +9,6 @@ using CodeFormatter;
 using CommandLine;
 
 using Xunit;
-using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting.Tests
 {
@@ -31,7 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             // at least two verbs to ParseArguments in order to realize appropriate
             // behavior around parsing the verb name...
             result = parser.ParseArguments<ExportOptions, FormatOptions>(args)
-                .Return(
+                .MapResult(
                 (FormatOptions parsedOptions) => { options = parsedOptions; return 0; },
                 errs => ReportErrors(errs));
 
