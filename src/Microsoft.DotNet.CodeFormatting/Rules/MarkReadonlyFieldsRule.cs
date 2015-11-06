@@ -60,6 +60,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
                         await Task.WhenAll(
                             allDocuments.AsParallel()
+                                .Where(doc => doc.Project.Language == LanguageNames.CSharp)
                                 .Select(
                                     doc => WriteUsagesScanner.RemoveWrittenFields(
                                         doc,
@@ -115,6 +116,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 Document document,
                 CancellationToken cancellationToken)
             {
+                if (document.Project.Language != LanguageNames.CSharp)
+                {
+                    return new HashSet<IFieldSymbol>();
+                }
+
                 var scanner = new WritableFieldScanner(
                     await document.GetSemanticModelAsync(cancellationToken));
                 scanner.Visit(await document.GetSyntaxRootAsync(cancellationToken));

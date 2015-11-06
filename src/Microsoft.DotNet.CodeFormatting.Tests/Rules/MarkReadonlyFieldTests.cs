@@ -384,6 +384,21 @@ class C2
             Verify(Original(text), Readonly(text), true, LanguageNames.CSharp);
         }
 
+        [Fact]
+        public void MarkReadOnlyDoNotAnalyzeVisualBasicCode()
+        {
+            string text = @"
+Namespace MarkReadOnlyTests
+    Public NotInheritable Class MyTest
+        Shared s_instance As MyTest = New MyTest()
+    End Class
+End Namespace";
+
+            string expected = Original(text);
+            Verify(expected, expected, languageName: LanguageNames.VisualBasic);
+        }
+
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");

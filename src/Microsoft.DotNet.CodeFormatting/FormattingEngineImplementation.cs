@@ -29,7 +29,9 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly FormattingOptions _options;
         private readonly IEnumerable<CodeFixProvider> _fixers;
         private readonly IEnumerable<IFormattingFilter> _filters;
-        private readonly IEnumerable<DiagnosticAnalyzer> _analyzers;
+        private readonly IList<DiagnosticAnalyzer> _cSharpAnalyzers;
+        private readonly IList<DiagnosticAnalyzer> _visualBasicharpAnalyzers;
+        private readonly Dictionary<string, IEnumerable<DiagnosticAnalyzer>> _languageToAnalyzersMap;
         private readonly IEnumerable<IOptionsProvider> _optionsProviders;
         private readonly IEnumerable<ExportFactory<ISyntaxFormattingRule, SyntaxRule>> _syntaxRules;
         private readonly IEnumerable<ExportFactory<ILocalSemanticFormattingRule, LocalSemanticRule>> _localSemanticRules;
@@ -81,7 +83,7 @@ namespace Microsoft.DotNet.CodeFormatting
         }
 
         public ImmutableArray<DiagnosticDescriptor> AllSupportedDiagnostics
-            => _analyzers
+            => _cSharpAnalyzers.Union(_visualBasicharpAnalyzers)
                     .SelectMany(a => a.SupportedDiagnostics)
                     .OrderBy(a => a.Id)
                     .ToImmutableArray();
@@ -98,12 +100,35 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             _options = options;
             _filters = filters;
-            _analyzers = analyzers;
             _fixers = fixers;
             _syntaxRules = syntaxRules;
             _optionsProviders = optionProviders;
             _localSemanticRules = localSemanticRules;
             _globalSemanticRules = globalSemanticRules;
+
+            _cSharpAnalyzers = new List<DiagnosticAnalyzer>();
+            _visualBasicharpAnalyzers = new List<DiagnosticAnalyzer>();
+
+            foreach (DiagnosticAnalyzer analyzer in analyzers)
+            {
+                Type type = analyzer.GetType();
+                var attr = (DiagnosticAnalyzerAttribute)type.GetCustomAttributes(typeof(DiagnosticAnalyzerAttribute), false)[0];
+                foreach (string language in attr.Languages)
+                {
+                    if (language == LanguageNames.CSharp)
+                    {
+                        _cSharpAnalyzers.Add(analyzer);
+                    }
+                    else if (language == LanguageNames.VisualBasic)
+                    {
+                        _visualBasicharpAnalyzers.Add(analyzer);
+                    }
+                    else
+                    {
+                        Debug.Assert(false);
+                    }
+                }
+            }
 
             Debug.Assert(options.CopyrightHeader != null);
 
@@ -308,15 +333,28 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             AnalyzerOptions analyzerOptions = null;
 
+            if (project.Language != LanguageNames.CSharp &&
+                project.Language != LanguageNames.VisualBasic)
+            {
+                return ImmutableArray<Diagnostic>.Empty;
+            }
+
             if (!string.IsNullOrEmpty(FormattingOptionsFilePath))
             {
                 var additionalTextFile = new AdditionalTextFile(FormattingOptionsFilePath);
                 analyzerOptions = new AnalyzerOptions(new AdditionalText[] { additionalTextFile }.ToImmutableArray());
             }
 
-            var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
-            var compilationWithAnalyzers = compilation.WithAnalyzers(_analyzers.ToImmutableArray(), analyzerOptions);
-            return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().ConfigureAwait(false);
+            IList<DiagnosticAnalyzer> analyzers = project.Language == LanguageNames.CSharp ? _cSharpAnalyzers : _visualBasicharpAnalyzers;
+
+            if (analyzers.Count > 0)
+            {
+                var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
+                var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers.ToImmutableArray(), analyzerOptions);
+                return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().ConfigureAwait(false);
+            }
+
+            return ImmutableArray<Diagnostic>.Empty;
         }
 
         private bool ShouldBeProcessed(Document document)

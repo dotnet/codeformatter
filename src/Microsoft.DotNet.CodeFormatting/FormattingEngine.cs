@@ -18,7 +18,6 @@ namespace Microsoft.DotNet.CodeFormatting
         {
             var container = CreateCompositionContainer(assemblies);
             var engine = container.GetExport<IFormattingEngine>();
-            var consoleFormatLogger = new ConsoleFormatLogger();
             return engine;
         }
 
