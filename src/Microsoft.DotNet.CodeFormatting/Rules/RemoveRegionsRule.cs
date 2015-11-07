@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(RemoveRegionsRule.Name, RemoveRegionsRule.Description, SyntaxRuleOrder.RemoveRegionsRule)]
+    [SyntaxRule(RemoveRegionsRule.Name, RemoveRegionsRule.Description, SyntaxRuleOrder.RemoveRegionsRule, DefaultRule = false)]
     internal sealed class RemoveRegionsRule : CSharpOnlyFormattingRule, ISyntaxFormattingRule
     {
         internal const string Name = "RemoveRegions";
