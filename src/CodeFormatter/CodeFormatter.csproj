@@ -93,12 +93,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="CopyrightHeader.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IllegalHeaders.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="App.config" />
-    <None Include="CopyrightHeader.md" />
-    <None Include="IllegalHeaders.md" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.CodeFormatter.Analyzers\Microsoft.DotNet.CodeFormatter.Analyzers.csproj">
@@ -119,8 +123,4 @@
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>  -->
-  <Target Name="AfterBuild">
-    <Copy SourceFiles="$(ProjectDir)IllegalHeaders.md" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
-    <Copy SourceFiles="$(ProjectDir)CopyrightHeader.md" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
-  </Target>
 </Project>

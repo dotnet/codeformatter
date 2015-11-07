@@ -7,11 +7,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     internal static class SyntaxRuleOrder
     {
         public const int HasNoCustomCopyrightHeaderFormattingRule = 1;
-        public const int CopyrightHeaderRule = 2;
-        public const int UsingLocationFormattingRule = 3;
-        public const int NewLineAboveFormattingRule = 4;
-        public const int BraceNewLineRule = 6;
-        public const int NonAsciiChractersAreEscapedInLiterals = 7;
+        public const int UsingLocationFormattingRule = 2;
+        public const int NewLineAboveFormattingRule = 3;
+        public const int BraceNewLineRule = 4;
+        public const int NonAsciiChractersAreEscapedInLiterals = 5;
+        public const int CopyrightHeaderRule = 6;
     }
 
     // Please keep these values sorted by number, not rule name.    
