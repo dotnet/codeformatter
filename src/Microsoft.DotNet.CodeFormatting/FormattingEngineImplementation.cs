@@ -442,6 +442,12 @@ namespace Microsoft.DotNet.CodeFormatting
             foreach (var documentId in documentIds)
             {
                 var document = originalSolution.GetDocument(documentId);
+
+                if (!localSemanticRule.SupportsLanguage(document.Project.Language))
+                {
+                    continue;
+                }
+
                 var syntaxRoot = await GetSyntaxRootAndFilter(localSemanticRule, document, cancellationToken).ConfigureAwait(false);
                 if (syntaxRoot == null)
                 {

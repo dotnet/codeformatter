@@ -504,7 +504,21 @@ class C
             Verify(Original(text), Readonly(text));
         }
 
-        private static string Original(string text)
+        [Fact]
+        public void MarkReadOnlyDoNotAnalyzeVisualBasicCode()
+        {
+            string text = @"  
+Namespace MarkReadOnlyTests  
+    Public NotInheritable Class MyTest  
+        Shared s_instance As MyTest = New MyTest()  
+    End Class  
+End Namespace";
+
+            string expected = Original(text);
+            Verify(expected, expected, languageName: LanguageNames.VisualBasic);
+        }
+
+    private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
         }
