@@ -122,7 +122,7 @@ namespace CodeFormatter
         private const string RuleEnabledSwitch1 = "/rule+:";
         private const string RuleEnabledSwitch2 = "/rule:";
         private const string RuleDisabledSwitch = "/rule-:";
-        private const string Usage = 
+        private const string Usage =
 @"CodeFormatter [/file:<filename>] [/lang:<language>] [/c:<config>[,<config>...]>]
     [/copyright:<file> | /nocopyright] [/tables] [/nounicode] 
     [/rule(+|-):rule1,rule2,...]  [/verbose]
@@ -234,7 +234,7 @@ namespace CodeFormatter
                 {
                     return CommandLineParseResult.CreateSuccess(CommandLineOptions.ListRules);
                 }
-                else
+                else if (ValidateFormatTarget(arg))
                 {
                     formatTargets.Add(arg);
                 }
@@ -242,7 +242,7 @@ namespace CodeFormatter
 
             if (formatTargets.Count == 0)
             {
-                return CommandLineParseResult.CreateError("Must specify at least one project / solution / rsp to format");
+                return CommandLineParseResult.CreateError("Must specify at least one valid project / solution / rsp to format");
             }
 
             var options = new CommandLineOptions(
@@ -263,6 +263,21 @@ namespace CodeFormatter
             foreach (var current in data.Split(','))
             {
                 ruleMap = ruleMap.SetItem(current, enabled);
+            }
+        }
+
+        private static bool ValidateFormatTarget(string formatTarget)
+        {
+            try
+            {
+                // This can throw a wide range of exception, none of which we
+                // care about to handle differently than marking the file as invalid.
+                var file = new FileInfo(formatTarget);
+                return file.Exists;
+            }
+            catch
+            {
+                return false;
             }
         }
     }
