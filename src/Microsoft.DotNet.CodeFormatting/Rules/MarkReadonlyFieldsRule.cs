@@ -249,6 +249,20 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 CheckForFieldWrite(node.Left);
             }
 
+            public override void VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node)
+            {
+                base.VisitPostfixUnaryExpression(node);
+
+                CheckForFieldWrite(node.Operand);
+            }
+
+            public override void VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
+            {
+                base.VisitPrefixUnaryExpression(node);
+
+                CheckForFieldWrite(node.Operand);
+            }
+
             public override void VisitBinaryExpression(BinaryExpressionSyntax node)
             {
                 base.VisitBinaryExpression(node);

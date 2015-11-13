@@ -384,6 +384,42 @@ class C2
             Verify(Original(text), Readonly(text), true, LanguageNames.CSharp);
         }
 
+        [Fact]
+        public void MarkReadOnlyDoNotAnalyzeVisualBasicCode()
+        {
+            string text = @"
+Namespace MarkReadOnlyTests
+    Public NotInheritable Class MyTest
+        Shared s_instance As MyTest = New MyTest()
+    End Class
+End Namespace";
+
+            string expected = Original(text);
+            Verify(expected, expected, languageName: LanguageNames.VisualBasic);
+        }
+
+        [Fact]
+        public void MarkReadOnlyFieldIncrementFieldWithinUnsafeBlock()
+        {
+            string text = @"
+public class Test
+{
+    private uint _prefixCount;
+    private uint _postfixCount;
+    public void Add(int item)
+    {
+        unchecked
+        {
+            ++_prefixCount;
+            _postfixCount++;
+        }
+    }
+}";
+            Verify(text, text);
+        }
+
+
+
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
