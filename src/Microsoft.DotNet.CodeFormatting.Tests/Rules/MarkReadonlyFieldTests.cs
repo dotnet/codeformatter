@@ -427,11 +427,14 @@ public class Test
 public class Test
 {
     private READONLY uint _prefixCount;
-    private READONLY uint _postfixCount;
+    private READONLY bool _flag;
     public void Add(int item)
     {
+        System.Console.WriteLine((int)_prefixCount);
+        System.Console.WriteLine(-_prefixCount);
+        System.Console.WriteLine(+_prefixCount);
         System.Console.WriteLine(~_prefixCount);
-        System.Console.WriteLine(~_postfixCount);
+        System.Console.WriteLine(!_flag);
     }
 }";
             Verify(Original(text), Readonly(text));
