@@ -524,8 +524,24 @@ public class Test
             Verify(text, text);
         }
 
-
         [Fact]
+        public void MarkReadOnlyFieldNonMutatingUnaryOperators()
+        {
+            string text = @"
+public class Test
+{
+    private READONLY uint _prefixCount;
+    private READONLY uint _postfixCount;
+    public void Add(int item)
+    {
+        System.Console.WriteLine(~_prefixCount);
+        System.Console.WriteLine(~_postfixCount);
+    }
+}";
+            Verify(Original(text), Readonly(text));
+    }
+
+    [Fact]
         public void MarkReadOnlyDoNotAnalyzeVisualBasicCode()
         {
             string text = @"
