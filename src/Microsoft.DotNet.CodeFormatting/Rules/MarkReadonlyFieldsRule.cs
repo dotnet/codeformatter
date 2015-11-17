@@ -115,6 +115,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 Document document,
                 CancellationToken cancellationToken)
             {
+                if (document.Project.Language != LanguageNames.CSharp)
+                {
+                    return new HashSet<IFieldSymbol>();
+                }
+
                 var scanner = new WritableFieldScanner(
                     await document.GetSemanticModelAsync(cancellationToken));
                 scanner.Visit(await document.GetSyntaxRootAsync(cancellationToken));
@@ -448,6 +453,11 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 ConcurrentDictionary<IFieldSymbol, bool> writableFields,
                 CancellationToken cancellationToken)
             {
+                if (document.Project.Language != LanguageNames.CSharp)
+                {
+                    return;
+                }
+
                 var scanner = new WriteUsagesScanner(
                     await document.GetSemanticModelAsync(cancellationToken),
                     writableFields);

@@ -440,7 +440,6 @@ public class Test
             Verify(Original(text), Readonly(text));
         }
    
-
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");

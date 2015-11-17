@@ -96,6 +96,42 @@ namespace System.Composition.UnitTests
         }
 
         [Fact]
+        public async Task TestPreserveClassDocComments()
+        {
+            string text = @"
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace System.Composition.UnitTests
+{
+    /// <summary>
+    /// Some sort of doc comment.
+    /// </summary>
+    [TestClass]
+    public class MyTestClass
+    {
+    }
+}
+";
+            var expected = @"
+using System;
+using Xunit;
+
+namespace System.Composition.UnitTests
+{
+    /// <summary>
+    /// Some sort of doc comment.
+    /// </summary>
+    public class MyTestClass
+    {
+    }
+}
+";
+            await Verify(text, expected);
+        }
+
+
+        [Fact]
         public async Task TestUpdatesTestMethodAttributes()
         {
             var text = @"
