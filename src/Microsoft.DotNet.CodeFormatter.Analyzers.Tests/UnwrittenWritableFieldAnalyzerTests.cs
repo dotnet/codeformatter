@@ -54,7 +54,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithNoReferences()
+        public void MarkReadOnlyWithNoReferences()
         {
             string text = @"
 class C
@@ -66,7 +66,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyInternalWithNoReferences()
+        public void MarkReadOnlyInternalWithNoReferences()
         {
             string text = @"
 class C
@@ -168,7 +168,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithReadReferences()
+        public void MarkReadOnlyWithReadReferences()
         {
             string text = @"
 class C
@@ -263,7 +263,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithExternStructArgument()
+        public void MarkReadOnlyWithExternStructArgument()
         {
             string text = @"
 struct C
@@ -327,7 +327,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithPrimitiveMethodCall()
+        public void MarkReadOnlyWithPrimitiveMethodCall()
         {
             string text = @"
 
@@ -369,7 +369,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithWriteReferencesInConstructor()
+        public void MarkReadOnlyWithWriteReferencesInConstructor()
         {
             string text = @"
 class C
@@ -466,7 +466,7 @@ class C2
         }
 
         [Fact]
-        public void TestMarkReadonlyWithFieldPrecededByXmlComment()
+        public void MarkReadOnlyWithFieldPrecededByXmlComment()
         {
             string text = @"
 class C
@@ -479,7 +479,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithFieldPrecededByNonXmlComment()
+        public void MarkReadOnlyWithFieldPrecededByNonXmlComment()
         {
             string text = @"
 class C
@@ -492,7 +492,7 @@ class C
         }
 
         [Fact]
-        public void TestMarkReadonlyWithFieldWithNoAccessSpecifierPrecededByXmlComment()
+        public void MarkReadOnlyWithFieldWithNoAccessSpecifierPrecededByXmlComment()
         {
             string text = @"
 class C
@@ -505,20 +505,60 @@ class C
         }
 
         [Fact]
+        public void MarkReadOnlyFieldIncrementFieldWithinUnsafeBlock()
+        {
+            string text = @"
+public class Test
+{
+    private uint _prefixCount;
+    private uint _postfixCount;
+    public void Add(int item)
+    {
+        unchecked
+        {
+            ++_prefixCount;
+            _postfixCount++;
+        }
+    }
+}";
+            Verify(text, text);
+        }
+
+        [Fact]
+        public void MarkReadOnlyFieldNonMutatingUnaryOperators()
+        {
+            string text = @"
+public class Test
+{
+    private READONLY uint _prefixCount;
+    private READONLY bool _flag;
+    public void Add(int item)
+    {
+        System.Console.WriteLine((int)_prefixCount);
+        System.Console.WriteLine(-_prefixCount);
+        System.Console.WriteLine(+_prefixCount);
+        System.Console.WriteLine(~_prefixCount);
+        System.Console.WriteLine(!_flag);
+    }
+}";
+            Verify(Original(text), Readonly(text));
+        }
+
+        [Fact]
         public void MarkReadOnlyDoNotAnalyzeVisualBasicCode()
         {
-            string text = @"  
-Namespace MarkReadOnlyTests  
-    Public NotInheritable Class MyTest  
-        Shared s_instance As MyTest = New MyTest()  
-    End Class  
+            string text = @"
+Namespace MarkReadOnlyTests
+    Public NotInheritable Class MyTest
+        Shared s_instance As MyTest = New MyTest()
+    End Class
 End Namespace";
 
             string expected = Original(text);
             Verify(expected, expected, languageName: LanguageNames.VisualBasic);
         }
 
-    private static string Original(string text)
+        private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
         }

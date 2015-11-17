@@ -254,6 +254,36 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 CheckForFieldWrite(node.Left);
             }
 
+            public override void VisitPostfixUnaryExpression(PostfixUnaryExpressionSyntax node)
+            {
+                base.VisitPostfixUnaryExpression(node);
+
+                switch (node.OperatorToken.Kind())
+                {
+                    case SyntaxKind.MinusMinusToken:
+                    case SyntaxKind.PlusPlusToken:
+                    {
+                        CheckForFieldWrite(node.Operand);
+                        break;
+                    }
+                }
+            }
+
+            public override void VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
+            {
+                base.VisitPrefixUnaryExpression(node);
+
+                switch (node.OperatorToken.Kind())
+                {
+                    case SyntaxKind.MinusMinusToken:
+                    case SyntaxKind.PlusPlusToken:
+                    {
+                        CheckForFieldWrite(node.Operand);
+                        break;
+                    }
+                }
+            }
+
             public override void VisitBinaryExpression(BinaryExpressionSyntax node)
             {
                 base.VisitBinaryExpression(node);

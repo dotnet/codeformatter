@@ -398,6 +398,48 @@ End Namespace";
             Verify(expected, expected, languageName: LanguageNames.VisualBasic);
         }
 
+        [Fact]
+        public void MarkReadOnlyFieldIncrementFieldWithinUnsafeBlock()
+        {
+            string text = @"
+public class Test
+{
+    private uint _prefixCount;
+    private uint _postfixCount;
+    public void Add(int item)
+    {
+        unchecked
+        {
+            ++_prefixCount;
+            _postfixCount++;
+        }
+        System.Console.WriteLine(~_prefixCount);
+        System.Console.WriteLine(~_postfixCount);
+    }
+}";
+            Verify(text, text);
+        }
+
+        [Fact]
+        public void MarkReadOnlyFieldNonMutatingUnaryOperators()
+        {
+            string text = @"
+public class Test
+{
+    private READONLY uint _prefixCount;
+    private READONLY bool _flag;
+    public void Add(int item)
+    {
+        System.Console.WriteLine((int)_prefixCount);
+        System.Console.WriteLine(-_prefixCount);
+        System.Console.WriteLine(+_prefixCount);
+        System.Console.WriteLine(~_prefixCount);
+        System.Console.WriteLine(!_flag);
+    }
+}";
+            Verify(Original(text), Readonly(text));
+        }
+   
         private static string Original(string text)
         {
             return text.Replace("READONLY ", "");
