@@ -243,7 +243,7 @@ class C1
 {
     int[][] T()
     {
-        return new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } }
+        return new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } };
     }
 
     void M(string[] a)
@@ -253,6 +253,9 @@ class C1
  
         foreach (var element in T())
         { }
+
+        foreach (var i in 1)
+        { }
     }
 }";
             const string expected = @"
@@ -260,7 +263,7 @@ class C1
 {
     int[][] T()
     {
-        return new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } }
+        return new int[] { new int[] { 1, 2, 3 }, new int[] { 4, 5, 6 } };
     }
 
     void M(string[] a)
@@ -269,6 +272,9 @@ class C1
         { }  
  
         foreach (int[] element in T())
+        { }
+
+        foreach (var i in 1)
         { }
     }
 }";
@@ -297,6 +303,8 @@ class C1
         public void TestVarDeclarationInUsing()
         {
             const string input = @"
+using System;
+
 class C1
 {
     class U1 : IDisposable
@@ -322,6 +330,8 @@ class C1
     }
 }";
             const string expected = @"
+using System;
+
 class C1
 {
     class U1 : IDisposable
@@ -423,6 +433,42 @@ class C1
     }
 }";
             const string expected = input;
+            Verify(input, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestVarDeclarationGeneric()
+        {
+            const string input = @"
+using System.Collections.Generic;
+//using System.Collections.Immutable;   // this line is intentionally commented out
+
+class C2
+{}
+
+class C1
+{
+    void M()
+    {
+        var x = (new List<int>()).GetEnumerator();
+        var locationBuilder = ImmutableArray.CreateBuilder<C2>();
+    }
+}";
+            const string expected = @"
+using System.Collections.Generic;
+//using System.Collections.Immutable;   // this line is intentionally commented out
+
+class C2
+{}
+
+class C1
+{
+    void M()
+    {
+        List<int>.Enumerator x = (new List<int>()).GetEnumerator();
+        var locationBuilder = ImmutableArray.CreateBuilder<C2>();
+    }
+}";
             Verify(input, expected, runFormatter: false);
         }
     }

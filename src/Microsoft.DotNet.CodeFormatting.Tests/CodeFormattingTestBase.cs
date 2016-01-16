@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
     {
         private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
         private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
+        private static readonly MetadataReference s_SystemCollectionsImmutableReference = MetadataReference.CreateFromFile(typeof(ImmutableArray).Assembly.Location);
         private static readonly MetadataReference s_CodeFormatterReference = MetadataReference.CreateFromFile(typeof(IFormattingEngine).Assembly.Location);
 
         private const string FileNamePrefix = "Test";
@@ -28,6 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             yield return s_CorlibReference;
             yield return s_SystemCoreReference;
             yield return s_CodeFormatterReference;
+            yield return s_SystemCollectionsImmutableReference;
         }
 
         private Workspace CreateWorkspace(string[] sources, string language = LanguageNames.CSharp)

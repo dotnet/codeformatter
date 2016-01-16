@@ -53,12 +53,15 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 }
 
                 var node = (VariableDeclarationSyntax)syntaxContext.Node;
+                var model = syntaxContext.SemanticModel;
+                var token = syntaxContext.CancellationToken;
                 // C# syntax doesn't allow implicitly typed variables to have multiple declarators,
                 // but we need to handle error situations (incomplete or extra declarators).   
                 if (node.Type != null &&
                     node.Type.IsVar &&
                     !IsTypeObvious(node) &&
-                    !IsAnonymousType(node.Variables.FirstOrDefault(), syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                    !IsAnonymousType(node.Variables.FirstOrDefault(), model, token) &&
+                    !HasErrors(node, model, token))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleVariableDeclaration, node.GetLocation(), node.Variables.Single().Identifier.Text));
                 }
@@ -71,19 +74,29 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                     return;
                 }
 
-                var node = (ForEachStatementSyntax)syntaxContext.Node; 
+                var node = (ForEachStatementSyntax)syntaxContext.Node;
+                var model = syntaxContext.SemanticModel;
+                var token = syntaxContext.CancellationToken;
                 if (node.Type != null &&
                     node.Identifier != null &&
                     node.Type.IsVar &&
                     !IsTypeObvious(node) &&
-                    !IsAnonymousType(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                    !IsAnonymousType(node, model, token)&&
+                    !HasErrors(node.Expression, model, token))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleForEachStatement, node.Identifier.GetLocation(), node.Identifier.Text));
                 }
             }, SyntaxKind.ForEachStatement);
         }
 
-        private bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
+        private static bool HasErrors(SyntaxNode node, SemanticModel model, CancellationToken token)
+        {
+            return model.GetSyntaxDiagnostics(node.Span, token).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error) ||
+                   model.GetDeclarationDiagnostics(node.Span, token).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error) ||
+                   model.GetMethodBodyDiagnostics(node.Span, token).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+        }
+
+        private static bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
         {
             PropertyBag properties = OptionsHelper.GetProperties(syntaxContext.Options);
 
