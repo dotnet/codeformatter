@@ -12,6 +12,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
 
+using Microsoft.CodeAnalysis.CSharp.Symbols;
+
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [Export(typeof(DiagnosticAnalyzer))]
@@ -89,12 +91,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             }, SyntaxKind.ForEachStatement);
         }
 
-        private static bool HasErrors(SyntaxNode node, SemanticModel model, CancellationToken token)
-        {
-            return model.GetSyntaxDiagnostics(node.Span, token).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error) ||
-                   model.GetDeclarationDiagnostics(node.Span, token).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error) ||
-                   model.GetMethodBodyDiagnostics(node.Span, token).Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
-        }
+        private static bool HasErrors(SyntaxNode node, SemanticModel model, CancellationToken token) => 
+            model.GetTypeInfo(node, token).Type.Kind != SymbolKind.ErrorType;
 
         private static bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
         {
@@ -109,7 +107,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         /// </summary>
         private static bool IsAnonymousType(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
         {
-            ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken); 
+            ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken);
             bool? isAnonymousType = ((ILocalSymbol)symbol)?.Type?.IsAnonymousType;
             return isAnonymousType.HasValue && isAnonymousType.Value;
         }
