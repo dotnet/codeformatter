@@ -12,6 +12,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
 
+using Microsoft.CodeAnalysis.CSharp.Symbols;
+
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
     [Export(typeof(DiagnosticAnalyzer))]
@@ -53,12 +55,15 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 }
 
                 var node = (VariableDeclarationSyntax)syntaxContext.Node;
+                var model = syntaxContext.SemanticModel;
+                var token = syntaxContext.CancellationToken;
                 // C# syntax doesn't allow implicitly typed variables to have multiple declarators,
                 // but we need to handle error situations (incomplete or extra declarators).   
                 if (node.Type != null &&
                     node.Type.IsVar &&
                     !IsTypeObvious(node) &&
-                    !IsAnonymousType(node.Variables.FirstOrDefault(), syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                    !IsAnonymousType(node.Variables.FirstOrDefault(), model, token) &&
+                    !HasErrors(node, model, token))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleVariableDeclaration, node.GetLocation(), node.Variables.Single().Identifier.Text));
                 }
@@ -71,19 +76,25 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                     return;
                 }
 
-                var node = (ForEachStatementSyntax)syntaxContext.Node; 
+                var node = (ForEachStatementSyntax)syntaxContext.Node;
+                var model = syntaxContext.SemanticModel;
+                var token = syntaxContext.CancellationToken;
                 if (node.Type != null &&
                     node.Identifier != null &&
                     node.Type.IsVar &&
                     !IsTypeObvious(node) &&
-                    !IsAnonymousType(node, syntaxContext.SemanticModel, syntaxContext.CancellationToken))
+                    !IsAnonymousType(node, model, token)&&
+                    !HasErrors(node.Expression, model, token))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleForEachStatement, node.Identifier.GetLocation(), node.Identifier.Text));
                 }
             }, SyntaxKind.ForEachStatement);
         }
 
-        private bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
+        private static bool HasErrors(SyntaxNode node, SemanticModel model, CancellationToken token) => 
+            model.GetTypeInfo(node, token).Type.Kind != SymbolKind.ErrorType;
+
+        private static bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
         {
             PropertyBag properties = OptionsHelper.GetProperties(syntaxContext.Options);
 
@@ -96,7 +107,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         /// </summary>
         private static bool IsAnonymousType(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
         {
-            ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken); 
+            ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken);
             bool? isAnonymousType = ((ILocalSymbol)symbol)?.Type?.IsAnonymousType;
             return isAnonymousType.HasValue && isAnonymousType.Value;
         }
