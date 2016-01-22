@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                     node.Type.IsVar &&
                     !IsTypeObvious(node) &&
                     !IsAnonymousType(node.Variables.FirstOrDefault(), model, token) &&
-                    !HasErrors(node, model, token))
+                    !HasErrors(node.Variables.FirstOrDefault(), model, token))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleVariableDeclaration, node.GetLocation(), node.Variables.Single().Identifier.Text));
                 }
@@ -91,8 +91,12 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             }, SyntaxKind.ForEachStatement);
         }
 
-        private static bool HasErrors(SyntaxNode node, SemanticModel model, CancellationToken token) => 
-            model.GetTypeInfo(node, token).Type.Kind != SymbolKind.ErrorType;
+        private static bool HasErrors(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
+        {
+            ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken);
+            SymbolKind? symbolKind = ((ILocalSymbol)symbol)?.Type?.Kind;
+            return symbolKind.HasValue && symbolKind == SymbolKind.ErrorType;
+        }
 
         private static bool RuleEnabled(SyntaxNodeAnalysisContext syntaxContext)
         {
