@@ -23,7 +23,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitThisAnalyzer_MessageFormat)),
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
-                                                                            true);
+                                                                            true,
+                                                                            customTags: RuleType.Local);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);

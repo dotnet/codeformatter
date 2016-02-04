@@ -27,7 +27,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.UnwrittenWritableFieldAnalyzer_MessageFormat)),
                                                                             "Usage",
                                                                             DiagnosticSeverity.Warning,
-                                                                            true);
+                                                                            true,
+                                                                            customTags: RuleType.Local);
 
         private static readonly SyntaxKind[] s_compoundAssignmentExpressionKinds =
             {
