@@ -73,9 +73,12 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             {
                 var usingDirective = node as UsingDirectiveSyntax;
                 var symbol = semanticModel.GetSymbolInfo(usingDirective.Name).Symbol;
-                var newDirective = editor.Generator.WithName(usingDirective, symbol.ToDisplayString());
-                editor.RemoveNode(usingDirective);
-                newUsings.Add(newDirective);
+                if (symbol != null)
+                {
+                    var newDirective = editor.Generator.WithName(usingDirective, symbol.ToDisplayString());
+                    editor.RemoveNode(usingDirective);
+                    newUsings.Add(newDirective);
+                }
             }
 
             var newRoot = editor.GetChangedRoot();
