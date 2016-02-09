@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
                                                                             true,
-                                                                            customTags: RuleType.Local);
+                                                                            customTags: RuleType.LocalSemantic);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);

@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             "Usage",
                                                                             DiagnosticSeverity.Warning,
                                                                             true,
-                                                                            customTags: RuleType.Local);
+                                                                            customTags: RuleType.LocalSemantic);
 
         private static readonly SyntaxKind[] s_compoundAssignmentExpressionKinds =
             {

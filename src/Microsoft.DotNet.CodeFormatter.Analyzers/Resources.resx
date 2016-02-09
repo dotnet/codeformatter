@@ -136,13 +136,22 @@
     <value>Replace the usage of 'var' with an explicit type</value>
   </data>
   <data name="OptimizeNamespaceImportsAnalyzer_MessageFormat" xml:space="preserve">
-    <value>Remove unused namespaces</value>
-  </data>
-  <data name="OptimizeNamespaceImportsAnalyzer_Title" xml:space="preserve">
     <value>Namespace '{0}' is unused in this file</value>
   </data>
+  <data name="OptimizeNamespaceImportsAnalyzer_Title" xml:space="preserve">
+    <value>Remove unused namespace imports</value>
+  </data>
   <data name="OptimizeNamespaceImportsFixer_Title" xml:space="preserve">
-    <value>Remove unused namespaces</value>
+    <value>Remove unused namespace imports</value>
+  </data>
+  <data name="PlaceImportsOutsideNamespaceFixer_Title" xml:space="preserve">
+    <value>Move import statements outside the namespace.</value>
+  </data>
+  <data name="PlaceImportsOutsideNamespace_MessageFormat" xml:space="preserve">
+    <value>Place namespace import statements outside a namespace.</value>
+  </data>
+  <data name="PlaceImportsOutsideNamespace_Title" xml:space="preserve">
+    <value>Place namespace import statements outside a namespace.</value>
   </data>
   <data name="UnwrittenWritableFieldAnalyzer_MessageFormat" xml:space="preserve">
     <value>The field '{0}' is never written to and can be marked readonly</value>

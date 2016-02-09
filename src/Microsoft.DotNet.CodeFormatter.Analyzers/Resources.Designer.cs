@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with explicit type.
+        ///   Looks up a localized string similar to Variable &apos;{0}&apos; should be declared with an explicit type.
         /// </summary>
         internal static string ExplicitVariableTypeAnalyzer_MessageFormat {
             get {
@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replace the usage of &apos;var&apos; with explicit type.
+        ///   Looks up a localized string similar to Replace the usage of &apos;var&apos; with an explicit type.
         /// </summary>
         internal static string ExplicitVariableTypeFixer_Title {
             get {
@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove unused namespaces.
+        ///   Looks up a localized string similar to Namespace &apos;{0}&apos; is unused in this file.
         /// </summary>
         internal static string OptimizeNamespaceImportsAnalyzer_MessageFormat {
             get {
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Namespace &apos;{0}&apos; is unused in this file.
+        ///   Looks up a localized string similar to Remove unused namespace imports.
         /// </summary>
         internal static string OptimizeNamespaceImportsAnalyzer_Title {
             get {
@@ -133,11 +133,38 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove unused namespaces.
+        ///   Looks up a localized string similar to Remove unused namespace imports.
         /// </summary>
         internal static string OptimizeNamespaceImportsFixer_Title {
             get {
                 return ResourceManager.GetString("OptimizeNamespaceImportsFixer_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Place namespace import statements outside a namespace..
+        /// </summary>
+        internal static string PlaceImportsOutsideNamespace_MessageFormat {
+            get {
+                return ResourceManager.GetString("PlaceImportsOutsideNamespace_MessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Place namespace import statements outside a namespace..
+        /// </summary>
+        internal static string PlaceImportsOutsideNamespace_Title {
+            get {
+                return ResourceManager.GetString("PlaceImportsOutsideNamespace_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move import statements outside the namespace..
+        /// </summary>
+        internal static string PlaceImportsOutsideNamespaceFixer_Title {
+            get {
+                return ResourceManager.GetString("PlaceImportsOutsideNamespaceFixer_Title", resourceCulture);
             }
         }
         

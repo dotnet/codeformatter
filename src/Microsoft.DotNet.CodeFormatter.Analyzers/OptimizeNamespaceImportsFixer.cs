@@ -22,69 +22,31 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             SyntaxNode root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+            Diagnostic diagnostic = context.Diagnostics.First();
+            var usingDirectiveNodes = new List<SyntaxNode>();
 
-            foreach (var diagnostic in context.Diagnostics)
+            // We recapitulate the primary diagnostic location in the 
+            // Diagnostic.AdditionalLocations property on raising
+            // the diagnostic, so this member has complete location details.
+            foreach (Location location in diagnostic.AdditionalLocations)
             {
-                var usingDirectiveNodes = new List<SyntaxNode>();
-
-                // We recapitulate the primary diagnostic location in the 
-                // Diagnostic.AdditionalLocations property on raising
-                // the diagnostic, so this member has complete location details.
-                foreach (Location location in diagnostic.AdditionalLocations)
-                {
-                    SyntaxNode usingDirectiveNode = root.FindNode(location.SourceSpan);
-                    Debug.Assert(usingDirectiveNode != null);
-                    usingDirectiveNodes.Add(usingDirectiveNode);
-                }
-
-                var usingAction = (OptimizeNamespaceImportsAnalyzer.Action)Enum.Parse(typeof(OptimizeNamespaceImportsAnalyzer.Action), diagnostic.Properties["Action"]);
-                switch (usingAction)
-                {
-                    case OptimizeNamespaceImportsAnalyzer.Action.Remove:
-                        context.RegisterCodeFix(
-                            CodeAction.Create(
-                                Resources.OptimizeNamespaceImportsFixer_Title,
-                                c => RemoveUsingStatement(context.Document, root, usingDirectiveNodes)),
-                            diagnostic);
-                        break;
-                    case OptimizeNamespaceImportsAnalyzer.Action.PlaceOutsideNamespace:
-                        context.RegisterCodeFix(
-                            CodeAction.Create(
-                                Resources.OptimizeNamespaceImportsFixer_Title,
-                                c => PlaceOutsideNamespace(context.Document, root, usingDirectiveNodes)),
-                            diagnostic);
-                        break;
-                }
+                SyntaxNode usingDirectiveNode = root.FindNode(location.SourceSpan);
+                Debug.Assert(usingDirectiveNode != null);
+                usingDirectiveNodes.Add(usingDirectiveNode);
             }
+
+
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    Resources.OptimizeNamespaceImportsFixer_Title,
+                    c => RemoveUsingStatement(context.Document, root, usingDirectiveNodes)),
+                diagnostic);
         }
 
         private Task<Document> RemoveUsingStatement(Document document, SyntaxNode root, IEnumerable<SyntaxNode> usingDirectiveNodes)
         {     
             return Task.FromResult(
                 document.WithSyntaxRoot(root.RemoveNodes(usingDirectiveNodes, SyntaxRemoveOptions.KeepLeadingTrivia)));
-        }
-        private async Task<Document> PlaceOutsideNamespace(Document document, SyntaxNode root, IEnumerable<SyntaxNode> usingDirectiveNodes)
-        {
-            var semanticModel = await document.GetSemanticModelAsync().ConfigureAwait(false);
-            var editor = await DocumentEditor.CreateAsync(document).ConfigureAwait(false);
-
-            var newUsings = new List<SyntaxNode>();
-            foreach (var node in usingDirectiveNodes)
-            {
-                var usingDirective = node as UsingDirectiveSyntax;
-                var symbol = semanticModel.GetSymbolInfo(usingDirective.Name).Symbol;
-                if (symbol != null)
-                {
-                    var newDirective = editor.Generator.WithName(usingDirective, symbol.ToDisplayString());
-                    editor.RemoveNode(usingDirective);
-                    newUsings.Add(newDirective);
-                }
-            }
-
-            var newRoot = editor.GetChangedRoot();
-            newRoot = editor.Generator.AddNamespaceImports(newRoot, newUsings);
-            editor.ReplaceNode(root, newRoot);
-            return editor.GetChangedDocument();
         }
 
         public override FixAllProvider GetFixAllProvider()

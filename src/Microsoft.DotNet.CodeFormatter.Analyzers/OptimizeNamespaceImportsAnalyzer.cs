@@ -19,12 +19,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class OptimizeNamespaceImportsAnalyzer : DiagnosticAnalyzer
     {
-        internal enum Action
-        {
-            Remove,
-            PlaceOutsideNamespace
-        }
-
         internal const string DiagnosticId = AnalyzerIds.OptimizeNamespaceImports;
         private static DiagnosticDescriptor s_rule = new DiagnosticDescriptor(DiagnosticId,
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.OptimizeNamespaceImportsAnalyzer_Title)),
@@ -32,7 +26,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
                                                                             true,
-                                                                            customTags: RuleType.Global);
+                                                                            customTags: RuleType.GlobalSemantic);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);
@@ -56,12 +50,6 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 {
                     context.RegisterSemanticModelAction(LookForUnusedImports);
                 }
-
-                if (properties.GetProperty(OptimizeNamespaceImportsOptions.PlaceImportsOutsideNamespaceDeclaration))
-                {
-                    context.RegisterSyntaxNodeAction(LookForUsingsInsideNamespace, SyntaxKind.NamespaceDeclaration);
-                }
-
             });
         }
 
@@ -93,19 +81,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
             if (locations.Count > 0)
             {
-                semanticModelAnalysisContext.ReportDiagnostic(
-                    Diagnostic.Create(s_rule, firstDiagnostic.Location, locations, 
-                                      new Dictionary<string, string> { { "Action", Action.Remove.ToString() } }.ToImmutableDictionary()));
-            }
-        }
-        private static void LookForUsingsInsideNamespace(SyntaxNodeAnalysisContext syntaxContext)
-        {
-            var namespaceDeclaration = syntaxContext.Node as NamespaceDeclarationSyntax;
-            if (namespaceDeclaration.Usings.Count != 0)
-            {
-                var allLocations = namespaceDeclaration.Usings.Select(d => d.GetLocation());
-                syntaxContext.ReportDiagnostic(Diagnostic.Create(s_rule, namespaceDeclaration.Usings.First().GetLocation(), allLocations,
-                                                                 new Dictionary<string, string> { { "Action", Action.PlaceOutsideNamespace.ToString() } }.ToImmutableDictionary()));
+                semanticModelAnalysisContext.ReportDiagnostic(Diagnostic.Create(s_rule, firstDiagnostic.Location, locations));
             }
         }
     }

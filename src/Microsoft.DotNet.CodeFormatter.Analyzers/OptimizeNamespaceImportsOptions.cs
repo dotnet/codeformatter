@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         /// <summary>
         /// Place import directives outside namespace declaration (or within if value is false).
         /// </summary>
-        public static PerLanguageOption<bool> PlaceImportsOutsideNamespaceDeclaration { get; } = new PerLanguageOption<bool>(OptimizeNamespaceImportsAnalyzer.AnalyzerName, nameof(PlaceImportsOutsideNamespaceDeclaration), defaultValue: true);
+        public static PerLanguageOption<bool> PlaceImportsOutsideNamespaceDeclaration { get; } = new PerLanguageOption<bool>(PlaceImportsOutsideNamespaceAnalyzer.AnalyzerName, nameof(PlaceImportsOutsideNamespaceDeclaration), defaultValue: true);
 
         /// <summary>
         /// Place system namespaces first when writing import directives.

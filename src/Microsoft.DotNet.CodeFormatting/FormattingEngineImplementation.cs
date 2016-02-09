@@ -207,6 +207,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
             var workspace = project.Solution.Workspace;
 
+            await FormatProjectWithSyntaxAnalyzersAsync(workspace, project.Id, cancellationToken);
             await FormatProjectWithLocalAnalyzersAsync(workspace, project.Id, cancellationToken);
             await FormatProjectWithGlobalAnalyzersAsync(workspace, project.Id, cancellationToken);
 
@@ -214,15 +215,21 @@ namespace Microsoft.DotNet.CodeFormatting
             FormatLogger.WriteLine("Total time for formatting {0} - {1}", project.Name, watch.Elapsed);
         }
 
+        private async Task FormatProjectWithSyntaxAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        {
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.Syntactic)));
+            await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
+        }
+
         private async Task FormatProjectWithLocalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
-            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.Local)));
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.LocalSemantic)));
             await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
         }
 
         private async Task FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
-            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.Global)));
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic)));
 
             // Since global analyzers can potentially conflict with each other, run them one by one.
             foreach (var analyzer in analyzers)
