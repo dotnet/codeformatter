@@ -309,6 +309,8 @@ class C1
 {
     void M()
     {
+        // The variable names if of type IEnumerable<some_anonymous_type>. It is not itself of anonymous type,
+        // but it has a type parameter of anonymous type.
         var names = from i in new [] { 1, 2, 3 }
                     select new { Number = i, Age = i };
 
