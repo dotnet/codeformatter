@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                     node.Type.IsVar &&
                     !IsTypeObvious(node) &&
                     !IsAnonymousType(node, model, token)&&
-                    !HasErrors(node.Expression, model, token))
+                    !HasErrors(node, model, token))
                 {
                     syntaxContext.ReportDiagnostic(Diagnostic.Create(s_ruleForEachStatement, node.Identifier.GetLocation(), node.Identifier.Text));
                 }
@@ -112,8 +112,11 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         private static bool IsAnonymousType(SyntaxNode node, SemanticModel model, CancellationToken cancellationToken)
         {
             ISymbol symbol = model.GetDeclaredSymbol(node, cancellationToken);
-            bool? isAnonymousType = ((ILocalSymbol)symbol)?.Type?.IsAnonymousType;
-            return isAnonymousType.HasValue && isAnonymousType.Value;
+            ITypeSymbol type = ((ILocalSymbol)symbol)?.Type;
+            bool? isAnonymousType = type?.IsAnonymousType;
+            bool? containsAnonymousTypeArguments = (type as INamedTypeSymbol)?.TypeArguments.Any(t => t.IsAnonymousType);
+            return (isAnonymousType.HasValue && isAnonymousType.Value) ||
+                   (containsAnonymousTypeArguments.HasValue && containsAnonymousTypeArguments.Value);
         }
 
         /// <summary>

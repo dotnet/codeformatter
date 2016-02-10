@@ -300,6 +300,49 @@ class C1
         }
 
         [Fact]
+        public void TestDeclarationWithAnonymousTypeArguments()
+        {
+            const string input = @"
+using System.Linq;
+
+class C1
+{
+    void M()
+    {
+        // The variable names if of type IEnumerable<some_anonymous_type>. It is not itself of anonymous type,
+        // but it has a type parameter of anonymous type.
+        var names = from i in new [] { 1, 2, 3 }
+                    select new { Number = i, Age = i };
+
+        foreach (var name in names)
+        { }
+    }
+}";
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestForEachWithErrorType()
+        {
+            const string input = @"
+class C1
+{
+    void M()
+    {
+        // names will have error type here because System.Linq isn't included.
+        var names = from i in new [] { 1, 2, 3 }
+                    select new { Number = i, Age = i };
+
+        foreach (var name in names)
+        { }
+    }
+}";
+            const string expected = input;
+            Verify(input, expected, runFormatter: false);
+        }
+
+        [Fact]
         public void TestVarDeclarationInUsing()
         {
             const string input = @"
