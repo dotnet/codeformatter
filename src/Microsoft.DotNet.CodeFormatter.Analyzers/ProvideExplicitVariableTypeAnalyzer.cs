@@ -30,14 +30,14 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
                                                                             true,
-                                                                            customTags: VariableDeclarationCustomTag);
+                                                                            customTags: new[] { VariableDeclarationCustomTag, RuleType.LocalSemantic });
         private static readonly DiagnosticDescriptor s_ruleForEachStatement = new DiagnosticDescriptor(DiagnosticId,
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitVariableTypeAnalyzer_Title)),
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.ExplicitVariableTypeAnalyzer_MessageFormat)),
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
                                                                             true,
-                                                                            customTags: ForEachStatementCustomTag);
+                                                                            customTags: new[] { ForEachStatementCustomTag, RuleType.LocalSemantic });
 
         private static readonly ImmutableArray<DiagnosticDescriptor> s_supportedRules = ImmutableArray.Create(s_ruleVariableDeclaration, s_ruleForEachStatement);
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics

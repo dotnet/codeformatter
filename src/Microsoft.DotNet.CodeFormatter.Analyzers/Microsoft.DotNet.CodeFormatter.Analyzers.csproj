@@ -77,6 +77,8 @@
     <Compile Include="OptimizeNamespaceImportsFixer.cs" />
     <Compile Include="OptimizeNamespaceImportsOptions.cs" />
     <Compile Include="OptionsHelper.cs" />
+    <Compile Include="PlaceImportsOutsideNamespaceAnalyzer.cs" />
+    <Compile Include="PlaceImportsOutsideNamespaceFixer.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

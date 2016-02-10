@@ -78,6 +78,7 @@
     <Compile Include="ResponseFileWorkspace.cs" />
     <Compile Include="Rules\MarkReadonlyFieldsRule.cs" />
     <Compile Include="Rules\RuleOptions.cs" />
+    <Compile Include="RuleType.cs" />
     <Compile Include="SemaphoreLock.cs" />
     <Compile Include="SyntaxUtil.cs" />
     <Compile Include="Filters\FilenameFilter.cs" />

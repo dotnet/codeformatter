@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
@@ -8,6 +9,7 @@ using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
 
@@ -23,7 +25,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                                                             ResourceHelper.MakeLocalizableString(nameof(Resources.OptimizeNamespaceImportsAnalyzer_MessageFormat)),
                                                                             "Style",
                                                                             DiagnosticSeverity.Warning,
-                                                                            true);
+                                                                            true,
+                                                                            customTags: RuleType.GlobalSemantic);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
             => ImmutableArray.Create(s_rule);
@@ -32,12 +35,9 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSemanticModelAction(semanticModelAnalysisContext =>
+            context.RegisterCompilationStartAction(compilationContext =>
             {
-                SyntaxNode root;
-                SemanticModel semanticModel;
-
-                PropertyBag properties = OptionsHelper.GetProperties(semanticModelAnalysisContext.Options);
+                PropertyBag properties = OptionsHelper.GetProperties(compilationContext.Options);
 
                 if (!properties.GetProperty(
                     OptionsHelper.BuildDefaultEnabledProperty(OptimizeNamespaceImportsAnalyzer.AnalyzerName)))
@@ -46,40 +46,43 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                     return;
                 }
 
-                if (!properties.GetProperty(OptimizeNamespaceImportsOptions.RemoveUnnecessaryImports))
+                if (properties.GetProperty(OptimizeNamespaceImportsOptions.RemoveUnnecessaryImports))
                 {
-                    // All currently implemented analyzer behaviors are disabled,
-                    // and so therefore have no work to do.
-                    return;
+                    context.RegisterSemanticModelAction(LookForUnusedImports);
                 }
-
-                semanticModel = semanticModelAnalysisContext.SemanticModel;
-                root = semanticModel.SyntaxTree.GetRoot();
-
-                // If we encounter any conditionally included code, we cannot be sure
-                // that unused namespaces might not be relevant for some other compilation
-                if (root.DescendantTrivia().Any(x => x.Kind() == SyntaxKind.IfDirectiveTrivia))
-                    return;
-
-                var diagnostics = semanticModel.GetDiagnostics(null, semanticModelAnalysisContext.CancellationToken);
-                Diagnostic firstDiagnostic = null;
-                var locations = new List<Location>();
-
-                foreach (Diagnostic diagnostic in diagnostics)
-                {
-                    if (diagnostic.Id == "CS8019")
-                    {
-                        firstDiagnostic = firstDiagnostic ?? diagnostic;
-                        locations.Add(diagnostic.Location);
-                    }
-                }    
-                
-                if (locations.Count > 0)
-                {
-                    semanticModelAnalysisContext.ReportDiagnostic(
-                        Diagnostic.Create(s_rule, firstDiagnostic.Location, locations));
-                }       
             });
+        }
+
+        private static void LookForUnusedImports(SemanticModelAnalysisContext semanticModelAnalysisContext)
+        {
+            SyntaxNode root;
+            SemanticModel semanticModel;
+
+            semanticModel = semanticModelAnalysisContext.SemanticModel;
+            root = semanticModel.SyntaxTree.GetRoot();
+
+            // If we encounter any conditionally included code, we cannot be sure
+            // that unused namespaces might not be relevant for some other compilation
+            if (root.DescendantTrivia().Any(x => x.Kind() == SyntaxKind.IfDirectiveTrivia))
+                return;
+
+            var diagnostics = semanticModel.GetDiagnostics(null, semanticModelAnalysisContext.CancellationToken);
+            Diagnostic firstDiagnostic = null;
+            var locations = new List<Location>();
+
+            foreach (Diagnostic diagnostic in diagnostics)
+            {
+                if (diagnostic.Id == "CS8019")
+                {
+                    firstDiagnostic = firstDiagnostic ?? diagnostic;
+                    locations.Add(diagnostic.Location);
+                }
+            }
+
+            if (locations.Count > 0)
+            {
+                semanticModelAnalysisContext.ReportDiagnostic(Diagnostic.Create(s_rule, firstDiagnostic.Location, locations));
+            }
         }
     }
 }

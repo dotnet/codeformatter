@@ -15,6 +15,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.DotNet.CodeFormatter.Analyzers;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -179,10 +180,18 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public async Task FormatSolutionWithAnalyzersAsync(Solution solution, CancellationToken cancellationToken)
         {
-            foreach (var project in solution.Projects)
+            var watch = new Stopwatch();
+            watch.Start();
+
+            var workspace = solution.Workspace;
+            foreach (var projectId in solution.ProjectIds)
             {
+                var project = workspace.CurrentSolution.GetProject(projectId);
                 await FormatProjectWithAnalyzersAsync(project, cancellationToken).ConfigureAwait(false);
             }
+
+            watch.Stop();
+            FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
         }
 
         public async Task FormatProjectWithAnalyzersAsync(Project project, CancellationToken cancellationToken)
@@ -196,7 +205,43 @@ namespace Microsoft.DotNet.CodeFormatting
             var watch = new Stopwatch();
             watch.Start();
 
-            var diagnostics = await GetDiagnostics(project, cancellationToken).ConfigureAwait(false);
+            var workspace = project.Solution.Workspace;
+
+            await FormatProjectWithSyntaxAnalyzersAsync(workspace, project.Id, cancellationToken);
+            await FormatProjectWithLocalAnalyzersAsync(workspace, project.Id, cancellationToken);
+            await FormatProjectWithGlobalAnalyzersAsync(workspace, project.Id, cancellationToken);
+
+            watch.Stop();
+            FormatLogger.WriteLine("Total time for formatting {0} - {1}", project.Name, watch.Elapsed);
+        }
+
+        private async Task FormatProjectWithSyntaxAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        {
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.Syntactic)));
+            await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
+        }
+
+        private async Task FormatProjectWithLocalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        {
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.LocalSemantic)));
+            await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
+        }
+
+        private async Task FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        {
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic)));
+
+            // Since global analyzers can potentially conflict with each other, run them one by one.
+            foreach (var analyzer in analyzers)
+            {
+                await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+            }
+        }
+
+        private async Task FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
+        {
+            var project = workspace.CurrentSolution.GetProject(projectId);
+            var diagnostics = await GetDiagnostics(project, analyzers, cancellationToken).ConfigureAwait(false);
 
             var batchFixer = WellKnownFixAllProviders.BatchFixer;
 
@@ -209,20 +254,16 @@ namespace Microsoft.DotNet.CodeFormatting
                 new FormattingEngineDiagnosticProvider(project, diagnostics),
                 cancellationToken);
 
-
             var fix = await batchFixer.GetFixAsync(context).ConfigureAwait(false);
             if (fix != null)
             {
                 foreach (var operation in await fix.GetOperationsAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    operation.Apply(project.Solution.Workspace, cancellationToken);
+                    operation.Apply(workspace, cancellationToken);
                 }
             }
-
-            watch.Stop();
-            FormatLogger.WriteLine("Total time {0}", watch.Elapsed);
         }
-
+        
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
         {
             _ruleEnabledMap[ruleMetaData.Name] = enabled;
@@ -304,7 +345,7 @@ namespace Microsoft.DotNet.CodeFormatting
             return solution;
         }
 
-        private async Task<ImmutableArray<Diagnostic>> GetDiagnostics(Project project, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<Diagnostic>> GetDiagnostics(Project project, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
         {
             AnalyzerOptions analyzerOptions = null;
 
@@ -316,7 +357,34 @@ namespace Microsoft.DotNet.CodeFormatting
 
             var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
 
-            IEnumerable<DiagnosticAnalyzer> analyzersToRun = _analyzers.Where(a => a.SupportsLanguage(project.Language));
+            // If there are any compilation errors then some of the semantic rules will be faulty. Log the
+            // compiler errors and the metadatareferences to diagnose the issues.
+            if (Verbose)
+            {
+                var compilerDiagnostics = compilation.GetDiagnostics().Where(d => d.Severity != DiagnosticSeverity.Hidden && d.Severity != DiagnosticSeverity.Info);
+                if (compilerDiagnostics.Any())
+                {
+
+                    Console.WriteLine("Error count " + compilerDiagnostics.Count());
+
+                    Console.WriteLine("Metadata References for {0}", project.Name);
+                    foreach (var mr in project.MetadataReferences)
+                    {
+                        Console.WriteLine(mr.Display);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Diagnostics for {0}", project.Name);
+
+                    foreach (var diag in compilerDiagnostics)
+                    {
+                        Console.WriteLine(diag.ToString());
+                    }
+                }
+            }
+
+            IEnumerable<DiagnosticAnalyzer> analyzersToRun = analyzers.Where(a => a.SupportsLanguage(project.Language));
+
             if (analyzersToRun.Any())
             {
                 var compilationWithAnalyzers = compilation.WithAnalyzers(analyzersToRun.ToImmutableArray(), analyzerOptions);

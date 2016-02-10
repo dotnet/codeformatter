@@ -80,7 +80,9 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         private async Task<Document> ReplaceVarWithExplicitType(Document document, SyntaxNode varNode, ITypeSymbol explicitTypeSymbol, CancellationToken cancellationToken)
         {
             DocumentEditor documentEditor = await DocumentEditor.CreateAsync(document, cancellationToken);
-            SyntaxNode explicitTypeNode = documentEditor.Generator.TypeExpression(explicitTypeSymbol).WithAdditionalAnnotations(Simplifier.Annotation);
+            SyntaxNode explicitTypeNode = documentEditor.Generator.TypeExpression(explicitTypeSymbol)
+                                          .WithAdditionalAnnotations(Simplifier.Annotation)
+                                          .WithTriviaFrom(varNode);
             documentEditor.ReplaceNode(varNode, explicitTypeNode);
             return documentEditor.GetChangedDocument();
         }

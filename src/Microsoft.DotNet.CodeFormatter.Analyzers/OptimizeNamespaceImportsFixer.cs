@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -10,6 +11,8 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 
 namespace Microsoft.DotNet.CodeFormatter.Analyzers
 {
@@ -31,6 +34,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                 Debug.Assert(usingDirectiveNode != null);
                 usingDirectiveNodes.Add(usingDirectiveNode);
             }
+
 
             context.RegisterCodeFix(
                 CodeAction.Create(
