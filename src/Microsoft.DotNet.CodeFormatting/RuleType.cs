@@ -11,7 +11,7 @@
         /// <summary>
         /// This type of rule needs to look at semantic information to either diagnose or fix the issue. The semantic information
         /// is localized the site of the issue and any fix will only semantically affect the site of the issue or the enclosing code block 
-        /// for eg: an edit inside a method body.
+        /// for example: an edit inside a method body.
         /// </summary>
         public const string LocalSemantic = nameof(LocalSemantic);
 

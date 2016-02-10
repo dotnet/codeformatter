@@ -365,18 +365,21 @@ namespace Microsoft.DotNet.CodeFormatting
                 if (compilerDiagnostics.Any())
                 {
 
-                        Console.WriteLine("Error count " + compilerDiagnostics.Count());
+                    Console.WriteLine("Error count " + compilerDiagnostics.Count());
 
-                        Console.WriteLine("Metadata References for {0}", project.Name);
-                        foreach (var mr in project.MetadataReferences)
-                        {
-                            Console.WriteLine(mr.Display);
-                        }
+                    Console.WriteLine("Metadata References for {0}", project.Name);
+                    foreach (var mr in project.MetadataReferences)
+                    {
+                        Console.WriteLine(mr.Display);
+                    }
 
-                        foreach (var diag in compilerDiagnostics)
-                        {
-                            Console.WriteLine(diag.ToString());
-                        }
+                    Console.WriteLine();
+                    Console.WriteLine("Diagnostics for {0}", project.Name);
+
+                    foreach (var diag in compilerDiagnostics)
+                    {
+                        Console.WriteLine(diag.ToString());
+                    }
                 }
             }
 

@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             foreach (Location location in diagnostic.AdditionalLocations)
             {
                 SyntaxNode usingDirectiveNode = root.FindNode(location.SourceSpan);
-                Debug.Assert(usingDirectiveNode != null);
+                Debug.Assert(usingDirectiveNode != null && usingDirectiveNode.IsKind(SyntaxKind.UsingDirective));
                 usingDirectiveNodes.Add(usingDirectiveNode);
             }
 
