@@ -80,8 +80,11 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
         private async Task<Document> ReplaceVarWithExplicitType(Document document, SyntaxNode varNode, ITypeSymbol explicitTypeSymbol, CancellationToken cancellationToken)
         {
             DocumentEditor documentEditor = await DocumentEditor.CreateAsync(document, cancellationToken);
+
+            // Create an annotation and tag the type node with it so that we can find it again in a new tree.
+            var explicitTypeAnnotation = new SyntaxAnnotation();
             SyntaxNode explicitTypeNode = documentEditor.Generator.TypeExpression(explicitTypeSymbol)
-                                          .WithAdditionalAnnotations(Simplifier.Annotation)
+                                          .WithAdditionalAnnotations(Simplifier.Annotation, explicitTypeAnnotation)
                                           .WithTriviaFrom(varNode);
             documentEditor.ReplaceNode(varNode, explicitTypeNode);
             var newDocument = documentEditor.GetChangedDocument();
@@ -89,9 +92,8 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             // We don't want the explicit type to be fully qualified. So add an using for this node and the simplifier will
             // take care of removing it if it isn't necessary.
             // The second parmaeter to AddImportsAsync is an annotation that is used to locate the span
-            // for which an using should be added. Since we added the simplify annotation on explicitTypeNode, 
-            // we can just use that annotation to locate the node again in newDocument. 
-            newDocument = await ImportAdder.AddImportsAsync(newDocument, Simplifier.Annotation).ConfigureAwait(false);
+            // for which an using should be added.
+            newDocument = await ImportAdder.AddImportsAsync(newDocument, explicitTypeAnnotation).ConfigureAwait(false);
             return newDocument;
         }
 
