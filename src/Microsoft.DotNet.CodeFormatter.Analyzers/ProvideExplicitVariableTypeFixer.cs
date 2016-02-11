@@ -84,7 +84,15 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
                                           .WithAdditionalAnnotations(Simplifier.Annotation)
                                           .WithTriviaFrom(varNode);
             documentEditor.ReplaceNode(varNode, explicitTypeNode);
-            return documentEditor.GetChangedDocument();
+            var newDocument = documentEditor.GetChangedDocument();
+
+            // We don't want the explicit type to be fully qualified. So add an using for this node and the simplifier will
+            // take care of removing it if it isn't necessary.
+            // The second parmaeter to AddImportsAsync is an annotation that is used to locate the span
+            // for which an using should be added. Since we added the simplify annotation on explicitTypeNode, 
+            // we can just use that annotation to locate the node again in newDocument. 
+            newDocument = await ImportAdder.AddImportsAsync(newDocument, Simplifier.Annotation).ConfigureAwait(false);
+            return newDocument;
         }
 
         private static RuleType GetRuleType(Diagnostic diagnostic)

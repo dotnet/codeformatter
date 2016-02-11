@@ -32,7 +32,7 @@ class C1
         int[][] z = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 } };
     }
 }";
-            const string expected = input; 
+            const string expected = input;
             Verify(input, expected, runFormatter: false);
         }
 
@@ -510,6 +510,64 @@ class C1
     {
         List<int>.Enumerator x = (new List<int>()).GetEnumerator();
         var locationBuilder = ImmutableArray.CreateBuilder<C2>();
+    }
+}";
+            Verify(input, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestAddingUsing()
+        {
+            const string input = @"
+class C1
+{
+    System.Collections.Generic.List<int> f() { return null; }
+
+    void M()
+    {
+        var x = f();
+    }
+}";
+            const string expected =
+@"using System.Collections.Generic;
+
+class C1
+{
+    System.Collections.Generic.List<int> f() { return null; }
+
+    void M()
+    {
+        List<int> x = f();
+    }
+}";
+            Verify(input, expected, runFormatter: false);
+        }
+
+        [Fact]
+        public void TestNotAddingDuplicateUsing()
+        {
+            const string input = @"
+using System.Collections.Generic;
+
+class C1
+{
+    System.Collections.Generic.List<int> f() { return null; }
+
+    void M()
+    {
+        var x = f();
+    }
+}";
+            const string expected = @"
+using System.Collections.Generic;
+
+class C1
+{
+    System.Collections.Generic.List<int> f() { return null; }
+
+    void M()
+    {
+        List<int> x = f();
     }
 }";
             Verify(input, expected, runFormatter: false);
