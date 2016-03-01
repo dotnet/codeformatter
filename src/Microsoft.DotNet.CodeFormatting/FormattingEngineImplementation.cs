@@ -230,7 +230,10 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
-            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic)));
+            // assume analyzers with no custom tags are global to be maximally conservative
+            var analyzers = _analyzers.Where(a => {
+                return a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic) || d.CustomTags == null || d.CustomTags.Count() == 0);
+            });
 
             // Since global analyzers can potentially conflict with each other, run them one by one.
             foreach (var analyzer in analyzers)

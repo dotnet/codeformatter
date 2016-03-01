@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -67,7 +68,8 @@ namespace Microsoft.DotNet.CodeFormatting
                 .Export<ILocalSemanticFormattingRule>();
             conventions.ForTypesDerivedFrom<IGlobalSemanticFormattingRule>()
                 .Export<IGlobalSemanticFormattingRule>();
-
+            conventions.ForTypesDerivedFrom<DiagnosticAnalyzer>()
+                .Export<DiagnosticAnalyzer>();
             // New per-analyzer options mechanism, deriving
             // from VS Workspaces functionality 
             conventions.ForTypesDerivedFrom<IOptionsProvider>()

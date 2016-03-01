@@ -18,6 +18,7 @@ using Microsoft.DotNet.CodeFormatting;
 using Microsoft.DotNet.CodeFormatter.Analyzers;
 using Microsoft.CodeAnalysis.Options;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace CodeFormatter
 {
@@ -119,9 +120,38 @@ namespace CodeFormatter
             }
         }
 
+        // Expects a list of file paths to analyzer DLLs or directories containing analyzer DLLs
+        private static Assembly[] GetAnalyzerAssemblies(ImmutableArray<string> paths)
+        {
+            var assemblies = new System.Collections.Generic.List<Assembly>();
+            foreach(var path in paths)
+            {
+                if(File.Exists(path))
+                {
+                    assemblies.Add(Assembly.LoadFile(path));
+                }
+                else if (Directory.Exists(path))
+                {
+                    var DLLs = Directory.GetFiles(path).Where(file => file.EndsWith(".dll"));
+                    foreach (var file in DLLs)
+                    {
+                        assemblies.Add(Assembly.LoadFile(file));
+                    }
+                }
+            }
+
+            return assemblies.ToArray();
+        }
+
         private static async Task<int> RunFormatAsync(FormatOptions options, CancellationToken cancellationToken)
         {
-            var engine = FormattingEngine.Create(OptionsHelper.DefaultCompositionAssemblies);
+            var assemblies = OptionsHelper.DefaultCompositionAssemblies;
+            if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
+            {
+                assemblies = assemblies.Concat(GetAnalyzerAssemblies(options.AnalyzerListText)).ToArray();
+            }
+            
+            var engine = FormattingEngine.Create(assemblies);
 
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             configBuilder.Add(options.PreprocessorConfigurations.ToArray());            
@@ -132,7 +162,6 @@ namespace CodeFormatter
             engine.AllowTables = options.DefineDotNetFormatter;
             engine.FileNames = options.FileFilters.ToImmutableArray();
             engine.CopyrightHeader = options.CopyrightHeaderText;
-
 
             // Analyzers will hydrate rule enabled/disabled settings
             // directly from the options referenced by file path
