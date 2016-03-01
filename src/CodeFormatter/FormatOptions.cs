@@ -67,6 +67,40 @@ namespace CodeFormatter
             HelpText = "TEMPORARY: invoke built-in analyzers rather than rules to perform reformatting.")]
         public bool UseAnalyzers { get; set; }
 
+        [Option(
+            "analyzer-list",
+            HelpText = "A file containing a newline separated list of analyzer assemblies to be run against the target source.")]
+        public string AnalyzerListFile { get; set; }
+
+        private ImmutableArray<string> _analyzerListText;
+        public ImmutableArray<string> AnalyzerListText
+        {
+            get
+            {
+                if (_analyzerListText == null)
+                {
+                    _analyzerListText = InitializeAnalyzerListText(AnalyzerListFile);
+                }
+                return _analyzerListText;
+            }
+            internal set
+            {
+                _analyzerListText = value;
+            }
+        }
+
+        private static ImmutableArray<string> InitializeAnalyzerListText(string analyzerListFile)
+        {
+            ImmutableArray<string> analyzerListText = new ImmutableArray<string>();
+
+            if (!String.IsNullOrEmpty(analyzerListFile))
+            {
+                analyzerListText = ImmutableArray.CreateRange(File.ReadAllLines(analyzerListFile));
+            }
+
+            return analyzerListText;
+        }
+
         private ImmutableArray<string> _copyrightHeaderText;
         public ImmutableArray<string> CopyrightHeaderText
         {
