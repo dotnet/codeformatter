@@ -71,6 +71,10 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public string FormattingOptionsFilePath { get; set; }
 
+        public bool ApplyFixes { get; set; }
+
+        public string LogOutputPath { get; set; }
+
         public ImmutableArray<IRuleMetadata> AllRules
         {
             get
@@ -243,6 +247,22 @@ namespace Microsoft.DotNet.CodeFormatting
             }
         }
 
+        private async Task<int> getProjectLinesOfCodeCount(Project project)
+        {
+            var allLines = project.Documents.Select(async doc =>
+            {
+                var text = await doc.GetTextAsync();
+                return text.Lines.Count;
+            });
+            var totalLines = await Task.WhenAll(allLines);
+            return totalLines.Sum();
+        }
+
+        private string createAnalyzerResultText(DiagnosticAnalyzer analyzer, ImmutableArray<Diagnostic> diagnostics, int documentCount, int linesOfCodeInProject)
+        {
+            return String.Format("{0}\t{1}\t{2}\t{3}\n", analyzer.ToString(), documentCount, linesOfCodeInProject, diagnostics.Count());
+        }
+
         private async Task FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
         {
             if (analyzers != null && analyzers.Count() != 0)
@@ -250,44 +270,26 @@ namespace Microsoft.DotNet.CodeFormatting
                 var project = workspace.CurrentSolution.GetProject(projectId);
                 var diagnostics = await GetDiagnostics(project, analyzers, cancellationToken).ConfigureAwait(false);
 
-                var resultText = "";
-                // TODO: make configurable
-                var resultPath = @"E:\CodeFormatterResults\";
-                var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf("\\")).Replace(".csproj", "_CodeFormatterResults.txt");
+                var projectResultText = "";
+                var ext = project.Language == "C#" ? ".csproj" : ".vbproj";
+                var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(System.IO.Path.DirectorySeparatorChar)).Replace(ext, "_CodeFormatterResults.txt");
                 
                 var linesOfCodeInProject = -1;
-                
-                // TODO: make configurable with logOutput command
-                var logOutput = true;
-
-                foreach (var a in analyzers)
+                foreach (var analyzer in analyzers)
                 {
-                    var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(a), cancellationToken);
-                    FormatLogger.WriteLine(String.Format("{0}\t{1}", a.ToString(), diags.Count()));
-                    if (logOutput)
-                    {
-                        if(linesOfCodeInProject == -1)
-                        {
-                            var allLines = project.Documents.Select(async doc =>
-                            {
-                                var text = await doc.GetTextAsync();
-                                var lines = text.Lines.Count;
-                                return lines;
-                            });
-                            var totalLines = await Task.WhenAll(allLines);
-                            linesOfCodeInProject += totalLines.Sum();
-                        }
-                        resultText += String.Format("{0}\t{1}\t{2}\t{3}\n", a.ToString(), project.Documents.Count(), linesOfCodeInProject, diags.Count());
-                    }                    
+                    var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
+                    linesOfCodeInProject = linesOfCodeInProject == -1 ? await getProjectLinesOfCodeCount(project) : linesOfCodeInProject;
+                    var analyzerResultText = createAnalyzerResultText(analyzer, diags, project.Documents.Count(), linesOfCodeInProject);
+                    FormatLogger.Write(analyzerResultText);
+                    projectResultText += analyzerResultText;             
                 }
                 
-                if (logOutput)
+                if (LogOutputPath != null)
                 {
-                    System.IO.File.WriteAllText(resultPath + "\\" + resultFile, resultText);
+                    System.IO.File.WriteAllText(System.IO.Path.Combine(LogOutputPath, resultFile), projectResultText);
                 }
 
-                // TODO: make configurable based on 'codeformatter format' vs 'codeformatter analyze'
-                if (false)
+                if (ApplyFixes)
                 {
                     var batchFixer = WellKnownFixAllProviders.BatchFixer;
                     var context = new FixAllContext(

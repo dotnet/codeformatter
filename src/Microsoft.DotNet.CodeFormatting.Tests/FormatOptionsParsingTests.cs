@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(0, result);
             Assert.NotNull(options);
             Assert.Equal(12, options.RuleMap.Count);
-            Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+            Assert.Equal(new[] { "test.csproj" }, options.Targets);
 
             foreach (bool enabledSetting in options.RuleMap.Values)
             {
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(0, result);
             Assert.NotNull(options);
             Assert.Equal(12, options.RuleMap.Count);
-            Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+            Assert.Equal(new[] { "test.csproj" }, options.Targets);
 
             foreach(bool enabledSetting in options.RuleMap.Values)
             {
@@ -102,9 +102,9 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
 
             Assert.Equal(0, result);
             Assert.NotNull(options);
-            Assert.Equal(2, options.FormatTargets.Count());
-            Assert.True(options.FormatTargets.Contains("projectOne.csproj"));
-            Assert.True(options.FormatTargets.Contains("projectTwo.csproj"));
+            Assert.Equal(2, options.Targets.Count());
+            Assert.True(options.Targets.Contains("projectOne.csproj"));
+            Assert.True(options.Targets.Contains("projectTwo.csproj"));
         }
 
         [Fact]

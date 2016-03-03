@@ -20,6 +20,9 @@ namespace Microsoft.DotNet.CodeFormatting
         bool AllowTables { get; set; }
         bool Verbose { get; set; }
         string FormattingOptionsFilePath { get; set; }
+        bool ApplyFixes { get; set; }
+        string LogOutputPath { get; set; }
+
         void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled);
         Task FormatSolutionAsync(Solution solution, bool useAnalyzers, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project project, bool useAnalyzers, CancellationToken cancellationToken);

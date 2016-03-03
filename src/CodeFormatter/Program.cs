@@ -32,11 +32,13 @@ namespace CodeFormatter
             return Parser.Default.ParseArguments<
                 ListOptions,
                 ExportOptions,
-                FormatOptions>(args)
+                FormatOptions,
+                AnalyzeOptions>(args)
             .MapResult(
                 (ListOptions listOptions) => RunListCommand(listOptions),
                 (ExportOptions exportOptions) => RunExportOptionsCommand(exportOptions),
                 (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
+                (AnalyzeOptions analyzeOptions) => RunAnalyzeCommand(analyzeOptions),
                 errs => FAILED);
         }
 
@@ -91,9 +93,17 @@ namespace CodeFormatter
                 }
             }
         }
+        private static int RunAnalyzeCommand(AnalyzeOptions options)
+        {
+            return RunCommand(options, false);
+        }
 
         private static int RunFormatCommand(FormatOptions options)
         {
+            return RunCommand(options, true);
+        }
+
+        private static int RunCommand(CommandLineOptions options, bool applyCodeFixes) { 
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
 
@@ -101,7 +111,7 @@ namespace CodeFormatter
 
             try
             {
-                RunFormatAsync(options, ct).Wait(ct);
+                RunAsync(options, ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
                 return SUCCEEDED;
             }
@@ -143,7 +153,7 @@ namespace CodeFormatter
             return assemblies.ToArray();
         }
 
-        private static async Task<int> RunFormatAsync(FormatOptions options, CancellationToken cancellationToken)
+        private static async Task<int> RunAsync(CommandLineOptions options, CancellationToken cancellationToken)
         {
             var assemblies = OptionsHelper.DefaultCompositionAssemblies;
             if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
@@ -162,7 +172,8 @@ namespace CodeFormatter
             engine.AllowTables = options.DefineDotNetFormatter;
             engine.FileNames = options.FileFilters.ToImmutableArray();
             engine.CopyrightHeader = options.CopyrightHeaderText;
-
+            engine.ApplyFixes = options.ApplyFixes;
+            engine.LogOutputPath = options.LogOutputPath;
             // Analyzers will hydrate rule enabled/disabled settings
             // directly from the options referenced by file path
             // in options.OptionsFilePath
@@ -174,15 +185,15 @@ namespace CodeFormatter
                 }
             }
 
-            foreach (var item in options.FormatTargets)
+            foreach (var item in options.Targets)
             {
-                await RunFormatItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
+                await RunItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
             }
 
             return SUCCEEDED;
         }
 
-        private static async Task RunFormatItemAsync(
+        private static async Task RunItemAsync(
             IFormattingEngine engine,
             string item,
             string language,
