@@ -22,10 +22,10 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                                         };
         // TODO: fix hardcoded path
         private static string TestDLLDir = @"E:\src\codeformatter\src\Microsoft.DotNet.CodeFormatting.Tests\TestAnalyzers\";
-        private static Assembly RoslynV100Analyzer =  Assembly.LoadFile(TestDLLDir + "RoslynV1Analyzer.dll");
-        private static Assembly RoslynV110Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV11Analyzer.dll");
+        private static Assembly RoslynV100Analyzer =  Assembly.LoadFile(TestDLLDir + "RoslynV100Analyzer.dll");
+        private static Assembly RoslynV110Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV110Analyzer.dll");
         private static Assembly RoslynV111Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV111Analyzer.dll");
-        //private static Assembly RoslynV120Beta1Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV120Beta1Analyzer.dll");
+        private static Assembly RoslynV120Beta1Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV120Beta1Analyzer.dll");
 
         [Fact]
         public void AnalyzersBuiltAgainstRoslynV100()
@@ -57,11 +57,10 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         [Fact]
         public void AnalyzersBuiltAgainstRoslynV120Beta1()
         {
-            // TODO
-            //IEnumerable<Assembly> roslynV120Beta1AnalyzerDLL = new Assembly[] { RoslynV120Beta1Analyzer };
-            //Assert.DoesNotThrow(() => {
-            //    var assemblies = DefaultCompositionAssemblies.Concat(roslynV120Beta1AnalyzerDLL);
-            //});
+            IEnumerable<Assembly> roslynV120Beta1AnalyzerDLL = new Assembly[] { RoslynV120Beta1Analyzer };
+            Assert.DoesNotThrow(() => {
+                var assemblies = DefaultCompositionAssemblies.Concat(roslynV120Beta1AnalyzerDLL);
+            });
         }
     }
 }
