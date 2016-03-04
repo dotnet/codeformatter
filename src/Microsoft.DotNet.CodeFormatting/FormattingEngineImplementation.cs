@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly FormattingOptions _options;
         private readonly IEnumerable<CodeFixProvider> _fixers;
         private readonly IEnumerable<IFormattingFilter> _filters;
-        private readonly IEnumerable<DiagnosticAnalyzer> _analyzers;
+        private IEnumerable<DiagnosticAnalyzer> _analyzers;
         private readonly IEnumerable<IOptionsProvider> _optionsProviders;
         private readonly IEnumerable<ExportFactory<ISyntaxFormattingRule, SyntaxRule>> _syntaxRules;
         private readonly IEnumerable<ExportFactory<ILocalSemanticFormattingRule, LocalSemanticRule>> _localSemanticRules;
@@ -235,9 +235,11 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
-            // assume analyzers with no custom tags are global to be maximally conservative
+            // Remaining analyzers are either RuleType.GlobalSemantic, in which case we need to run them one by one lest they conflict
+            // with each other, or else they are of an unknown type in which case we should conservatively treat them as if they
+            // may conflict with one another.
             var analyzers = _analyzers.Where(a => {
-                return a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic) || d.CustomTags == null || d.CustomTags.Count() == 0);
+                return a.SupportedDiagnostics.All(d => !(d.CustomTags.Contains(RuleType.Syntactic) || d.CustomTags.Contains(RuleType.LocalSemantic)));
             });
 
             // Since global analyzers can potentially conflict with each other, run them one by one.
@@ -618,6 +620,11 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             return solution;
+        }
+
+        public void AddAnalyzers(ImmutableArray<DiagnosticAnalyzer> analyzers)
+        {
+            _analyzers = _analyzers.Concat(analyzers);
         }
     }
 }

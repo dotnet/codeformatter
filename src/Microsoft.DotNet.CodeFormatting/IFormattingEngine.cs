@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -26,5 +27,6 @@ namespace Microsoft.DotNet.CodeFormatting
         void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled);
         Task FormatSolutionAsync(Solution solution, bool useAnalyzers, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project project, bool useAnalyzers, CancellationToken cancellationToken);
+        void AddAnalyzers(ImmutableArray<DiagnosticAnalyzer> immutableArray);
     }
 }

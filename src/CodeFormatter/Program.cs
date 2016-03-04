@@ -130,37 +130,9 @@ namespace CodeFormatter
             }
         }
 
-        // Expects a list of file paths to analyzer DLLs or directories containing analyzer DLLs
-        private static Assembly[] GetAnalyzerAssemblies(ImmutableArray<string> paths)
-        {
-            var assemblies = new System.Collections.Generic.List<Assembly>();
-            foreach(var path in paths)
-            {
-                if(File.Exists(path))
-                {
-                    assemblies.Add(Assembly.LoadFile(path));
-                }
-                else if (Directory.Exists(path))
-                {
-                    var DLLs = Directory.GetFiles(path).Where(file => file.EndsWith(".dll"));
-                    foreach (var file in DLLs)
-                    {
-                        assemblies.Add(Assembly.LoadFile(file));
-                    }
-                }
-            }
-
-            return assemblies.ToArray();
-        }
-
         private static async Task<int> RunAsync(CommandLineOptions options, CancellationToken cancellationToken)
         {
             var assemblies = OptionsHelper.DefaultCompositionAssemblies;
-            if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
-            {
-                assemblies = assemblies.Concat(GetAnalyzerAssemblies(options.AnalyzerListText)).ToArray();
-            }
-            
             var engine = FormattingEngine.Create(assemblies);
 
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
@@ -174,6 +146,23 @@ namespace CodeFormatter
             engine.CopyrightHeader = options.CopyrightHeaderText;
             engine.ApplyFixes = options.ApplyFixes;
             engine.LogOutputPath = options.LogOutputPath;
+
+            if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
+            {                
+                var loaderAssembly = Assembly.Load((typeof(CommandLineProject)).Assembly.FullName);                
+                var loader = (IAnalyzerAssemblyLoader)Activator.CreateInstance(loaderAssembly.GetType("Microsoft.CodeAnalysis.SimpleAnalyzerAssemblyLoader"));
+                foreach(var analyzerPath in options.AnalyzerListText)
+                {
+                    var analyzerRef = new AnalyzerFileReference(analyzerPath, loader);
+                    var newAnalyzers = analyzerRef.GetAnalyzersForAllLanguages();
+                    if(newAnalyzers.Count() == 0)
+                    {
+                        throw new Exception(String.Format("Specified analyzer assembly {0} contained no analyzers", analyzerRef.GetAssembly().FullName));
+                    }
+                    engine.AddAnalyzers(newAnalyzers);
+                }
+            }
+
             // Analyzers will hydrate rule enabled/disabled settings
             // directly from the options referenced by file path
             // in options.OptionsFilePath
