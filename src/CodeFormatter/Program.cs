@@ -130,6 +130,31 @@ namespace CodeFormatter
             }
         }
 
+        private static IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
+        private static IAnalyzerAssemblyLoader AnalyzerAssemblyLoader {
+            get
+            {
+                if(_analyzerAssemblyLoader == null)
+                {
+                    // use Roslyn's existing simple loader, there're no special requirements for our usage
+                    var loaderAssembly = Assembly.Load((typeof(CommandLineProject)).Assembly.FullName);
+                    _analyzerAssemblyLoader = (IAnalyzerAssemblyLoader)Activator.CreateInstance(loaderAssembly.GetType("Microsoft.CodeAnalysis.SimpleAnalyzerAssemblyLoader"));
+                }
+                return _analyzerAssemblyLoader;
+            }
+        }
+
+        private static ImmutableArray<DiagnosticAnalyzer> LoadAnalyzersFromAssembly(string path, bool throwIfNoAnalyzersFound)
+        {
+            var analyzerRef = new AnalyzerFileReference(path, AnalyzerAssemblyLoader);
+            var newAnalyzers = analyzerRef.GetAnalyzersForAllLanguages();
+            if (newAnalyzers.Count() == 0 && throwIfNoAnalyzersFound)
+            {
+                throw new Exception(String.Format("Specified analyzer assembly {0} contained no analyzers", analyzerRef.GetAssembly().FullName));
+            }
+            return newAnalyzers;
+        }
+
         private static async Task<int> RunAsync(CommandLineOptions options, CancellationToken cancellationToken)
         {
             var assemblies = OptionsHelper.DefaultCompositionAssemblies;
@@ -148,18 +173,27 @@ namespace CodeFormatter
             engine.LogOutputPath = options.LogOutputPath;
 
             if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
-            {                
-                var loaderAssembly = Assembly.Load((typeof(CommandLineProject)).Assembly.FullName);                
-                var loader = (IAnalyzerAssemblyLoader)Activator.CreateInstance(loaderAssembly.GetType("Microsoft.CodeAnalysis.SimpleAnalyzerAssemblyLoader"));
-                foreach(var analyzerPath in options.AnalyzerListText)
+            {
+                foreach (var analyzerPath in options.AnalyzerListText)
                 {
-                    var analyzerRef = new AnalyzerFileReference(analyzerPath, loader);
-                    var newAnalyzers = analyzerRef.GetAnalyzersForAllLanguages();
-                    if(newAnalyzers.Count() == 0)
+                    if (File.Exists(analyzerPath))
                     {
-                        throw new Exception(String.Format("Specified analyzer assembly {0} contained no analyzers", analyzerRef.GetAssembly().FullName));
+                        var newAnalyzers = LoadAnalyzersFromAssembly(analyzerPath, true);
+                        engine.AddAnalyzers(newAnalyzers);
                     }
-                    engine.AddAnalyzers(newAnalyzers);
+                    else if (Directory.Exists(analyzerPath))
+                    {
+                        var DLLs = Directory.GetFiles(analyzerPath, "*.dll");
+                        foreach (var dll in DLLs)
+                        {
+                            // allows specifying a folder that contains analyzers as well as non-analyzer DLLs without throwing
+                            var newAnalyzers = LoadAnalyzersFromAssembly(dll, false);
+                            if (newAnalyzers.Count() > 0)
+                            {
+                                engine.AddAnalyzers(newAnalyzers);
+                            }
+                        }
+                    }
                 }
             }
 
