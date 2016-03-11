@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,6 +42,8 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly Dictionary<string, bool> _ruleEnabledMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private readonly ImmutableDictionary<string, CodeFixProvider> _diagnosticIdToFixerMap;
         private CompilationWithAnalyzers _compilationWithAnalyzers;
+        private object _outputLogger; // Microsoft.CodeAnalysis.ErrorLogger
+        private Assembly _loggerAssembly;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -92,6 +96,27 @@ namespace Microsoft.DotNet.CodeFormatting
                     .SelectMany(a => a.SupportedDiagnostics)
                     .OrderBy(a => a.Id)
                     .ToImmutableArray();
+        
+        // Use the Roslyn ErrorLogger type to log diagnostics per analyzer to SARIF format
+        public void LogDiagnostics(string filePath, ImmutableArray<Diagnostic> diagnostics)
+        {
+            if (_loggerAssembly == null)
+            {
+                _loggerAssembly = Assembly.Load(typeof(CommandLineParser).Assembly.FullName);
+            }
+
+            _outputLogger = Activator.CreateInstance(
+                _loggerAssembly.GetType("Microsoft.CodeAnalysis.ErrorLogger"),
+                new object[] { new FileStream(filePath, FileMode.Append, FileAccess.Write), "CodeFormatter", "0.1", _loggerAssembly.GetName().Version });
+
+            var logDiagMethodInfo = _outputLogger.GetType().GetMethod("LogDiagnostic", BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var diagnostic in diagnostics)
+            {
+                logDiagMethodInfo.Invoke(_outputLogger, new object[] { diagnostic, System.Globalization.CultureInfo.DefaultThreadCurrentCulture });
+            }
+
+            ((IDisposable)_outputLogger).Dispose();
+        }
 
         public FormattingEngineImplementation(
             FormattingOptions options,
@@ -260,35 +285,39 @@ namespace Microsoft.DotNet.CodeFormatting
             return totalLines.Sum();
         }
 
-        private string createAnalyzerResultText(DiagnosticAnalyzer analyzer, ImmutableArray<Diagnostic> diagnostics, int documentCount, int linesOfCodeInProject)
-        {
-            return String.Format("{0}\t{1}\t{2}\t{3}\n", analyzer.ToString(), documentCount, linesOfCodeInProject, diagnostics.Count());
-        }
-
         private async Task FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
         {
             if (analyzers != null && analyzers.Count() != 0)
             {
                 var project = workspace.CurrentSolution.GetProject(projectId);
                 var diagnostics = await GetDiagnostics(project, analyzers, cancellationToken).ConfigureAwait(false);
+                // Ensure at least 1 analyzer supporting the current project's language ran
+                if (_compilationWithAnalyzers != null)
+                {
+                    var ext = project.Language == "C#" ? ".csproj" : ".vbproj";
+                    var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(ext, "_CodeFormatterResults.txt");
 
-                var projectResultText = "";
-                var ext = project.Language == "C#" ? ".csproj" : ".vbproj";
-                var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(System.IO.Path.DirectorySeparatorChar)).Replace(ext, "_CodeFormatterResults.txt");
-                
-                var linesOfCodeInProject = -1;
-                foreach (var analyzer in analyzers)
-                {
-                    var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
-                    linesOfCodeInProject = linesOfCodeInProject == -1 ? await getProjectLinesOfCodeCount(project) : linesOfCodeInProject;
-                    var analyzerResultText = createAnalyzerResultText(analyzer, diags, project.Documents.Count(), linesOfCodeInProject);
-                    FormatLogger.Write(analyzerResultText);
-                    projectResultText += analyzerResultText;             
-                }
-                
-                if (LogOutputPath != null)
-                {
-                    System.IO.File.WriteAllText(System.IO.Path.Combine(LogOutputPath, resultFile), projectResultText);
+                    var linesOfCodeInProject = -1;
+                    foreach (var analyzer in analyzers)
+                    {
+                        var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
+                        linesOfCodeInProject = linesOfCodeInProject == -1 ? await getProjectLinesOfCodeCount(project) : linesOfCodeInProject;
+                        var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
+                        var analyzerResultText = String.Format("{0}\t{1}\t{2}\t{3}\t{4}\r\n",
+                            analyzer.ToString(),
+                            project.Documents.Count(),
+                            linesOfCodeInProject,
+                            diagnostics.Count(),
+                            analyzerTelemetryInfo.ExecutionTime);
+
+                        FormatLogger.Write(analyzerResultText);
+
+                        if (LogOutputPath != null)
+                        {
+                            LogDiagnostics((LogOutputPath + resultFile).Replace(".txt", ".json"), diags);
+                            File.AppendAllText(LogOutputPath + resultFile, analyzerResultText);
+                        }
+                    }
                 }
 
                 if (ApplyFixes)
@@ -444,6 +473,7 @@ namespace Microsoft.DotNet.CodeFormatting
             }
             else
             {
+                _compilationWithAnalyzers = null;
                 return ImmutableArray<Diagnostic>.Empty;
             }
         }
