@@ -109,6 +109,9 @@ namespace CodeFormatter
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             try
             {
                 RunAsync(options, ct).Wait(ct);
@@ -127,6 +130,11 @@ namespace CodeFormatter
                     Console.WriteLine("- {0}", message);
 
                 return FAILED;
+            }
+            finally
+            {
+                stopwatch.Stop();
+                Console.WriteLine("Total time: {0}", stopwatch.Elapsed);
             }
         }
 
@@ -210,7 +218,26 @@ namespace CodeFormatter
 
             foreach (var item in options.Targets)
             {
-                await RunItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
+                // target was a text file with a list of project files to run against
+                if (StringComparer.OrdinalIgnoreCase.Equals(Path.GetExtension(item), ".txt"))
+                {
+                    var targets = File.ReadAllLines(item);
+                    foreach (var target in targets)
+                    {
+                        try
+                        {
+                            await RunItemAsync(engine, target, options.Language, options.UseAnalyzers, cancellationToken);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Exception: {0} with project {1}", e.Message, target);
+                        }
+                    }
+                }
+                else
+                {
+                    await RunItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
+                }
             }
 
             return SUCCEEDED;
@@ -225,31 +252,39 @@ namespace CodeFormatter
         {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
-            if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
+            try
             {
-                using (var workspace = ResponseFileWorkspace.Create())
+                if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
                 {
-                    Project project = workspace.OpenCommandLineProject(item, language);
-                    await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
+                    using (var workspace = ResponseFileWorkspace.Create())
+                    {
+                        Project project = workspace.OpenCommandLineProject(item, language);
+                        await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
+                    }
+                }
+                else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+                {
+                    using (var workspace = MSBuildWorkspace.Create())
+                    {
+                        workspace.LoadMetadataForReferencedProjects = true;
+                        var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
+                        await engine.FormatSolutionAsync(solution, useAnalyzers, cancellationToken);
+                    }
+                }
+                else
+                {
+                    using (var workspace = MSBuildWorkspace.Create())
+                    {
+                        workspace.LoadMetadataForReferencedProjects = true;
+                        var project = await workspace.OpenProjectAsync(item, cancellationToken);
+                        await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
+                    }
                 }
             }
-            else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+            catch (Microsoft.Build.Exceptions.InvalidProjectFileException)
             {
-                using (var workspace = MSBuildWorkspace.Create())
-                {
-                    workspace.LoadMetadataForReferencedProjects = true;
-                    var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
-                    await engine.FormatSolutionAsync(solution, useAnalyzers, cancellationToken);
-                }
-            }
-            else
-            {
-                using (var workspace = MSBuildWorkspace.Create())
-                {
-                    workspace.LoadMetadataForReferencedProjects = true;
-                    var project = await workspace.OpenProjectAsync(item, cancellationToken);
-                    await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
-                }
+                // Can occur if for example a Mono based project with unknown targets files is supplied
+                Console.WriteLine("Invalid project file in target {0}", item);
             }
         }
 

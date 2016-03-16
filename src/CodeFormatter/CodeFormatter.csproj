@@ -21,6 +21,7 @@
       <HintPath>..\packages\CommandLineParser.2.0.273-beta\lib\net45\CommandLine.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.CodeAnalysis, Version=1.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.1.2.0-beta1-20160226-01\lib\net45\Microsoft.CodeAnalysis.dll</HintPath>
       <Private>True</Private>

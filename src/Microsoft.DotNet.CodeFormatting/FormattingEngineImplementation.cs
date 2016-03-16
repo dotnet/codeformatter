@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.CodeFormatting
                     .SelectMany(a => a.SupportedDiagnostics)
                     .OrderBy(a => a.Id)
                     .ToImmutableArray();
-        
+
         // Use the Roslyn ErrorLogger type to log diagnostics per analyzer to SARIF format
         public void LogDiagnostics(string filePath, ImmutableArray<Diagnostic> diagnostics)
         {
@@ -241,6 +241,7 @@ namespace Microsoft.DotNet.CodeFormatting
             await FormatProjectWithSyntaxAnalyzersAsync(workspace, project.Id, cancellationToken);
             await FormatProjectWithLocalAnalyzersAsync(workspace, project.Id, cancellationToken);
             await FormatProjectWithGlobalAnalyzersAsync(workspace, project.Id, cancellationToken);
+            await FormatProjectWithUnspecifiedAnalyzersAsync(workspace, project.Id, cancellationToken);
 
             watch.Stop();
             FormatLogger.WriteLine("Total time for formatting {0} - {1}", project.Name, watch.Elapsed);
@@ -260,12 +261,7 @@ namespace Microsoft.DotNet.CodeFormatting
 
         private async Task FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
-            // Remaining analyzers are either RuleType.GlobalSemantic, in which case we need to run them one by one lest they conflict
-            // with each other, or else they are of an unknown type in which case we should conservatively treat them as if they
-            // may conflict with one another.
-            var analyzers = _analyzers.Where(a => {
-                return a.SupportedDiagnostics.All(d => !(d.CustomTags.Contains(RuleType.Syntactic) || d.CustomTags.Contains(RuleType.LocalSemantic)));
-            });
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic)));
 
             // Since global analyzers can potentially conflict with each other, run them one by one.
             foreach (var analyzer in analyzers)
@@ -274,10 +270,22 @@ namespace Microsoft.DotNet.CodeFormatting
             }
         }
 
+        private async Task FormatProjectWithUnspecifiedAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        {
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => {
+                return !(d.CustomTags.Contains(RuleType.Syntactic) || d.CustomTags.Contains(RuleType.LocalSemantic) || d.CustomTags.Contains(RuleType.GlobalSemantic));
+            }));
+
+            // Treat analyzers with unknown rule types as if they were global in case they might conflict with each other
+            foreach (var analyzer in analyzers)
+            {
+                await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+            }
+        }
+
         private async Task<int> getProjectLinesOfCodeCount(Project project)
         {
-            var allLines = project.Documents.Select(async doc =>
-            {
+            var allLines = project.Documents.Select(async doc => {
                 var text = await doc.GetTextAsync();
                 return text.Lines.Count;
             });
@@ -294,28 +302,35 @@ namespace Microsoft.DotNet.CodeFormatting
                 // Ensure at least 1 analyzer supporting the current project's language ran
                 if (_compilationWithAnalyzers != null)
                 {
-                    var ext = project.Language == "C#" ? ".csproj" : ".vbproj";
-                    var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(ext, "_CodeFormatterResults.txt");
+                    var extension = StringComparer.OrdinalIgnoreCase.Equals(project.Language, "C#") ? ".csproj" : ".vbproj";
+                    var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(extension, "_CodeFormatterResults.txt");
 
                     var linesOfCodeInProject = -1;
                     foreach (var analyzer in analyzers)
                     {
                         var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
-                        linesOfCodeInProject = linesOfCodeInProject == -1 ? await getProjectLinesOfCodeCount(project) : linesOfCodeInProject;
-                        var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
-                        var analyzerResultText = String.Format("{0}\t{1}\t{2}\t{3}\t{4}\r\n",
-                            analyzer.ToString(),
-                            project.Documents.Count(),
-                            linesOfCodeInProject,
-                            diagnostics.Count(),
-                            analyzerTelemetryInfo.ExecutionTime);
-
-                        FormatLogger.Write(analyzerResultText);
-
-                        if (LogOutputPath != null)
+                        if (Verbose || LogOutputPath != null)
                         {
-                            LogDiagnostics((LogOutputPath + resultFile).Replace(".txt", ".json"), diags);
-                            File.AppendAllText(LogOutputPath + resultFile, analyzerResultText);
+                            linesOfCodeInProject = linesOfCodeInProject == -1 ? await getProjectLinesOfCodeCount(project) : linesOfCodeInProject;
+                            var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
+                            var analyzerResultText = string.Format("{0}\t{1}\t{2}\t{3}\t{4}\r\n",
+                                analyzer.ToString(),
+                                project.Documents.Count(),
+                                linesOfCodeInProject,
+                                diagnostics.Count(),
+                                analyzerTelemetryInfo.ExecutionTime);
+
+                            if (Verbose)
+                            {
+                                FormatLogger.Write(analyzerResultText);
+                            }
+
+                            if (LogOutputPath != null)
+                            {
+                                var resultPath = LogOutputPath + resultFile;
+                                LogDiagnostics(Path.ChangeExtension(resultPath, "json"), diags);
+                                File.AppendAllText(resultPath, analyzerResultText);
+                            }
                         }
                     }
                 }
@@ -343,7 +358,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 }
             }
         }
-        
+
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
         {
             _ruleEnabledMap[ruleMetaData.Name] = enabled;
@@ -654,7 +669,30 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public void AddAnalyzers(ImmutableArray<DiagnosticAnalyzer> analyzers)
         {
-            _analyzers = _analyzers.Concat(analyzers);
+            var toAdd = new List<DiagnosticAnalyzer>();
+            foreach (var analyzer in analyzers)
+            {
+                IEqualityComparer<DiagnosticAnalyzer> comparer = new AnalyzerComparer();
+                if (!_analyzers.Contains(analyzer, comparer))
+                {
+                    toAdd.Add(analyzer);
+                }
+            }
+            _analyzers = _analyzers.Concat(toAdd.ToArray());
+        }
+    }
+
+
+    internal class AnalyzerComparer : IEqualityComparer<DiagnosticAnalyzer>
+    {
+        public bool Equals(DiagnosticAnalyzer x, DiagnosticAnalyzer y)
+        {
+            return x.ToString() == y.ToString();
+        }
+
+        public int GetHashCode(DiagnosticAnalyzer obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }
