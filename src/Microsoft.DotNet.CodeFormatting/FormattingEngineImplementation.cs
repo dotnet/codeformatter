@@ -283,16 +283,6 @@ namespace Microsoft.DotNet.CodeFormatting
             }
         }
 
-        private async Task<int> getProjectLinesOfCodeCount(Project project)
-        {
-            var allLines = project.Documents.Select(async doc => {
-                var text = await doc.GetTextAsync();
-                return text.Lines.Count;
-            });
-            var totalLines = await Task.WhenAll(allLines);
-            return totalLines.Sum();
-        }
-
         private async Task FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
         {
             if (analyzers != null && analyzers.Count() != 0)
@@ -305,32 +295,14 @@ namespace Microsoft.DotNet.CodeFormatting
                     var extension = StringComparer.OrdinalIgnoreCase.Equals(project.Language, "C#") ? ".csproj" : ".vbproj";
                     var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(extension, "_CodeFormatterResults.txt");
 
-                    var linesOfCodeInProject = -1;
                     foreach (var analyzer in analyzers)
                     {
                         var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
                         if (Verbose || LogOutputPath != null)
                         {
-                            linesOfCodeInProject = linesOfCodeInProject == -1 ? await getProjectLinesOfCodeCount(project) : linesOfCodeInProject;
                             var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
-                            var analyzerResultText = string.Format("{0}\t{1}\t{2}\t{3}\t{4}\r\n",
-                                analyzer.ToString(),
-                                project.Documents.Count(),
-                                linesOfCodeInProject,
-                                diagnostics.Count(),
-                                analyzerTelemetryInfo.ExecutionTime);
-
-                            if (Verbose)
-                            {
-                                FormatLogger.Write(analyzerResultText);
-                            }
-
-                            if (LogOutputPath != null)
-                            {
-                                var resultPath = LogOutputPath + resultFile;
-                                LogDiagnostics(Path.ChangeExtension(resultPath, "json"), diags);
-                                File.AppendAllText(resultPath, analyzerResultText);
-                            }
+                            var resultPath = Path.ChangeExtension(LogOutputPath + resultFile, "json");                            
+                            LogDiagnostics(resultPath, diags);
                         }
                     }
                 }
