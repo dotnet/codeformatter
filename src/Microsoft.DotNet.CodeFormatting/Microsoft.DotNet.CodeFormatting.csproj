@@ -75,7 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdditionalTextFile.cs" />
-    <Compile Include="AnalyzerFileLoader.cs" />
     <Compile Include="DiagnosticAnalyzerExtensions.cs" />
     <Compile Include="FormattingEngineDiagnosticProvider.cs" />
     <Compile Include="IRuleMetadata.cs" />
