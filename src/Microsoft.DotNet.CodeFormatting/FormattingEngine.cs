@@ -10,7 +10,6 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CodeAnalysis.Options;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
