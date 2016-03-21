@@ -654,7 +654,7 @@ namespace Microsoft.DotNet.CodeFormatting
         }
     }
 
-
+    // Simple comparer to ensure we don't add the same analyzer twice given large lists of analyzer assemblies
     internal class AnalyzerComparer : IEqualityComparer<DiagnosticAnalyzer>
     {
         public bool Equals(DiagnosticAnalyzer x, DiagnosticAnalyzer y)
