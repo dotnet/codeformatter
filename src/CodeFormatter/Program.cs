@@ -138,23 +138,9 @@ namespace CodeFormatter
             }
         }
 
-        private static IAnalyzerAssemblyLoader _analyzerAssemblyLoader;
-        private static IAnalyzerAssemblyLoader AnalyzerAssemblyLoader {
-            get
-            {
-                if(_analyzerAssemblyLoader == null)
-                {
-                    // use Roslyn's existing simple loader, there're no special requirements for our usage
-                    var loaderAssembly = Assembly.Load((typeof(CommandLineProject)).Assembly.FullName);
-                    _analyzerAssemblyLoader = (IAnalyzerAssemblyLoader)Activator.CreateInstance(loaderAssembly.GetType("Microsoft.CodeAnalysis.SimpleAnalyzerAssemblyLoader"));
-                }
-                return _analyzerAssemblyLoader;
-            }
-        }
-
         private static ImmutableArray<DiagnosticAnalyzer> LoadAnalyzersFromAssembly(string path, bool throwIfNoAnalyzersFound)
         {
-            var analyzerRef = new AnalyzerFileReference(path, AnalyzerAssemblyLoader);
+            var analyzerRef = new AnalyzerFileReference(path, new BasicAnalyzerAssemblyLoader());
             var newAnalyzers = analyzerRef.GetAnalyzersForAllLanguages();
             if (newAnalyzers.Count() == 0 && throwIfNoAnalyzersFound)
             {
