@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             get { return new Rules.PrivateFieldNamingRule(); }
         }
 
-        private sealed class CSharpFields : PrivateFieldNamingRuleTests
+        public sealed class CSharpFields : PrivateFieldNamingRuleTests
         {
             [Fact]
             public void TestUnderScoreInPrivateFields()
@@ -215,7 +215,7 @@ class C
             }
         }
 
-        private sealed class VisualBasicFields : PrivateFieldNamingRuleTests
+        public sealed class VisualBasicFields : PrivateFieldNamingRuleTests
         {
             [Fact]
             public void Simple()
@@ -310,6 +310,23 @@ Class C1
         Dim x = p._field
         Return x
     End Function
+End Class";
+
+                Verify(text, expected, languageName: LanguageNames.VisualBasic);
+            }
+
+            [Fact]
+            public void FieldMarkedWithEvents()
+            {   // See:  https://github.com/dotnet/codeformatter/issues/216
+
+                var text = @"
+Class C1
+    Private Field WithEvents As Integer
+End Class";
+
+                var expected = @"
+Class C1
+    Private _field WithEvents As Integer
 End Class";
 
                 Verify(text, expected, languageName: LanguageNames.VisualBasic);
