@@ -172,13 +172,13 @@ namespace CodeFormatter
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
-                if (arg.StartsWith(ConfigSwitch, StringComparison.OrdinalIgnoreCase))
+                if (arg.StartsWith(ConfigSwitch, comparison))
                 {
                     var all = arg.Substring(ConfigSwitch.Length);
                     var configs = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                     configBuilder.Add(configs);
                 }
-                else if (arg.StartsWith(CopyrightSwitch, StringComparison.OrdinalIgnoreCase))
+                else if (arg.StartsWith(CopyrightSwitch, comparison))
                 {
                     var fileName = arg.Substring(CopyrightSwitch.Length);
                     try
@@ -194,7 +194,7 @@ namespace CodeFormatter
                         return CommandLineParseResult.CreateError(error);
                     }
                 }
-                else if (arg.StartsWith(LanguageSwitch, StringComparison.OrdinalIgnoreCase))
+                else if (arg.StartsWith(LanguageSwitch, comparison))
                 {
                     language = arg.Substring(LanguageSwitch.Length);
                 }
