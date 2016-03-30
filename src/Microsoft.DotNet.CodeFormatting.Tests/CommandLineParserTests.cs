@@ -108,6 +108,28 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
         }
 
+
+        [Fact]
+        public void Help()
+        {
+            var options = Parse("/help");
+            Assert.Equal(options.Operation, Operation.ShowHelp);
+        }
+
+        [Fact]
+        public void HelpShortForm()
+        {
+            var options = Parse("/?");
+            Assert.Equal(options.Operation, Operation.ShowHelp);
+        }
+
+        [Fact]
+        public void HelpWithOtherwiseValidArguments()
+        {
+            var options = Parse("test.csproj", "/nocopyright", "/help");
+            Assert.Equal(options.Operation, Operation.ShowHelp);
+        }
+
         [Fact]
         public void CopyrightEnable1()
         {
