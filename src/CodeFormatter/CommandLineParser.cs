@@ -194,13 +194,13 @@ namespace CodeFormatter
                         return CommandLineParseResult.CreateError(error);
                     }
                 }
-                else if (arg.StartsWith(LanguageSwitch, comparison))
-                {
-                    language = arg.Substring(LanguageSwitch.Length);
-                }
                 else if (comparer.Equals(arg, "/nocopyright"))
                 {
                     ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, false);
+                }
+                else if (arg.StartsWith(LanguageSwitch, comparison))
+                {
+                    language = arg.Substring(LanguageSwitch.Length);
                 }
                 else if (comparer.Equals(arg, "/nounicode"))
                 {
