@@ -66,8 +66,7 @@ class C {
     }
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
     private int _field;
@@ -123,8 +122,7 @@ class C {
     }
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
     private int field;
@@ -151,8 +149,7 @@ class C {
     }
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
     private int _field;
@@ -177,8 +174,7 @@ class C
 #endif 
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
 #if DOG
@@ -201,8 +197,7 @@ internal class C
 #endif 
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
 #if DOG
@@ -232,8 +227,7 @@ class C
 #endif 
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
     private void G()
@@ -270,8 +264,7 @@ class C
 #endif 
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
 #if TEST
@@ -310,8 +303,7 @@ internal class C
     }
 }";
 
-            var expected = @"// header
-
+            var expected = @"
 internal class C
 {
     private void M()
@@ -348,8 +340,7 @@ namespace Microsoft.Build.UnitTests
        {}
     }
 }";
-            var expected = @"// header
-
+            var expected = @"
 using System;
 using System.Reflection;
 

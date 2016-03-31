@@ -117,31 +117,34 @@ namespace CodeFormatter
     {
         private const string FileSwitch = "/file:";
         private const string ConfigSwitch = "/c:";
-        private const string CopyrightSwitch = "/copyright:";
+        private const string CopyrightWithFileSwitch = "/copyright:";
         private const string LanguageSwitch = "/lang:";
         private const string RuleEnabledSwitch1 = "/rule+:";
         private const string RuleEnabledSwitch2 = "/rule:";
         private const string RuleDisabledSwitch = "/rule-:";
-        private const string Usage = 
+        private const string Usage =
 @"CodeFormatter [/file:<filename>] [/lang:<language>] [/c:<config>[,<config>...]>]
-    [/copyright:<file> | /nocopyright] [/tables] [/nounicode] 
+    [/copyright(+|-):[<file>]] [/tables] [/nounicode] 
     [/rule(+|-):rule1,rule2,...]  [/verbose]
     <project, solution or response file>
 
-    /file        - Only apply changes to files with specified name
-    /lang        - Specifies the language to use when a responsefile is
-                   specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
-    /c           - Additional preprocessor configurations the formatter
-                   should run under.
-    /copyright   - Specifies file containing copyright header.
-                   Use ConvertTests to convert MSTest tests to xUnit.
-    /nocopyright - Do not update the copyright message.
-    /tables      - Let tables opt out of formatting by defining
-                   DOTNET_FORMATTER
-    /nounicode   - Do not convert unicode strings to escape sequences
-    /rule(+|-)   - Enable (default) or disable the specified rule
-    /rules       - List the available rules
-    /verbose     - Verbose output
+    /file           - Only apply changes to files with specified name
+    /lang           - Specifies the language to use when a responsefile is
+                      specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
+    /c              - Additional preprocessor configurations the formatter
+                      should run under.
+    /copyright(+|-) - Enables or disables (default) updating the copyright 
+                      header in files, optionally specifying a file 
+                      containing a custom copyright header.                   
+    /nocopyright    - Do not update the copyright message.
+    /tables         - Let tables opt out of formatting by defining
+                      DOTNET_FORMATTER
+    /nounicode      - Do not convert unicode strings to escape sequences
+    /rule(+|-)      - Enable (default) or disable the specified rule
+    /rules          - List the available rules
+    /verbose        - Verbose output
+
+Use ConvertTests to convert MSTest tests to xUnit.
 ";
 
         public static void PrintUsage()
@@ -163,7 +166,7 @@ namespace CodeFormatter
             var formatTargets = new List<string>();
             var fileNames = new List<string>();
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
-            var copyrightHeader = FormattingDefaults.DefaultCopyrightHeader;
+            var copyrightHeader = ImmutableArray<string>.Empty;
             var ruleMap = ImmutableDictionary<string, bool>.Empty;
             var language = LanguageNames.CSharp;
             var allowTables = false;
@@ -178,9 +181,16 @@ namespace CodeFormatter
                     var configs = all.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                     configBuilder.Add(configs);
                 }
-                else if (arg.StartsWith(CopyrightSwitch, comparison))
+                else if (comparer.Equals(arg, "/copyright+") || comparer.Equals(arg, "/copyright"))
                 {
-                    var fileName = arg.Substring(CopyrightSwitch.Length);
+                    ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, true);
+                    copyrightHeader = FormattingDefaults.DefaultCopyrightHeader;
+                }
+                else if (arg.StartsWith(CopyrightWithFileSwitch, comparison))
+                {
+                    ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, true);
+
+                    var fileName = arg.Substring(CopyrightWithFileSwitch.Length);
                     try
                     {
                         copyrightHeader = ImmutableArray.CreateRange(File.ReadAllLines(fileName));
@@ -194,8 +204,9 @@ namespace CodeFormatter
                         return CommandLineParseResult.CreateError(error);
                     }
                 }
-                else if (comparer.Equals(arg, "/nocopyright"))
-                {
+                else if (comparer.Equals(arg, "/copyright-") || comparer.Equals(arg, "/nocopyright")) 
+                {   // We still check /nocopyright for backwards compat
+
                     ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, false);
                 }
                 else if (arg.StartsWith(LanguageSwitch, comparison))

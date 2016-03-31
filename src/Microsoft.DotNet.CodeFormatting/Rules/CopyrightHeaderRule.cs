@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [SyntaxRule(CopyrightHeaderRule.Name, CopyrightHeaderRule.Description, SyntaxRuleOrder.CopyrightHeaderRule)]
+    [SyntaxRule(CopyrightHeaderRule.Name, CopyrightHeaderRule.Description, SyntaxRuleOrder.CopyrightHeaderRule, DefaultRule=false)]
     internal sealed partial class CopyrightHeaderRule : SyntaxFormattingRule, ISyntaxFormattingRule
     {
         internal const string Name = FormattingDefaults.CopyrightRuleName;
