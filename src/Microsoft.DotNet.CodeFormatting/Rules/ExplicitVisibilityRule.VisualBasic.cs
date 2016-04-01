@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             public override SyntaxNode VisitDelegateStatement(DelegateStatementSyntax node)
             {
-                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => SyntaxKind.PublicKeyword);
+                return EnsureVisibility(node, node.Modifiers, (x, l) => x.WithModifiers(l), () => GetDelegateTypeDefaultVisibility(node));
             }
 
             public override SyntaxNode VisitPropertyStatement(PropertyStatementSyntax node)
