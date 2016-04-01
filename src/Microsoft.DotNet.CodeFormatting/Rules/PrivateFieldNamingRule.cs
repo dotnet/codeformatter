@@ -90,6 +90,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                     name = name.Substring(2);
                 }
 
+                // Some .NET code uses "ts_" prefix for thread static
+                if (name.Length > 3 && name.StartsWith("ts_", StringComparison.OrdinalIgnoreCase))
+                {
+                    name = name.Substring(3);
+                }
+
                 if (name.Length == 0)
                 {
                     return fieldSymbol.Name;
