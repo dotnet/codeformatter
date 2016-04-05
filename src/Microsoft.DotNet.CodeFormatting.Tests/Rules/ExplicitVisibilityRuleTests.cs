@@ -863,6 +863,29 @@ End Interface";
                 Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
             }
 
+            [Fact]
+            public void Delegates()
+            {
+                var text = @"
+Delegate Function Func1() As Boolean
+
+Friend Class Foo
+
+    Delegate Function Func2() As Boolean
+End Class
+";
+
+                var expected = @"
+Friend Delegate Function Func1() As Boolean
+
+Friend Class Foo
+
+    Public Delegate Function Func2() As Boolean
+End Class
+";
+                Verify(text, expected, runFormatter: false, languageName: LanguageNames.VisualBasic);
+            }
+
             /// <summary>
             /// VB.Net can have visibility modifiers + explicit interface implementation unlike C#. The 
             /// visibility rules for these members is the same as normal members.
