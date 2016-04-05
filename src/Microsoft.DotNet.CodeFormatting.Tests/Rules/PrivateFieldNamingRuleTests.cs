@@ -331,6 +331,30 @@ End Class";
 
                 Verify(text, expected, languageName: LanguageNames.VisualBasic);
             }
+
+            [Fact]
+            public void RemoveTwoLetterThreadStaticPrefix()
+            {
+                var text = @"
+class C
+{
+    int ts_instance;
+    static int ts_Static;
+    [System.ThreadStatic]static int ts_ThreadStatic;
+}
+";
+
+                var expected = @"
+class C
+{
+    int _instance;
+    static int s_static;
+    [System.ThreadStatic]static int t_threadStatic;
+}
+";
+
+                Verify(text, expected, runFormatter: false);
+            }
         }
     }
 }
