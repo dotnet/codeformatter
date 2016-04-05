@@ -84,10 +84,34 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         }
 
         [Fact]
+        public void CopyrightDisable()
+        {
+            var options = Parse("/copyright-", "test.csproj");
+            Assert.False(options.RuleMap[FormattingDefaults.CopyrightRuleName]);
+            Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+        }
+
+        [Fact]
         public void NoCopyright()
         {
             var options = Parse("/nocopyright", "test.csproj");
             Assert.False(options.RuleMap[FormattingDefaults.CopyrightRuleName]);
+            Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+        }
+
+        [Fact]
+        public void CopyrightEnable1()
+        {
+            var options = Parse("/copyright+", "test.csproj");
+            Assert.True(options.RuleMap[FormattingDefaults.CopyrightRuleName]);
+            Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+        }
+
+        [Fact]
+        public void CopyrightEnable2()
+        {
+            var options = Parse("/copyright", "test.csproj");
+            Assert.True(options.RuleMap[FormattingDefaults.CopyrightRuleName]);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
         }
     }
