@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,7 +33,7 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly FormattingOptions _options;
         private readonly IEnumerable<CodeFixProvider> _fixers;
         private readonly IEnumerable<IFormattingFilter> _filters;
-        private readonly IEnumerable<DiagnosticAnalyzer> _analyzers;
+        private IEnumerable<DiagnosticAnalyzer> _analyzers;
         private readonly IEnumerable<IOptionsProvider> _optionsProviders;
         private readonly IEnumerable<ExportFactory<ISyntaxFormattingRule, SyntaxRule>> _syntaxRules;
         private readonly IEnumerable<ExportFactory<ILocalSemanticFormattingRule, LocalSemanticRule>> _localSemanticRules;
@@ -39,6 +41,9 @@ namespace Microsoft.DotNet.CodeFormatting
         private readonly Stopwatch _watch = new Stopwatch();
         private readonly Dictionary<string, bool> _ruleEnabledMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private readonly ImmutableDictionary<string, CodeFixProvider> _diagnosticIdToFixerMap;
+        private CompilationWithAnalyzers _compilationWithAnalyzers;
+        private object _outputLogger; // Microsoft.CodeAnalysis.ErrorLogger
+        private Assembly _loggerAssembly;
 
         public ImmutableArray<string> CopyrightHeader
         {
@@ -70,6 +75,10 @@ namespace Microsoft.DotNet.CodeFormatting
 
         public string FormattingOptionsFilePath { get; set; }
 
+        public bool ApplyFixes { get; set; }
+
+        public string LogOutputPath { get; set; }
+
         public ImmutableArray<IRuleMetadata> AllRules
         {
             get
@@ -87,6 +96,27 @@ namespace Microsoft.DotNet.CodeFormatting
                     .SelectMany(a => a.SupportedDiagnostics)
                     .OrderBy(a => a.Id)
                     .ToImmutableArray();
+
+        // Use the Roslyn ErrorLogger type to log diagnostics per analyzer to SARIF format
+        public void LogDiagnostics(string filePath, ImmutableArray<Diagnostic> diagnostics)
+        {
+            if (_loggerAssembly == null)
+            {
+                _loggerAssembly = Assembly.Load(typeof(CommandLineParser).Assembly.FullName);
+            }
+
+            _outputLogger = Activator.CreateInstance(
+                _loggerAssembly.GetType("Microsoft.CodeAnalysis.ErrorLogger"),
+                new object[] { new FileStream(filePath, FileMode.Append, FileAccess.Write), "CodeFormatter", "0.1", _loggerAssembly.GetName().Version });
+
+            var logDiagMethodInfo = _outputLogger.GetType().GetMethod("LogDiagnostic", BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var diagnostic in diagnostics)
+            {
+                logDiagMethodInfo.Invoke(_outputLogger, new object[] { diagnostic, System.Globalization.CultureInfo.DefaultThreadCurrentCulture });
+            }
+
+            ((IDisposable)_outputLogger).Dispose();
+        }
 
         public FormattingEngineImplementation(
             FormattingOptions options,
@@ -211,6 +241,7 @@ namespace Microsoft.DotNet.CodeFormatting
             await FormatProjectWithSyntaxAnalyzersAsync(workspace, project.Id, cancellationToken);
             await FormatProjectWithLocalAnalyzersAsync(workspace, project.Id, cancellationToken);
             await FormatProjectWithGlobalAnalyzersAsync(workspace, project.Id, cancellationToken);
+            await FormatProjectWithUnspecifiedAnalyzersAsync(workspace, project.Id, cancellationToken);
 
             watch.Stop();
             FormatLogger.WriteLine("Total time for formatting {0} - {1}", project.Name, watch.Elapsed);
@@ -239,32 +270,67 @@ namespace Microsoft.DotNet.CodeFormatting
             }
         }
 
+        private async Task FormatProjectWithUnspecifiedAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        {
+            var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => {
+                return !(d.CustomTags.Contains(RuleType.Syntactic) || d.CustomTags.Contains(RuleType.LocalSemantic) || d.CustomTags.Contains(RuleType.GlobalSemantic));
+            }));
+
+            // Treat analyzers with unknown rule types as if they were global in case they might conflict with each other
+            foreach (var analyzer in analyzers)
+            {
+                await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+            }
+        }
+
         private async Task FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
         {
-            var project = workspace.CurrentSolution.GetProject(projectId);
-            var diagnostics = await GetDiagnostics(project, analyzers, cancellationToken).ConfigureAwait(false);
-
-            var batchFixer = WellKnownFixAllProviders.BatchFixer;
-
-            var context = new FixAllContext(
-                project.Documents.First(), // TODO: Shouldn't this be the whole project?
-                new UberCodeFixer(_diagnosticIdToFixerMap),
-                FixAllScope.Project,
-                null,
-                diagnostics.Select(d => d.Id),
-                new FormattingEngineDiagnosticProvider(project, diagnostics),
-                cancellationToken);
-
-            var fix = await batchFixer.GetFixAsync(context).ConfigureAwait(false);
-            if (fix != null)
+            if (analyzers != null && analyzers.Count() != 0)
             {
-                foreach (var operation in await fix.GetOperationsAsync(cancellationToken).ConfigureAwait(false))
+                var project = workspace.CurrentSolution.GetProject(projectId);
+                var diagnostics = await GetDiagnostics(project, analyzers, cancellationToken).ConfigureAwait(false);
+                // Ensure at least 1 analyzer supporting the current project's language ran
+                if (_compilationWithAnalyzers != null)
                 {
-                    operation.Apply(workspace, cancellationToken);
+                    var extension = StringComparer.OrdinalIgnoreCase.Equals(project.Language, "C#") ? ".csproj" : ".vbproj";
+                    var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(extension, "_CodeFormatterResults.txt");
+
+                    foreach (var analyzer in analyzers)
+                    {
+                        var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
+                        if (Verbose || LogOutputPath != null)
+                        {
+                            var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
+                            var resultPath = Path.ChangeExtension(LogOutputPath + resultFile, "json");                            
+                            LogDiagnostics(resultPath, diags);
+                        }
+                    }
+                }
+
+                if (ApplyFixes)
+                {
+                    var batchFixer = WellKnownFixAllProviders.BatchFixer;
+                    var context = new FixAllContext(
+                        project.Documents.First(), // TODO: Shouldn't this be the whole project?
+                        new UberCodeFixer(_diagnosticIdToFixerMap),
+                        FixAllScope.Project,
+                        null,
+                        diagnostics.Select(d => d.Id),
+                        new FormattingEngineDiagnosticProvider(project, diagnostics),
+                        cancellationToken);
+
+                    var fix = await batchFixer.GetFixAsync(context).ConfigureAwait(false);
+                    if (fix != null)
+                    {
+                        foreach (var operation in await fix.GetOperationsAsync(cancellationToken).ConfigureAwait(false))
+                        {
+                            operation.Apply(workspace, cancellationToken);
+                        }
+                    }
                 }
             }
         }
-        
+
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
         {
             _ruleEnabledMap[ruleMetaData.Name] = enabled;
@@ -389,10 +455,12 @@ namespace Microsoft.DotNet.CodeFormatting
             if (analyzersToRun.Any())
             {
                 var compilationWithAnalyzers = compilation.WithAnalyzers(analyzersToRun.ToImmutableArray(), analyzerOptions);
+                _compilationWithAnalyzers = compilationWithAnalyzers;
                 return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().ConfigureAwait(false);
             }
             else
             {
+                _compilationWithAnalyzers = null;
                 return ImmutableArray<Diagnostic>.Empty;
             }
         }
@@ -569,6 +637,34 @@ namespace Microsoft.DotNet.CodeFormatting
             }
 
             return solution;
+        }
+
+        public void AddAnalyzers(ImmutableArray<DiagnosticAnalyzer> analyzers)
+        {
+            var toAdd = new List<DiagnosticAnalyzer>();
+            foreach (var analyzer in analyzers)
+            {
+                IEqualityComparer<DiagnosticAnalyzer> comparer = new AnalyzerComparer();
+                if (!_analyzers.Contains(analyzer, comparer))
+                {
+                    toAdd.Add(analyzer);
+                }
+            }
+            _analyzers = _analyzers.Concat(toAdd.ToArray());
+        }
+    }
+
+    // Simple comparer to ensure we don't add the same analyzer twice given large lists of analyzer assemblies
+    internal class AnalyzerComparer : IEqualityComparer<DiagnosticAnalyzer>
+    {
+        public bool Equals(DiagnosticAnalyzer x, DiagnosticAnalyzer y)
+        {
+            return x.ToString() == y.ToString();
+        }
+
+        public int GetHashCode(DiagnosticAnalyzer obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

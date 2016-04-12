@@ -18,6 +18,7 @@ using Microsoft.DotNet.CodeFormatting;
 using Microsoft.DotNet.CodeFormatter.Analyzers;
 using Microsoft.CodeAnalysis.Options;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace CodeFormatter
 {
@@ -31,11 +32,13 @@ namespace CodeFormatter
             return Parser.Default.ParseArguments<
                 ListOptions,
                 ExportOptions,
-                FormatOptions>(args)
+                FormatOptions,
+                AnalyzeOptions>(args)
             .MapResult(
                 (ListOptions listOptions) => RunListCommand(listOptions),
                 (ExportOptions exportOptions) => RunExportOptionsCommand(exportOptions),
                 (FormatOptions formatOptions) => RunFormatCommand(formatOptions),
+                (AnalyzeOptions analyzeOptions) => RunAnalyzeCommand(analyzeOptions),
                 errs => FAILED);
         }
 
@@ -90,17 +93,28 @@ namespace CodeFormatter
                 }
             }
         }
+        private static int RunAnalyzeCommand(AnalyzeOptions options)
+        {
+            return RunCommand(options, false);
+        }
 
         private static int RunFormatCommand(FormatOptions options)
         {
+            return RunCommand(options, true);
+        }
+
+        private static int RunCommand(CommandLineOptions options, bool applyCodeFixes) { 
             var cts = new CancellationTokenSource();
             var ct = cts.Token;
 
             Console.CancelKeyPress += delegate { cts.Cancel(); };
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             try
             {
-                RunFormatAsync(options, ct).Wait(ct);
+                RunAsync(options, ct).Wait(ct);
                 Console.WriteLine("Completed formatting.");
                 return SUCCEEDED;
             }
@@ -117,11 +131,28 @@ namespace CodeFormatter
 
                 return FAILED;
             }
+            finally
+            {
+                stopwatch.Stop();
+                Console.WriteLine("Total time: {0}", stopwatch.Elapsed);
+            }
         }
 
-        private static async Task<int> RunFormatAsync(FormatOptions options, CancellationToken cancellationToken)
+        private static ImmutableArray<DiagnosticAnalyzer> LoadAnalyzersFromAssembly(string path, bool throwIfNoAnalyzersFound)
         {
-            var engine = FormattingEngine.Create(OptionsHelper.DefaultCompositionAssemblies);
+            var analyzerRef = new AnalyzerFileReference(path, new BasicAnalyzerAssemblyLoader());
+            var newAnalyzers = analyzerRef.GetAnalyzersForAllLanguages();
+            if (newAnalyzers.Count() == 0 && throwIfNoAnalyzersFound)
+            {
+                throw new Exception(String.Format("Specified analyzer assembly {0} contained no analyzers", analyzerRef.GetAssembly().FullName));
+            }
+            return newAnalyzers;
+        }
+
+        private static async Task<int> RunAsync(CommandLineOptions options, CancellationToken cancellationToken)
+        {
+            var assemblies = OptionsHelper.DefaultCompositionAssemblies;
+            var engine = FormattingEngine.Create(assemblies);
 
             var configBuilder = ImmutableArray.CreateBuilder<string[]>();
             configBuilder.Add(options.PreprocessorConfigurations.ToArray());            
@@ -132,7 +163,33 @@ namespace CodeFormatter
             engine.AllowTables = options.DefineDotNetFormatter;
             engine.FileNames = options.FileFilters.ToImmutableArray();
             engine.CopyrightHeader = options.CopyrightHeaderText;
+            engine.ApplyFixes = options.ApplyFixes;
+            engine.LogOutputPath = options.LogOutputPath;
 
+            if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
+            {
+                foreach (var analyzerPath in options.AnalyzerListText)
+                {
+                    if (File.Exists(analyzerPath))
+                    {
+                        var newAnalyzers = LoadAnalyzersFromAssembly(analyzerPath, true);
+                        engine.AddAnalyzers(newAnalyzers);
+                    }
+                    else if (Directory.Exists(analyzerPath))
+                    {
+                        var DLLs = Directory.GetFiles(analyzerPath, "*.dll");
+                        foreach (var dll in DLLs)
+                        {
+                            // allows specifying a folder that contains analyzers as well as non-analyzer DLLs without throwing
+                            var newAnalyzers = LoadAnalyzersFromAssembly(dll, false);
+                            if (newAnalyzers.Count() > 0)
+                            {
+                                engine.AddAnalyzers(newAnalyzers);
+                            }
+                        }
+                    }
+                }
+            }
 
             // Analyzers will hydrate rule enabled/disabled settings
             // directly from the options referenced by file path
@@ -145,15 +202,34 @@ namespace CodeFormatter
                 }
             }
 
-            foreach (var item in options.FormatTargets)
+            foreach (var item in options.Targets)
             {
-                await RunFormatItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
+                // target was a text file with a list of project files to run against
+                if (StringComparer.OrdinalIgnoreCase.Equals(Path.GetExtension(item), ".txt"))
+                {
+                    var targets = File.ReadAllLines(item);
+                    foreach (var target in targets)
+                    {
+                        try
+                        {
+                            await RunItemAsync(engine, target, options.Language, options.UseAnalyzers, cancellationToken);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Exception: {0} with project {1}", e.Message, target);
+                        }
+                    }
+                }
+                else
+                {
+                    await RunItemAsync(engine, item, options.Language, options.UseAnalyzers, cancellationToken);
+                }
             }
 
             return SUCCEEDED;
         }
 
-        private static async Task RunFormatItemAsync(
+        private static async Task RunItemAsync(
             IFormattingEngine engine,
             string item,
             string language,
@@ -162,31 +238,39 @@ namespace CodeFormatter
         {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
-            if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
+            try
             {
-                using (var workspace = ResponseFileWorkspace.Create())
+                if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
                 {
-                    Project project = workspace.OpenCommandLineProject(item, language);
-                    await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
+                    using (var workspace = ResponseFileWorkspace.Create())
+                    {
+                        Project project = workspace.OpenCommandLineProject(item, language);
+                        await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
+                    }
+                }
+                else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+                {
+                    using (var workspace = MSBuildWorkspace.Create())
+                    {
+                        workspace.LoadMetadataForReferencedProjects = true;
+                        var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
+                        await engine.FormatSolutionAsync(solution, useAnalyzers, cancellationToken);
+                    }
+                }
+                else
+                {
+                    using (var workspace = MSBuildWorkspace.Create())
+                    {
+                        workspace.LoadMetadataForReferencedProjects = true;
+                        var project = await workspace.OpenProjectAsync(item, cancellationToken);
+                        await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
+                    }
                 }
             }
-            else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
+            catch (Microsoft.Build.Exceptions.InvalidProjectFileException)
             {
-                using (var workspace = MSBuildWorkspace.Create())
-                {
-                    workspace.LoadMetadataForReferencedProjects = true;
-                    var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
-                    await engine.FormatSolutionAsync(solution, useAnalyzers, cancellationToken);
-                }
-            }
-            else
-            {
-                using (var workspace = MSBuildWorkspace.Create())
-                {
-                    workspace.LoadMetadataForReferencedProjects = true;
-                    var project = await workspace.OpenProjectAsync(item, cancellationToken);
-                    await engine.FormatProjectAsync(project, useAnalyzers, cancellationToken);
-                }
+                // Can occur if for example a Mono based project with unknown targets files is supplied
+                Console.WriteLine("Invalid project file in target {0}", item);
             }
         }
 

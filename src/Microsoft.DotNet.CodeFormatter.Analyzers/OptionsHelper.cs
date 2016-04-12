@@ -101,6 +101,7 @@ namespace Microsoft.DotNet.CodeFormatter.Analyzers
             return new PerLanguageOption<bool>(analyzerName, "Enabled", defaultValue: true);
         }
 
+        // TODO: fix hardcoded list
         internal static IEnumerable<string> AllAnalyzerNames = new string[] {
             ExplicitThisAnalyzer.AnalyzerName,
             OptimizeNamespaceImportsAnalyzer.AnalyzerName,
