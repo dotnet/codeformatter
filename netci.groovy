@@ -2,7 +2,8 @@
 
 import jobs.generation.Utilities;
 
-def project = 'dotnet/codeformatter'
+def project = GithubProject
+def branch = GithubBranchName
 // Define build string
 def buildString = '''call "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\Tools\\VsDevCmd.bat" && build.cmd'''
 
@@ -10,11 +11,17 @@ def buildString = '''call "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0
 
 [true, false].each { isPR ->
     def newJob = job(Utilities.getFullJobName(project, '', isPR)) {
-        label('windows')
         steps {
             batchFile(buildString)
         }
     }
     
-    Utilities.simpleInnerLoopJobSetup(newJob, project, isPR, 'Windows Debug')
+    Utilities.setMachineAffinity(newJob, 'Windows_NT', 'latest-or-auto')
+    Utilities.standardJobSetup(newJob, project, isPR, "*/${branch}")
+    if (isPR) {
+        Utilities.addGithubPRTriggerForBranch(newJob, branch, 'Windows Debug')
+    }
+    else {
+        Utilities.addGithubPushTrigger(newJob)
+    }
 }
