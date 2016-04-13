@@ -1,6 +1,7 @@
 // Import the utility functionality.
-
 import jobs.generation.Utilities;
+// Import functionality for job reporting
+import jobs.generation.JobReport;
 
 def project = GithubProject
 def branch = GithubBranchName
@@ -25,3 +26,6 @@ def buildString = '''call "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0
         Utilities.addGithubPushTrigger(newJob)
     }
 }
+
+// Generate the job report
+JobReport.Report.generateJobReport(out)
