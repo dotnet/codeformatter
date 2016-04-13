@@ -19,7 +19,7 @@ namespace CodeFormatter
     {
         [Value(
             0,
-            HelpText = "Project, solution or response file to drive code formatting.",
+            HelpText = "Project, solution, text file with target paths, or response file to drive code formatting.",
             Required = true)]
         public IEnumerable<string> Targets { get; set; }
 
@@ -67,9 +67,9 @@ namespace CodeFormatter
         public bool UseAnalyzers { get; set; }
 
         [Option(
-            "analyzer-list",
-            HelpText = "A file containing a newline separated list of analyzer assemblies to be run against the target source.")]
-        public string AnalyzerListFile { get; set; }
+            "analyzers",
+            HelpText = "A path to an analyzer assembly or a file containing a newline separated list of analyzer assemblies to be run against the target source.")]
+        public string TargetAnalyzers { get; set; }
 
         [Option(
             "log-output-path",
@@ -78,33 +78,43 @@ namespace CodeFormatter
 
         public virtual bool ApplyFixes { get; }
 
-        private ImmutableArray<string> _analyzerListText;
-        public ImmutableArray<string> AnalyzerListText
+        private ImmutableArray<string> _targetAnalyzerText;
+        public ImmutableArray<string> TargetAnalyzerText
         {
             get
             {
-                if (_analyzerListText == null)
+                if (_targetAnalyzerText == null)
                 {
-                    _analyzerListText = InitializeAnalyzerListText(AnalyzerListFile);
+                    _targetAnalyzerText = InitializeTargetAnalyzerText(TargetAnalyzers);
                 }
-                return _analyzerListText;
+                return _targetAnalyzerText;
             }
             internal set
             {
-                _analyzerListText = value;
+                _targetAnalyzerText = value;
             }
         }
 
-        private static ImmutableArray<string> InitializeAnalyzerListText(string analyzerListFile)
+        private static ImmutableArray<string> InitializeTargetAnalyzerText(string targetAnalyzers)
         {
-            ImmutableArray<string> analyzerListText = new ImmutableArray<string>();
+            var fileType = Path.GetExtension(targetAnalyzers);
 
-            if (!String.IsNullOrEmpty(analyzerListFile))
+            if (StringComparer.OrdinalIgnoreCase.Equals(fileType, ".dll"))
             {
-                analyzerListText = ImmutableArray.CreateRange(File.ReadAllLines(analyzerListFile));
+                return ImmutableArray.Create(targetAnalyzers);
+            }
+            else if(StringComparer.OrdinalIgnoreCase.Equals(fileType, ".txt"))
+            {
+                ImmutableArray<string> analyzerText = new ImmutableArray<string>();
+
+                if (!String.IsNullOrEmpty(targetAnalyzers))
+                {
+                    analyzerText = ImmutableArray.CreateRange(File.ReadAllLines(targetAnalyzers));
+                }
+                return analyzerText;
             }
 
-            return analyzerListText;
+            return ImmutableArray<string>.Empty;
         }
 
         private ImmutableArray<string> _copyrightHeaderText;
