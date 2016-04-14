@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.DotNet.CodeFormatting;
 
@@ -100,21 +101,22 @@ namespace CodeFormatter
 
             foreach (var item in options.FormatTargets)
             {
-                await RunFormatItemAsync(engine, item, options.Language, cancellationToken);
+                await RunFormatItemAsync(engine, item, options, cancellationToken);
             }
 
             return 0;
         }
 
-        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
-        { 
+        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, CommandLineOptions options, CancellationToken cancellationToken)
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
                 using (var workspace = ResponseFileWorkspace.Create())
                 {
-                    Project project = workspace.OpenCommandLineProject(item, language);
+                    ModifyWorkspaceOptions(workspace, options);
+                    Project project = workspace.OpenCommandLineProject(item, options.Language);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
@@ -122,6 +124,7 @@ namespace CodeFormatter
             {
                 using (var workspace = MSBuildWorkspace.Create())
                 {
+                    ModifyWorkspaceOptions(workspace, options);
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
                     await engine.FormatSolutionAsync(solution, cancellationToken);
@@ -131,6 +134,7 @@ namespace CodeFormatter
             {
                 using (var workspace = MSBuildWorkspace.Create())
                 {
+                    ModifyWorkspaceOptions(workspace, options);
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
@@ -154,6 +158,11 @@ namespace CodeFormatter
             }
 
             return true;
+        }
+
+        private static void ModifyWorkspaceOptions(Workspace workspace, CommandLineOptions options)
+        {
+            workspace.Options = workspace.Options.WithChangedOption(FormattingOptions.UseTabs, options.Language, options.UseTabs);
         }
     }
 }

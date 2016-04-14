@@ -28,7 +28,8 @@ namespace CodeFormatter
             ImmutableArray<string>.Empty,
             null,
             allowTables: false,
-            verbose: false);
+            verbose: false,
+            useTabs: false);
 
         public readonly Operation Operation;
         public readonly ImmutableArray<string[]> PreprocessorConfigurations;
@@ -39,6 +40,7 @@ namespace CodeFormatter
         public readonly string Language;
         public readonly bool AllowTables;
         public readonly bool Verbose;
+        public readonly bool UseTabs;
 
         public CommandLineOptions(
             Operation operation,
@@ -49,7 +51,8 @@ namespace CodeFormatter
             ImmutableArray<string> fileNames,
             string language,
             bool allowTables,
-            bool verbose)
+            bool verbose,
+            bool useTabs)
         {
             Operation = operation;
             PreprocessorConfigurations = preprocessorConfigurations;
@@ -60,6 +63,7 @@ namespace CodeFormatter
             Language = language;
             AllowTables = allowTables;
             Verbose = verbose;
+            UseTabs = useTabs;
         }
     }
 
@@ -135,7 +139,7 @@ namespace CodeFormatter
                       should run under.
     /copyright(+|-) - Enables or disables (default) updating the copyright 
                       header in files, optionally specifying a file 
-                      containing a custom copyright header.                   
+                      containing a custom copyright header.
     /nocopyright    - Do not update the copyright message.
     /tables         - Let tables opt out of formatting by defining
                       DOTNET_FORMATTER
@@ -143,6 +147,7 @@ namespace CodeFormatter
     /rule(+|-)      - Enable (default) or disable the specified rule
     /rules          - List the available rules
     /verbose        - Verbose output
+    /usetabs        - Use tabs for indentation instead of spaces
 
 Use ConvertTests to convert MSTest tests to xUnit.
 ";
@@ -171,6 +176,7 @@ Use ConvertTests to convert MSTest tests to xUnit.
             var language = LanguageNames.CSharp;
             var allowTables = false;
             var verbose = false;
+            var useTabs = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -245,6 +251,10 @@ Use ConvertTests to convert MSTest tests to xUnit.
                 {
                     return CommandLineParseResult.CreateSuccess(CommandLineOptions.ListRules);
                 }
+                else if (comparer.Equals(arg, "/usetabs"))
+                {
+                    useTabs = true;
+                }
                 else
                 {
                     formatTargets.Add(arg);
@@ -265,7 +275,8 @@ Use ConvertTests to convert MSTest tests to xUnit.
                 fileNames.ToImmutableArray(),
                 language,
                 allowTables,
-                verbose);
+                verbose,
+                useTabs);
             return CommandLineParseResult.CreateSuccess(options);
         }
 
