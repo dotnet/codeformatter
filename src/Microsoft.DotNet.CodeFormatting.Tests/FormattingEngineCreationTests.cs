@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,46 +21,61 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                                             typeof(FormattingEngine).Assembly,
                                             typeof(OptimizeNamespaceImportsAnalyzer).Assembly
                                         };
-        // TODO: fix hardcoded path
-        private static string TestDLLDir = @"E:\src\codeformatter\src\Microsoft.DotNet.CodeFormatting.Tests\TestAnalyzers\";
-        private static Assembly RoslynV100Analyzer =  Assembly.LoadFile(TestDLLDir + "RoslynV100Analyzer.dll");
-        private static Assembly RoslynV110Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV110Analyzer.dll");
-        private static Assembly RoslynV111Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV111Analyzer.dll");
-        private static Assembly RoslynV120Beta1Analyzer = Assembly.LoadFile(TestDLLDir + "RoslynV120Beta1Analyzer.dll");
+
+        private static string TestDLLDir = Path.Combine(Directory.GetCurrentDirectory(), "TestAnalyzers");
+        private static string RoslynV100Analyzer =  Path.Combine(TestDLLDir, "RoslynV100Analyzer.dll");
+        private static string RoslynV110Analyzer = Path.Combine(TestDLLDir, "RoslynV110Analyzer.dll");
+        private static string RoslynV111Analyzer = Path.Combine(TestDLLDir, "RoslynV111Analyzer.dll");
+        private static string RoslynV120Beta1Analyzer = Path.Combine(TestDLLDir, "RoslynV120Beta1Analyzer.dll");
+        private static string RoslynV120VBAnalyzer = Path.Combine(TestDLLDir, "RoslynV120VBAnalyzer.dll");
 
         [Fact]
         public void AnalyzersBuiltAgainstRoslynV100()
         {
-            IEnumerable<Assembly> roslynV1AnalyzerDLL = new Assembly[] { RoslynV100Analyzer };
+            IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var assemblies = DefaultCompositionAssemblies.Concat(roslynV1AnalyzerDLL);
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV100Analyzer));
+                Assert.Equal(1, analyzers.Count());
             });
         }
 
         [Fact]
         public void AnalyzersBuiltAgainstRoslynV110()
         {
-            IEnumerable<Assembly> roslynV110AnalyzerDLL = new Assembly[] { RoslynV110Analyzer };
+            IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var assemblies = DefaultCompositionAssemblies.Concat(roslynV110AnalyzerDLL);
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV110Analyzer));
+                Assert.Equal(1, analyzers.Count());
             });
         }
 
         [Fact]
         public void AnalyzersBuiltAgainstRoslynV111()
         {
-            IEnumerable<Assembly> roslynV111AnalyzerDLL = new Assembly[] { RoslynV111Analyzer };
+            IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var assemblies = DefaultCompositionAssemblies.Concat(roslynV111AnalyzerDLL);
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV111Analyzer));
+                Assert.Equal(1, analyzers.Count());
             });
         }
 
         [Fact]
         public void AnalyzersBuiltAgainstRoslynV120Beta1()
         {
-            IEnumerable<Assembly> roslynV120Beta1AnalyzerDLL = new Assembly[] { RoslynV120Beta1Analyzer };
+            IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var assemblies = DefaultCompositionAssemblies.Concat(roslynV120Beta1AnalyzerDLL);
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV120Beta1Analyzer));
+                Assert.Equal(1, analyzers.Count());
+            });
+        }
+
+        [Fact]
+        public void AnalyzersBuiltAgainstRoslynV120()
+        {
+            IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
+            Assert.DoesNotThrow(() => {
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV120VBAnalyzer));
+                Assert.Equal(1, analyzers.Count());
             });
         }
     }
