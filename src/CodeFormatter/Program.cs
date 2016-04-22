@@ -148,6 +148,36 @@ namespace CodeFormatter
             }
             return newAnalyzers;
         }
+            
+        // Expects a list of paths to files or directories of DLLs containing analyzers and adds them to the engine
+        internal static ImmutableArray<DiagnosticAnalyzer> AddCustomAnalyzers(IFormattingEngine engine, ImmutableArray<string> analyzerList)
+        {
+            foreach (var analyzerPath in analyzerList)
+            {
+                if (File.Exists(analyzerPath))
+                {
+                    var newAnalyzers = LoadAnalyzersFromAssembly(analyzerPath, true);
+                    engine.AddAnalyzers(newAnalyzers);
+                    return newAnalyzers;
+                }
+                else if (Directory.Exists(analyzerPath))
+                {
+                    var DLLs = Directory.GetFiles(analyzerPath, "*.dll");
+                    foreach (var dll in DLLs)
+                    {
+                        // allows specifying a folder that contains analyzers as well as non-analyzer DLLs without throwing
+                        var newAnalyzers = LoadAnalyzersFromAssembly(dll, false);
+                        if (newAnalyzers.Count() > 0)
+                        {
+                            engine.AddAnalyzers(newAnalyzers);
+                        }
+                        return newAnalyzers;
+                    }
+                }
+            }
+
+            return ImmutableArray<DiagnosticAnalyzer>.Empty;
+        }
 
         private static async Task<int> RunAsync(CommandLineOptions options, CancellationToken cancellationToken)
         {
@@ -166,29 +196,9 @@ namespace CodeFormatter
             engine.ApplyFixes = options.ApplyFixes;
             engine.LogOutputPath = options.LogOutputPath;
 
-            if (options.AnalyzerListFile != null && options.AnalyzerListText != null && options.AnalyzerListText.Count() > 0)
+            if (options.TargetAnalyzers != null && options.TargetAnalyzerText != null && options.TargetAnalyzerText.Count() > 0)
             {
-                foreach (var analyzerPath in options.AnalyzerListText)
-                {
-                    if (File.Exists(analyzerPath))
-                    {
-                        var newAnalyzers = LoadAnalyzersFromAssembly(analyzerPath, true);
-                        engine.AddAnalyzers(newAnalyzers);
-                    }
-                    else if (Directory.Exists(analyzerPath))
-                    {
-                        var DLLs = Directory.GetFiles(analyzerPath, "*.dll");
-                        foreach (var dll in DLLs)
-                        {
-                            // allows specifying a folder that contains analyzers as well as non-analyzer DLLs without throwing
-                            var newAnalyzers = LoadAnalyzersFromAssembly(dll, false);
-                            if (newAnalyzers.Count() > 0)
-                            {
-                                engine.AddAnalyzers(newAnalyzers);
-                            }
-                        }
-                    }
-                }
+                AddCustomAnalyzers(engine, options.TargetAnalyzerText);
             }
 
             // Analyzers will hydrate rule enabled/disabled settings

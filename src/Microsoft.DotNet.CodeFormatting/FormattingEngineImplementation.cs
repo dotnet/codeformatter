@@ -298,9 +298,11 @@ namespace Microsoft.DotNet.CodeFormatting
                     foreach (var analyzer in analyzers)
                     {
                         var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
+
                         if (Verbose || LogOutputPath != null)
                         {
                             var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
+                            FormatLogger.WriteLine("{0}\t{1}\t{2}\t{3}", project.Name, analyzer.ToString(), diags.Count(), analyzerTelemetryInfo.ExecutionTime);
                             var resultPath = Path.ChangeExtension(LogOutputPath + resultFile, "json");                            
                             LogDiagnostics(resultPath, diags);
                         }
