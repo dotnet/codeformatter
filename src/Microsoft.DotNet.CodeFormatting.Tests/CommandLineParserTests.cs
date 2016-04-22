@@ -17,6 +17,15 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return options;
         }
 
+        private CommandLineOptions FailToParse(params string[] args)
+        {
+            CommandLineOptions options;
+            Assert.False(CommandLineParser.TryParse(args, out options));
+            Assert.Null(options);
+
+            return options;
+        }
+
         [Fact]
         public void Rules()
         {
@@ -99,6 +108,28 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
         }
 
+
+        [Fact]
+        public void Help()
+        {
+            var options = Parse("/help");
+            Assert.Equal(options.Operation, Operation.ShowHelp);
+        }
+
+        [Fact]
+        public void HelpShortForm()
+        {
+            var options = Parse("/?");
+            Assert.Equal(options.Operation, Operation.ShowHelp);
+        }
+
+        [Fact]
+        public void HelpWithOtherwiseValidArguments()
+        {
+            var options = Parse("test.csproj", "/nocopyright", "/help");
+            Assert.Equal(options.Operation, Operation.ShowHelp);
+        }
+
         [Fact]
         public void CopyrightEnable1()
         {
@@ -113,6 +144,24 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             var options = Parse("/copyright", "test.csproj");
             Assert.True(options.RuleMap[FormattingDefaults.CopyrightRuleName]);
             Assert.Equal(new[] { "test.csproj" }, options.FormatTargets);
+        }
+
+        [Fact]
+        public void SingleUnrecognizedOption()
+        {
+            FailToParse("/unrecognized");
+        }
+
+        [Fact]
+        public void UnrecognizedOptionWithFormatTarget()
+        {
+            FailToParse("test.csproj", "/unrecognized");
+        }
+
+        [Fact]
+        public void UnrecognizedOptionWithOtherwiseValidArguments()
+        {
+            FailToParse("test.csproj", "/nocopyright", "/unrecognized");
         }
     }
 }

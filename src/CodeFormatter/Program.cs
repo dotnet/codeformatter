@@ -31,6 +31,11 @@ namespace CodeFormatter
             int exitCode;
             switch (options.Operation)
             {
+                case Operation.ShowHelp:
+                    CommandLineParser.PrintUsage();
+                    exitCode = 0;
+                    break;
+
                 case Operation.ListRules:
                     RunListRules();
                     exitCode = 0;
