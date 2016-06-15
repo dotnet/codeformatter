@@ -37,6 +37,7 @@ namespace CodeFormatter
 
         [Option(
             'l', "lang",
+            Default = "C#",
             HelpText = "Specifies the language to use when a response file is specified, e.g., 'C#', 'Visual Basic', ... (default: 'C#').")]
         public string Language { get; set; }
 

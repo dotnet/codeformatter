@@ -138,10 +138,10 @@ namespace CodeFormatter
             }
         }
 
-        private static ImmutableArray<DiagnosticAnalyzer> LoadAnalyzersFromAssembly(string path, bool throwIfNoAnalyzersFound)
+        private static ImmutableArray<DiagnosticAnalyzer> LoadAnalyzersFromAssembly(string path, string language, bool throwIfNoAnalyzersFound)
         {
             var analyzerRef = new AnalyzerFileReference(path, new BasicAnalyzerAssemblyLoader());
-            var newAnalyzers = analyzerRef.GetAnalyzersForAllLanguages();
+            var newAnalyzers = analyzerRef.GetAnalyzers(language);
             if (newAnalyzers.Count() == 0 && throwIfNoAnalyzersFound)
             {
                 throw new Exception(String.Format("Specified analyzer assembly {0} contained no analyzers", analyzerRef.GetAssembly().FullName));
@@ -150,29 +150,32 @@ namespace CodeFormatter
         }
             
         // Expects a list of paths to files or directories of DLLs containing analyzers and adds them to the engine
-        internal static ImmutableArray<DiagnosticAnalyzer> AddCustomAnalyzers(IFormattingEngine engine, ImmutableArray<string> analyzerList)
+        internal static ImmutableArray<DiagnosticAnalyzer> AddCustomAnalyzers(IFormattingEngine engine, ImmutableArray<string> analyzerList, string language)
         {
             foreach (var analyzerPath in analyzerList)
             {
                 if (File.Exists(analyzerPath))
                 {
-                    var newAnalyzers = LoadAnalyzersFromAssembly(analyzerPath, true);
+                    var newAnalyzers = LoadAnalyzersFromAssembly(analyzerPath, language, true);
                     engine.AddAnalyzers(newAnalyzers);
                     return newAnalyzers;
                 }
                 else if (Directory.Exists(analyzerPath))
                 {
                     var DLLs = Directory.GetFiles(analyzerPath, "*.dll");
+                    var allAnalyzers = ImmutableArray.CreateBuilder<DiagnosticAnalyzer>();
                     foreach (var dll in DLLs)
                     {
                         // allows specifying a folder that contains analyzers as well as non-analyzer DLLs without throwing
-                        var newAnalyzers = LoadAnalyzersFromAssembly(dll, false);
+                        var newAnalyzers = LoadAnalyzersFromAssembly(dll, language, false);
                         if (newAnalyzers.Count() > 0)
                         {
                             engine.AddAnalyzers(newAnalyzers);
+                            allAnalyzers.AddRange(newAnalyzers);
                         }
-                        return newAnalyzers;
                     }
+                    
+                    return allAnalyzers.ToImmutable();
                 }
             }
 
@@ -198,7 +201,7 @@ namespace CodeFormatter
 
             if (options.TargetAnalyzers != null && options.TargetAnalyzerText != null && options.TargetAnalyzerText.Count() > 0)
             {
-                AddCustomAnalyzers(engine, options.TargetAnalyzerText);
+                AddCustomAnalyzers(engine, options.TargetAnalyzerText, options.Language);
             }
 
             // Analyzers will hydrate rule enabled/disabled settings
