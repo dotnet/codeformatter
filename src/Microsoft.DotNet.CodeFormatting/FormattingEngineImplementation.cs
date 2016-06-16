@@ -107,12 +107,17 @@ namespace Microsoft.DotNet.CodeFormatting
 
             _outputLogger = Activator.CreateInstance(
                 _loggerAssembly.GetType("Microsoft.CodeAnalysis.ErrorLogger"),
-                new object[] { new FileStream(filePath, FileMode.Append, FileAccess.Write), "CodeFormatter", "0.1", _loggerAssembly.GetName().Version });
+                new object[] {
+                    new FileStream(filePath, FileMode.Append, FileAccess.Write),
+                    "CodeFormatter",
+                    "0.1",
+                    _loggerAssembly.GetName().Version,
+                    Thread.CurrentThread.CurrentCulture });
 
-            var logDiagMethodInfo = _outputLogger.GetType().GetMethod("LogDiagnostic", BindingFlags.NonPublic | BindingFlags.Instance);
+            var logDiagMethodInfo = _outputLogger.GetType().GetMethod("LogDiagnostic", BindingFlags.Public | BindingFlags.Instance);
             foreach (var diagnostic in diagnostics)
             {
-                logDiagMethodInfo.Invoke(_outputLogger, new object[] { diagnostic, System.Globalization.CultureInfo.DefaultThreadCurrentCulture });
+                logDiagMethodInfo.Invoke(_outputLogger, new object[] { diagnostic,  });
             }
 
             ((IDisposable)_outputLogger).Dispose();
