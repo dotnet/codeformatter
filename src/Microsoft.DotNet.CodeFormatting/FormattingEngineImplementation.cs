@@ -107,12 +107,17 @@ namespace Microsoft.DotNet.CodeFormatting
 
             _outputLogger = Activator.CreateInstance(
                 _loggerAssembly.GetType("Microsoft.CodeAnalysis.ErrorLogger"),
-                new object[] { new FileStream(filePath, FileMode.Append, FileAccess.Write), "CodeFormatter", "0.1", _loggerAssembly.GetName().Version });
+                new object[] {
+                    new FileStream(filePath, FileMode.Append, FileAccess.Write),
+                    "CodeFormatter",
+                    "0.1",
+                    _loggerAssembly.GetName().Version,
+                    Thread.CurrentThread.CurrentCulture });
 
-            var logDiagMethodInfo = _outputLogger.GetType().GetMethod("LogDiagnostic", BindingFlags.NonPublic | BindingFlags.Instance);
+            var logDiagMethodInfo = _outputLogger.GetType().GetMethod("LogDiagnostic", BindingFlags.Public | BindingFlags.Instance);
             foreach (var diagnostic in diagnostics)
             {
-                logDiagMethodInfo.Invoke(_outputLogger, new object[] { diagnostic, System.Globalization.CultureInfo.DefaultThreadCurrentCulture });
+                logDiagMethodInfo.Invoke(_outputLogger, new object[] { diagnostic,  });
             }
 
             ((IDisposable)_outputLogger).Dispose();
@@ -238,63 +243,73 @@ namespace Microsoft.DotNet.CodeFormatting
 
             var workspace = project.Solution.Workspace;
 
-            await FormatProjectWithSyntaxAnalyzersAsync(workspace, project.Id, cancellationToken);
-            await FormatProjectWithLocalAnalyzersAsync(workspace, project.Id, cancellationToken);
-            await FormatProjectWithGlobalAnalyzersAsync(workspace, project.Id, cancellationToken);
-            await FormatProjectWithUnspecifiedAnalyzersAsync(workspace, project.Id, cancellationToken);
+            var syntaxDiagnostics = await FormatProjectWithSyntaxAnalyzersAsync(workspace, project.Id, cancellationToken);
+            var localDiagnostics = await FormatProjectWithLocalAnalyzersAsync(workspace, project.Id, cancellationToken);
+            var globalDiagnostics = await FormatProjectWithGlobalAnalyzersAsync(workspace, project.Id, cancellationToken);
+            var unspecifiedDiagnostics = await FormatProjectWithUnspecifiedAnalyzersAsync(workspace, project.Id, cancellationToken);
+            var projectDiagnostics = syntaxDiagnostics.Concat(localDiagnostics).Concat(globalDiagnostics).Concat(unspecifiedDiagnostics);
 
+            var extension = StringComparer.OrdinalIgnoreCase.Equals(project.Language, "C#") ? ".csproj" : ".vbproj";
+            var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(extension, "_CodeFormatterResults.txt");
+            var resultPath = Path.ChangeExtension(LogOutputPath + resultFile, "json");
+            LogDiagnostics(resultPath, projectDiagnostics.ToImmutableArray());
+            
             watch.Stop();
             FormatLogger.WriteLine("Total time for formatting {0} - {1}", project.Name, watch.Elapsed);
         }
 
-        private async Task FormatProjectWithSyntaxAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<Diagnostic>> FormatProjectWithSyntaxAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
             var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.Syntactic)));
-            await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
+            return await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
         }
 
-        private async Task FormatProjectWithLocalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<Diagnostic>> FormatProjectWithLocalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
             var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.LocalSemantic)));
-            await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
+            return await FormatWithAnalyzersCoreAsync(workspace, projectId, analyzers, cancellationToken);
         }
 
-        private async Task FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<Diagnostic>> FormatProjectWithGlobalAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
             var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => d.CustomTags.Contains(RuleType.GlobalSemantic)));
 
+            var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
             // Since global analyzers can potentially conflict with each other, run them one by one.
             foreach (var analyzer in analyzers)
             {
-                await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+                var analyzerDiagnostics = await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+                diagnostics.AddRange(analyzerDiagnostics);
             }
+            return diagnostics.ToImmutableArray();
         }
 
-        private async Task FormatProjectWithUnspecifiedAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<Diagnostic>> FormatProjectWithUnspecifiedAnalyzersAsync(Workspace workspace, ProjectId projectId, CancellationToken cancellationToken)
         {
             var analyzers = _analyzers.Where(a => a.SupportedDiagnostics.All(d => {
                 return !(d.CustomTags.Contains(RuleType.Syntactic) || d.CustomTags.Contains(RuleType.LocalSemantic) || d.CustomTags.Contains(RuleType.GlobalSemantic));
             }));
 
+            var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
             // Treat analyzers with unknown rule types as if they were global in case they might conflict with each other
             foreach (var analyzer in analyzers)
             {
-                await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+                var analyzerDiagnostics = await FormatWithAnalyzersCoreAsync(workspace, projectId, new[] { analyzer }, cancellationToken);
+                diagnostics.AddRange(analyzerDiagnostics);
             }
+            return diagnostics.ToImmutableArray();
         }
 
-        private async Task FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<Diagnostic>> FormatWithAnalyzersCoreAsync(Workspace workspace, ProjectId projectId, IEnumerable<DiagnosticAnalyzer> analyzers, CancellationToken cancellationToken)
         {
             if (analyzers != null && analyzers.Count() != 0)
             {
                 var project = workspace.CurrentSolution.GetProject(projectId);
                 var diagnostics = await GetDiagnostics(project, analyzers, cancellationToken).ConfigureAwait(false);
+                var diagnosticsToLog = ImmutableArray.CreateBuilder<Diagnostic>();
                 // Ensure at least 1 analyzer supporting the current project's language ran
                 if (_compilationWithAnalyzers != null)
                 {
-                    var extension = StringComparer.OrdinalIgnoreCase.Equals(project.Language, "C#") ? ".csproj" : ".vbproj";
-                    var resultFile = project.FilePath.Substring(project.FilePath.LastIndexOf(Path.DirectorySeparatorChar)).Replace(extension, "_CodeFormatterResults.txt");
-
                     foreach (var analyzer in analyzers)
                     {
                         var diags = await _compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync(ImmutableArray.Create(analyzer), cancellationToken);
@@ -303,8 +318,11 @@ namespace Microsoft.DotNet.CodeFormatting
                         {
                             var analyzerTelemetryInfo = await _compilationWithAnalyzers.GetAnalyzerTelemetryInfoAsync(analyzer, cancellationToken);
                             FormatLogger.WriteLine("{0}\t{1}\t{2}\t{3}", project.Name, analyzer.ToString(), diags.Count(), analyzerTelemetryInfo.ExecutionTime);
-                            var resultPath = Path.ChangeExtension(LogOutputPath + resultFile, "json");                            
-                            LogDiagnostics(resultPath, diags);
+                            // LogDiagnostic doesn't write anything useful for the 0 errors case so just skip it
+                            if (diags.Count() > 0)
+                            {
+                                diagnosticsToLog.AddRange(diags.ToList());
+                            }
                         }
                     }
                 }
@@ -330,7 +348,11 @@ namespace Microsoft.DotNet.CodeFormatting
                         }
                     }
                 }
+
+                return diagnosticsToLog.ToImmutableArray();
             }
+
+            return ImmutableArray.Create<Diagnostic>();
         }
 
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)

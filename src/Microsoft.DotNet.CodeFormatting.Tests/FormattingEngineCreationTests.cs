@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV100Analyzer));
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV100Analyzer), "C#");
                 Assert.Equal(1, analyzers.Count());
             });
         }
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV110Analyzer));
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV110Analyzer), "C#");
                 Assert.Equal(1, analyzers.Count());
             });
         }
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV111Analyzer));
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV111Analyzer), "C#");
                 Assert.Equal(1, analyzers.Count());
             });
         }
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV120Beta1Analyzer));
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV120Beta1Analyzer), "C#");
                 Assert.Equal(1, analyzers.Count());
             });
         }
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         {
             IFormattingEngine engine = FormattingEngine.Create(DefaultCompositionAssemblies);
             Assert.DoesNotThrow(() => {
-                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV120VBAnalyzer));
+                var analyzers = Program.AddCustomAnalyzers(engine, ImmutableArray.Create(RoslynV120VBAnalyzer), "VB");
                 Assert.Equal(1, analyzers.Count());
             });
         }
