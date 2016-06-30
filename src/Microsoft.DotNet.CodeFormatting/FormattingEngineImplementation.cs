@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 new object[] {
                     new FileStream(filePath, FileMode.Append, FileAccess.Write),
                     "CodeFormatter",
-                    "0.1",
+                    FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).FileVersion,
                     _loggerAssembly.GetName().Version,
                     Thread.CurrentThread.CurrentCulture });
 
