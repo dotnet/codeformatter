@@ -1,6 +1,6 @@
 # CodeFormatter
 
-[![Build status](http://dotnet-ci.cloudapp.net/job/dotnet_codeformatter/job/master/job/innerloop/badge/icon)](http://dotnet-ci.cloudapp.net/job/dotnet_codeformatter/job/master/job/innerloop/)
+[![Build status](https://ci2.dot.net/job/dotnet_codeformatter/job/master/job/innerloop/badge/icon)](https://ci2.dot.net/job/dotnet_codeformatter/job/master/job/innerloop/)
 
 CodeFormatter is a tool that uses Roslyn to automatically rewrite the source to
 follow our coding styles, which are [documented here][corefx-coding-style].
