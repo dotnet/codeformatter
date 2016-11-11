@@ -235,3 +235,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Local msbuild copy to run on Mono
+src/ExternalApis/
