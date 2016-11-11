@@ -41,6 +41,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return syntaxRoot;
             }
 
+            bool usingIsFirstInSource = syntaxRoot.DescendantNodes().FirstOrDefault() == firstUsing;
+            if (usingIsFirstInSource)
+            {
+                return syntaxRoot;
+            }
+
             return ProcessCore(syntaxRoot, firstUsing);
         }
 
@@ -48,6 +54,12 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             var firstNamespace = syntaxRoot.DescendantNodesAndSelf().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
             if (firstNamespace == null)
+            {
+                return syntaxRoot;
+            }
+
+            bool namespaceIsFirstInSource = syntaxRoot.DescendantNodes().FirstOrDefault() == firstNamespace;
+            if (namespaceIsFirstInSource)
             {
                 return syntaxRoot;
             }
