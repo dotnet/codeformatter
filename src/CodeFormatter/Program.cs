@@ -76,15 +76,23 @@ namespace CodeFormatter
             }
             catch (AggregateException ex)
             {
-                var typeLoadException = ex.InnerExceptions.FirstOrDefault() as ReflectionTypeLoadException;
-                if (typeLoadException == null)
+                var typeLoadException = ex.InnerExceptions.OfType<ReflectionTypeLoadException>().FirstOrDefault();
+                var invalidProjextFileException = ex.InnerExceptions.FirstOrDefault(innerEx => innerEx.GetType().FullName == "Microsoft.Build.Exceptions.InvalidProjectFileException");
+                if (typeLoadException == null && invalidProjextFileException == null)
                     throw;
 
-                Console.WriteLine("ERROR: Type loading error detected. In order to run this tool you need either Visual Studio 2015 or Microsoft Build Tools 2015 tools installed.");
-                var messages = typeLoadException.LoaderExceptions.Select(e => e.Message).Distinct();
-                foreach (var message in messages)
-                    Console.WriteLine("- {0}", message);
-
+                if (typeLoadException != null)
+                {
+                    Console.WriteLine("ERROR: Type loading error detected. In order to run this tool you need either Visual Studio 2015 or Microsoft Build Tools 2015 tools installed.");
+                    var messages = typeLoadException.LoaderExceptions.Select(e => e.Message).Distinct();
+                    foreach (var message in messages)
+                        Console.WriteLine("- {0}", message);
+                }
+                if (invalidProjextFileException != null)
+                {
+                    Console.WriteLine("ERROR: Projectfile could not be loaded.");
+                    Console.WriteLine("- {0}", invalidProjextFileException.Message);
+                }
                 return 1;
             }
         }
@@ -112,7 +120,7 @@ namespace CodeFormatter
         }
 
         private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
-        { 
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
