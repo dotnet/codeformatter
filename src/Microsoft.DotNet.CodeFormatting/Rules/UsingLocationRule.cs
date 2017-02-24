@@ -2,12 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.ComponentModel.Composition;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -66,9 +61,18 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
                 return syntaxNode;
             }
 
+            // We need to insert the new usings between the namespace and its leading trivia otherwise this rule incorrectly inserts the usings before the copyright headers.
             var newRoot = root;
-            newRoot = newRoot.ReplaceNode(namespaceDeclaration, namespaceDeclaration.WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>()));
-            newRoot = newRoot.WithUsings(newRoot.Usings.AddRange(namespaceDeclaration.Usings));
+            var leadingTrivia = namespaceDeclaration.GetLeadingTrivia();
+            var newNamespace = namespaceDeclaration
+                .WithUsings(SyntaxFactory.List<UsingDirectiveSyntax>())
+                .WithLeadingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+            var additionalUsings = namespaceDeclaration.Usings;
+            var firstUsing = additionalUsings[0];
+            var newFirstUsing = firstUsing.WithLeadingTrivia(leadingTrivia.Concat(firstUsing.GetLeadingTrivia()));
+            additionalUsings = additionalUsings.Replace(firstUsing, newFirstUsing);
+            newRoot = newRoot.ReplaceNode(namespaceDeclaration, newNamespace);
+            newRoot = newRoot.WithUsings(newRoot.Usings.AddRange(additionalUsings));
 
             return newRoot;
         }
