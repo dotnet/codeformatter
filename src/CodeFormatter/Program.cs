@@ -47,7 +47,7 @@ namespace CodeFormatter
                     throw new Exception("Invalid enum value: " + options.Operation);
             }
 
-            return 0;
+            return exitCode;
         }
 
         private static void RunListRules()
