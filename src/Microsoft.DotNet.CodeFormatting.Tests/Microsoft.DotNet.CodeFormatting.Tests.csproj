@@ -96,6 +96,7 @@
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\MarkReadonlyFieldTests.cs" />
+    <Compile Include="Rules\RemoveRegionsTests.cs" />
     <Compile Include="Rules\UsingLocationRuleTests.cs" />
   </ItemGroup>
   <ItemGroup>
