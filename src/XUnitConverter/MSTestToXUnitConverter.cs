@@ -4,23 +4,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Diagnostics;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CodeGeneration;
-using System.Runtime.Serialization;
-using System.IO;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace XUnitConverter
 {
     public sealed class MSTestToXUnitConverter : ConverterBase
     {
-        private static object s_lockObject = new object();
+        private static readonly object s_lockObject = new object();
         private static HashSet<string> s_mstestNamespaces;
 
         private static UsingDirectiveSyntax RemoveLeadingAndTrailingCompilerDirectives(UsingDirectiveSyntax usingSyntax)

@@ -2,21 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
 using Xunit;
 
 namespace XUnitConverter.Tests
 {
     public class TestAssertTrueOrFalseConverterTests : ConverterTestBase
     {
-        protected override XUnitConverter.ConverterBase CreateConverter()
+        protected override ConverterBase CreateConverter()
         {
-            return new XUnitConverter.TestAssertTrueOrFalseConverter();
+            return new TestAssertTrueOrFalseConverter();
         }
 
         [Fact]
