@@ -323,37 +323,5 @@ internal class C
 
             Verify(source, expected, runFormatter: false);
         }
-
-        [Fact]
-        public void CSharpHeaderCorrectAfterMovingUsings()
-        {
-
-            var source = @"
-namespace Microsoft.Build.UnitTests
-{
-    using System;
-    using System.Reflection;
- 
-    public class Test
-    {
-        public void RequiredRuntimeAttribute() 
-       {}
-    }
-}";
-            var expected = @"
-using System;
-using System.Reflection;
-
-namespace Microsoft.Build.UnitTests
-{
-    public class Test
-    {
-        public void RequiredRuntimeAttribute()
-        { }
-    }
-}";
-
-            Verify(source, expected);
-        }
     }
 }
