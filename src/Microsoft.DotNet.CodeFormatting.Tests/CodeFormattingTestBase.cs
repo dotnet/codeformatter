@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             return solution;
         }
 
-        private void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
+        private async Task AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
         {
             var expectedDocuments = expectedSolution.Projects.SelectMany(p => p.Documents);
             var actualDocuments = actualSolution.Projects.SelectMany(p => p.Documents);
@@ -83,30 +83,28 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
             foreach (var expected in expectedDocuments)
             {
                 var actual = actualDocuments.Where(d => d.Name == expected.Name).Single();
-                var aText = actual.GetTextAsync().Result.ToString();
-                var eText = expected.GetTextAsync().Result.ToString();
+                var aText = (await actual.GetTextAsync().ConfigureAwait(false)).ToString();
+                var eText = (await expected.GetTextAsync().ConfigureAwait(false)).ToString();
                 Assert.Equal(eText, aText);
             }
         }
 
         protected abstract Task<Document> RewriteDocumentAsync(Document document);
 
-        protected void Verify(string[] sources, string[] expected, bool runFormatter, string languageName)
+        protected async Task Verify(string[] sources, string[] expected, bool runFormatter, string languageName)
         {
             var inputSolution = CreateSolution(sources, languageName);
             var expectedSolution = CreateSolution(expected, languageName);
-            var actualSolution = Format(inputSolution, runFormatter).Result;
+            var actualSolution = await Format(inputSolution, runFormatter).ConfigureAwait(false);
 
             if (actualSolution == null)
                 Assert.False(true, "Solution is null. Test Failed.");
 
-            AssertSolutionEqual(expectedSolution, actualSolution);
+            await AssertSolutionEqual(expectedSolution, actualSolution);
         }
 
-        protected void Verify(string source, string expected, bool runFormatter = true, string languageName = LanguageNames.CSharp)
-        {
-            Verify(new string[] { source }, new string[] { expected }, runFormatter, languageName);
-        }
+        protected Task Verify(string source, string expected, bool runFormatter = true, string languageName = LanguageNames.CSharp)
+            => Verify(new string[] { source }, new string[] { expected }, runFormatter, languageName);
     }
 
     public abstract class SyntaxRuleTestBase : CodeFormattingTestBase

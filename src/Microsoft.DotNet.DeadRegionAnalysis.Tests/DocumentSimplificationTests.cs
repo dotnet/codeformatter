@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
     public class DocumentSimplificationTests : TestBase
     {
         [Fact]
-        public void Simplify()
+        public async Task Simplify()
         {
             string source = @"
 #if true && varying // To be simplified
@@ -36,10 +36,10 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
 #if true && false // Left alone
 #endif
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
-        protected void Verify(string source, string expected)
+        protected async Task Verify(string source, string expected)
         {
             var inputSolution = CreateSolution(new[] { source });
             var expectedSolution = CreateSolution(new[] { expected });
@@ -47,9 +47,9 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
             var engine = AnalysisEngine.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "varying" });
 
             var document = inputSolution.Projects.Single().Documents.Single();
-            var actualSolution = engine.SimplifyVaryingPreprocessorExpressions(document).Result.Project.Solution;
+            var actualSolution = (await engine.SimplifyVaryingPreprocessorExpressions(document)).Project.Solution;
 
-            AssertSolutionEqual(expectedSolution, actualSolution);
+            await AssertSolutionEqual(expectedSolution, actualSolution);
         }
     }
 }

@@ -351,7 +351,7 @@ class C
         }
 
         [Fact]
-        public void TestMultipleFiles()
+        public async System.Threading.Tasks.Task TestMultipleFilesAsync()
         {
             string[] text =
             {
@@ -382,7 +382,7 @@ class C2
 }
 "
             };
-            Verify(Original(text), Readonly(text), true, LanguageNames.CSharp);
+            await Verify(Original(text), Readonly(text), true, LanguageNames.CSharp);
         }
 
         private static string Original(string text)

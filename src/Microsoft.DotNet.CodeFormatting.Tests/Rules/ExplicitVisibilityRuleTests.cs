@@ -324,7 +324,7 @@ public partial class C { }
             }
 
             [Fact]
-            public void PartialAcrossFiles()
+            public async Task PartialAcrossFilesAsync()
             {
                 var text1 = @"
 public partial class C { }
@@ -342,7 +342,7 @@ public partial class C { }
 public partial class C { }
 ";
 
-                Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
+                await Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
             }
 
             [Fact]

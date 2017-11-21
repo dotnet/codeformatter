@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
@@ -10,7 +11,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
     public class RegionRemovalTests : TestBase
     {
         [Fact]
-        public void RemoveDisabledIf()
+        public async Task RemoveDisabledIfAsync()
         {
             var source = @"
 // Test
@@ -25,11 +26,11 @@ class B {}
 // B
 class B {}
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveDisabledIfWithWhitespaceTrivia()
+        public async Task RemoveDisabledIfWithWhitespaceTriviaAsync()
         {
             var source = @"
 class A
@@ -53,11 +54,11 @@ class A
     public int G;
 }
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveDisabledIfWithElse()
+        public async Task RemoveDisabledIfWithElseAsync()
         {
             var source = @"
 // Test
@@ -76,11 +77,11 @@ class B {}
 class B {}
 // End Test
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveDisabledElse()
+        public async Task RemoveDisabledElseAsync()
         {
             var source = @"
 // Test
@@ -99,11 +100,11 @@ class B {}
 class A {}
 // End Test
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveDisabledIfWithVaryingElifElse()
+        public async Task RemoveDisabledIfWithVaryingElifElseAsync()
         {
             // Replace elifs where the previous region is an if
             var source = @"
@@ -131,11 +132,11 @@ class C {}
 #endif // if false
 // End Test
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveDisabledAdjacentUnrelatedRegions()
+        public async Task RemoveDisabledAdjacentUnrelatedRegionsAsync()
         {
             var source = @"
 class C
@@ -171,11 +172,11 @@ class C
 // End Test
 }
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveEnabledIf()
+        public async Task RemoveEnabledIfAsync()
         {
             var source = @"
 // Test
@@ -191,11 +192,11 @@ class A {}
 class A {}
 // End Test
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveEnabledIfWithChain()
+        public async Task RemoveEnabledIfWithChainAsync()
         {
             var source = @"
 #if true
@@ -211,11 +212,11 @@ class D {}
             var expected = @"
 class A {}
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveEnabledElifWithChain()
+        public async Task RemoveEnabledElifWithChainAsync()
         {
             var source = @"
 #if false
@@ -231,11 +232,11 @@ class D {}
             var expected = @"
 class B {}
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveEnabledElseWithChain()
+        public async Task RemoveEnabledElseWithChainAsync()
         {
             var source = @"
 #if false
@@ -251,11 +252,11 @@ class D {}
             var expected = @"
 class D {}
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveIfAndElifWithVaryingChain()
+        public async Task RemoveIfAndElifWithVaryingChainAsync()
         {
             var source = @"
 #if false
@@ -275,11 +276,11 @@ class C {}
 class D {}
 #endif
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveStaggeredElifs()
+        public async Task RemoveStaggeredElifsAsync()
         {
             var source = @"
 #if false
@@ -301,11 +302,11 @@ class B {}
 class D {}
 #endif
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
         [Fact]
-        public void RemoveNestedRegions()
+        public async Task RemoveNestedRegionsAsync()
         {
             var source = @"
 #if false
@@ -319,19 +320,19 @@ class D {}
 ";
             var expected = @"
 ";
-            Verify(source, expected);
+            await Verify(source, expected);
         }
 
-        protected void Verify(string source, string expected, bool runFormatter = true)
+        protected async Task Verify(string source, string expected, bool runFormatter = true)
         {
             var inputSolution = CreateSolution(new[] { source });
             var expectedSolution = CreateSolution(new[] { expected });
 
             var engine = AnalysisEngine.FromProjects(inputSolution.Projects, alwaysIgnoredSymbols: new[] { "VARYING" });
-            var regionInfo = engine.GetConditionalRegionInfo().Result.Single();
-            var actualSolution = engine.RemoveUnnecessaryRegions(regionInfo).Result.Project.Solution;
+            var regionInfo = (await engine.GetConditionalRegionInfo().ConfigureAwait(false)).Single();
+            var actualSolution = (await engine.RemoveUnnecessaryRegions(regionInfo).ConfigureAwait(false)).Project.Solution;
 
-            AssertSolutionEqual(expectedSolution, actualSolution);
+            await AssertSolutionEqual(expectedSolution, actualSolution);
         }
     }
 }
