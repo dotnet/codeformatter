@@ -1,0 +1,25 @@
+queue: Hosted VS2017
+
+steps:
+
+- checkout: self
+  clean: true
+
+- task: MSBuild@1
+  displayName: Restore
+  inputs:
+    solution: src\CodeFormatter.sln
+    msbuildArguments: /t:Restore
+
+- task: MSBuild@1
+  displayName: Restore
+  inputs:
+    solution: src\CodeFormatter.sln
+    msbuildArguments: /bl:"$(Build.ArtifactStagingDirectory)\build.binlog"
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Artifact
+  inputs:
+    PathtoPublish: $(Build.ArtifactStagingDirectory)
+    ArtifactName: output
+    ArtifactType: Container
