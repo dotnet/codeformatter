@@ -85,10 +85,7 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
                 var actual = actualDocuments.Where(d => d.Name == expected.Name).Single();
                 var aText = actual.GetTextAsync().Result.ToString();
                 var eText = expected.GetTextAsync().Result.ToString();
-                if (eText != aText)
-                {
-                    Assert.False(true, "Document " + expected.Name + " did not match.\nActual:\n" + aText + "\nExpected:\n" + eText);
-                }
+                Assert.Equal(eText, aText);
             }
         }
 
