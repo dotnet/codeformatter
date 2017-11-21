@@ -44,10 +44,8 @@ class T
     // some trivia
     private int _k = 1, _s = 2, _rsk_yz = 3, _y_z;
     // some trivia
-    [ThreadStatic]
-    static int t_r;
-    [ThreadStaticAttribute]
-    static int t_r;
+    [ThreadStatic] static int t_r;
+    [ThreadStaticAttribute] static int t_r;
 }";
                 Verify(text, expected);
             }
