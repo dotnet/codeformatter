@@ -23,8 +23,8 @@ steps:
     testAssemblyVer2: |-
       bin\*.Tests\**\*.Tests.dll
       !**\XUnitConverter.Tests.dll
-    runInParallel: 'true'
-    codeCoverageEnabled: 'true'
+    runInParallel: 'false'
+    codeCoverageEnabled: 'false'
     publishRunAttachments: 'true'
 
 - task: PublishBuildArtifacts@1
