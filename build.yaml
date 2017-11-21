@@ -17,6 +17,16 @@ steps:
     solution: src\CodeFormatter.sln
     msbuildArguments: /bl:"$(Build.ArtifactStagingDirectory)\build.binlog"
 
+- task: VSTest@2
+  displayName: Test
+  inputs:
+    testAssemblyVer2: |-
+      bin\*.Tests\**\*.Tests.dll
+      !**\XUnitConverter.Tests.dll
+    runInParallel: 'true'
+    codeCoverageEnabled: 'true'
+    publishRunAttachments: 'true'
+
 - task: PublishBuildArtifacts@1
   displayName: Publish Artifact
   inputs:

@@ -22,6 +22,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{67C4DCF1-00E7-4045-89F5-3C751D2DAA4E}"
 	ProjectSection(SolutionItems) = preProject
 		..\build.props = ..\build.props
+		..\build.yaml = ..\build.yaml
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
 Global
