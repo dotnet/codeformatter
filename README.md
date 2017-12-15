@@ -36,4 +36,4 @@ CodeFormatter <project or solution> [<rule types>] [/file:<filename>] [/nocopyri
 We follow the same contribution process that 
 [corefx is using][corefx-contributing].
 
-[corefx-contributing]: https://github.com/dotnet/corefx/wiki/Contributing
+[corefx-contributing]: https://github.com/dotnet/corefx/blob/master/CONTRIBUTING.md
