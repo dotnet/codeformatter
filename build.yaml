@@ -12,7 +12,7 @@ steps:
     msbuildArguments: /t:Restore
 
 - task: MSBuild@1
-  displayName: Restore
+  displayName: Build
   inputs:
     solution: src\CodeFormatter.sln
     msbuildArguments: /bl:"$(Build.ArtifactStagingDirectory)\build.binlog"
@@ -28,7 +28,7 @@ steps:
     publishRunAttachments: 'true'
 
 - task: PublishBuildArtifacts@1
-  displayName: Publish Artifact
+  displayName: Publish
   inputs:
     PathtoPublish: $(Build.ArtifactStagingDirectory)
     ArtifactName: output
