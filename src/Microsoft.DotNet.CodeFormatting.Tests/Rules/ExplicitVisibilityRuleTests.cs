@@ -324,7 +324,7 @@ public partial class C { }
             }
 
             [Fact]
-            public void PartialAcrossFiles()
+            public async Task PartialAcrossFilesAsync()
             {
                 var text1 = @"
 public partial class C { }
@@ -342,7 +342,7 @@ public partial class C { }
 public partial class C { }
 ";
 
-                Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
+                await Verify(new[] { text1, text2 }, new[] { expected1, expected2 }, runFormatter: false, languageName: LanguageNames.CSharp);
             }
 
             [Fact]
@@ -555,10 +555,11 @@ internal class C
                 Verify(text, expected);
             }
 
+            [Fact]
             public void CommentAttributeAndMultipleField()
             {
                 var text = @"
-class C 
+class C
 {
     // Hello
     [Attr]
@@ -567,7 +568,7 @@ class C
 };";
 
                 var expected = @"
-internal class C 
+internal class C
 {
     // Hello
     [Attr]

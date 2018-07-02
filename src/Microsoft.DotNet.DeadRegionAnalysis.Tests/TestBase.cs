@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
             return solution;
         }
 
-        protected static void AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
+        protected async static Task AssertSolutionEqual(Solution expectedSolution, Solution actualSolution)
         {
             var expectedDocuments = expectedSolution.Projects.SelectMany(p => p.Documents);
             var actualDocuments = actualSolution.Projects.SelectMany(p => p.Documents);
@@ -89,12 +89,9 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
             foreach (var expected in expectedDocuments)
             {
                 var actual = actualDocuments.Where(d => d.Name == expected.Name).Single();
-                var aText = actual.GetTextAsync().Result.ToString();
-                var eText = expected.GetTextAsync().Result.ToString();
-                if (eText != aText)
-                {
-                    Assert.False(true, "Document " + expected.Name + " did not match.\nActual:\n" + aText + "\nExpected:\n" + eText);
-                }
+                var aText = (await actual.GetTextAsync().ConfigureAwait(false)).ToString();
+                var eText = (await expected.GetTextAsync().ConfigureAwait(false)).ToString();
+                Assert.Equal(eText, aText);
             }
         }
 
