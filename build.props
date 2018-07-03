@@ -32,12 +32,12 @@
 
   <!-- Package references -->
   <ItemGroup Condition=" '$(IncludeMSBuild)' == 'true' ">
-    <PackageReference Include="Microsoft.Build" Version="15.1.1012" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.1.1012" />
+    <PackageReference Include="Microsoft.Build" Version="15.7.179" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.7.179" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IncludeRoslyn)' == 'true' ">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.4.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="2.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.8.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup Condition=" '$(IncludeXunit)' == 'true' ">
     <PackageReference Include="xunit" Version="2.3.1" />
