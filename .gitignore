@@ -16,8 +16,8 @@ src/.vs
 [Rr]eleases/
 x64/
 x86/
-build/
 bld/
+tools/
 [Bb]in/
 [Oo]bj/
 msbuild.log
