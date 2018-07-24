@@ -25,13 +25,11 @@
   <ItemGroup>
     <Compile Include="CodeFormattingTestBase.cs" />
     <Compile Include="CommandLineParserTests.cs" />
-    <Compile Include="Rules\BracesRuleTests.cs" />
     <Compile Include="Rules\CombinationTest.cs" />
     <Compile Include="Rules\CopyrightHeaderRuleTests.cs" />
     <Compile Include="Rules\ExplicitThisRuleTests.cs" />
     <Compile Include="Rules\ExplicitVisibilityRuleTests.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRuleTests.cs" />
-    <Compile Include="Rules\NewLineAboveRuleTests.cs" />
     <Compile Include="Rules\PrivateFieldNamingRuleTests.cs" />
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRuleTests.cs" />
     <Compile Include="Rules\MarkReadonlyFieldTests.cs" />

@@ -46,13 +46,11 @@
     <Compile Include="Rules\PrivateFieldNamingRule.CSharp.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.VisualBasic.cs" />
     <Compile Include="Rules\SyntaxFormattingRule.cs" />
-    <Compile Include="Rules\BraceNewLineRule.cs" />
     <Compile Include="Rules\CopyrightHeaderRule.VisualBasic.cs" />
     <Compile Include="Rules\CopyrightHeaderRule.CSharp.cs" />
     <Compile Include="Rules\CSharpOnlyFormattingRule.cs" />
     <Compile Include="Rules\ExplicitVisibilityRule.cs" />
     <Compile Include="Rules\CopyrightHeaderRule.cs" />
-    <Compile Include="Rules\NewLineAboveRule.cs" />
     <Compile Include="Rules\HasNoIllegalHeadersFormattingRule.cs" />
     <Compile Include="Rules\HasNoCustomCopyrightHeaderFormattingRule.cs" />
     <Compile Include="Rules\PrivateFieldNamingRule.cs" />
