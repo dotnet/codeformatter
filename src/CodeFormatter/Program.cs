@@ -3,15 +3,22 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Dynamic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using EditorConfig.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.DotNet.CodeFormatting;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace CodeFormatter
 {
@@ -105,21 +112,23 @@ namespace CodeFormatter
 
             foreach (var item in options.FormatTargets)
             {
-                await RunFormatItemAsync(engine, item, options.Language, cancellationToken);
+                await RunFormatItemAsync(engine, item, options, cancellationToken);
             }
 
             return 0;
         }
 
-        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
-        { 
+        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, CommandLineOptions options, CancellationToken cancellationToken)
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
                 using (var workspace = ResponseFileWorkspace.Create())
                 {
-                    Project project = workspace.OpenCommandLineProject(item, language);
+                    ConfigureWorkspace(workspace, options, item);
+
+                    Project project = workspace.OpenCommandLineProject(item, options.Language);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
@@ -127,6 +136,8 @@ namespace CodeFormatter
             {
                 using (var workspace = MSBuildWorkspace.Create())
                 {
+                    ConfigureWorkspace(workspace, options, item);
+
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
                     await engine.FormatSolutionAsync(solution, cancellationToken);
@@ -136,6 +147,8 @@ namespace CodeFormatter
             {
                 using (var workspace = MSBuildWorkspace.Create())
                 {
+                    ConfigureWorkspace(workspace, options, item);
+
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
@@ -159,6 +172,92 @@ namespace CodeFormatter
             }
 
             return true;
+        }
+
+        static void ConfigureWorkspace(Workspace workspace, CommandLineOptions options, string item)
+        {
+            if(options.UseEditorConfig)
+                ConfigureWorkspaceWithEditorConfig(workspace, options, item);
+        }
+
+        static void ConfigureWorkspaceWithEditorConfig(Workspace workspace, CommandLineOptions options, string item)
+        {
+            // Save the current directory to restore it after using the EditorConfigParser
+            var previousCurrentDirectory = Directory.GetCurrentDirectory();
+            try
+            {
+                // Since the EditorConfigParser nuget searches for the .editorconfig hierarchy using
+                // the current directory, we need to change it to the item path in order for it to find it
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(item));
+
+                var editorConfigParser = new EditorConfigParser();
+                var editorConfigItems = default(IEnumerable<FileConfiguration>);
+
+                if (options.Language == LanguageNames.CSharp)
+                    editorConfigItems = editorConfigParser.Parse(".cs");
+                else if (options.Language == LanguageNames.VisualBasic)
+                    editorConfigItems = editorConfigParser.Parse(".vb");
+                else
+                    return;
+
+                // Microsoft.CodeAnalysis.Options.IOptionService
+                var optionService = workspace
+                    .AsDynamicReflection()
+                    ._workspaceOptionService;
+
+                // Get the registered options in the roslyn workspace
+                IEnumerable<IOption> registeredOptions = optionService.GetRegisteredOptions();
+
+                foreach (var option in registeredOptions.Where(x => x.StorageLocations != null))
+                {
+                    // Get the EditorConfig storage of the option
+                    OptionStorageLocation editorConfigStorageLocation = option
+                        .StorageLocations
+                        .FirstOrDefault(x => x.GetType().Name == "EditorConfigStorageLocation`1");
+
+                    // If it's null, it means that the option in the workspace does not have a corresponding storage in the .editorconfig file.
+                    if (editorConfigStorageLocation != null)
+                    {
+                        string editorConfigKey = editorConfigStorageLocation.AsDynamicReflection().KeyName;
+
+                        // Get the value in the .editorconfig associated with the editorConfig storage key
+                        string editorConfigValue =
+                            (from editorConfigItem in editorConfigItems
+                             from prop in editorConfigItem.Properties
+                             where prop.Key == editorConfigKey
+                             select prop.Value).FirstOrDefault();
+
+                        if (!string.IsNullOrEmpty(editorConfigValue))
+                        {
+                            // Map the value in the .editorconfig file to the Option value in the roslyn workspace
+                            // by invoking Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation<T>.TryOption(...) 
+                            object optionValue = default(object);
+                            if (editorConfigStorageLocation.AsDynamicReflection().TryGetOption(
+                                    option,
+                                    new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
+                                    {
+                                        { editorConfigKey, editorConfigValue }
+                                    }),
+                                    option.Type,
+                                    OutValue.Create<object>(x => optionValue = x)))
+                            {
+                                var optionKey = new OptionKey(
+                                    option,
+                                    option.IsPerLanguage ? options.Language : null);
+
+                                Console.WriteLine($"Applying {editorConfigKey}={editorConfigValue} setting into {option.Name}={optionValue}...");
+                                // And finally set the option value in the workspace
+                                workspace.Options = workspace.Options.WithChangedOption(optionKey, optionValue);
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                // And restore the original current directory
+                Directory.SetCurrentDirectory(previousCurrentDirectory);
+            }
         }
     }
 }

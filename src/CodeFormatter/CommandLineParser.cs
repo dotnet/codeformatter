@@ -27,6 +27,7 @@ namespace CodeFormatter
             ImmutableDictionary<string, bool>.Empty,
             ImmutableArray<string>.Empty,
             ImmutableArray<string>.Empty,
+            true,
             null,
             allowTables: false,
             verbose: false);
@@ -38,6 +39,7 @@ namespace CodeFormatter
             ImmutableDictionary<string, bool>.Empty,
             ImmutableArray<string>.Empty,
             ImmutableArray<string>.Empty,
+            true,
             null,
             allowTables: false,
             verbose: false);
@@ -49,6 +51,7 @@ namespace CodeFormatter
         public readonly ImmutableDictionary<string, bool> RuleMap;
         public readonly ImmutableArray<string> FormatTargets;
         public readonly ImmutableArray<string> FileNames;
+        public readonly bool UseEditorConfig;
         public readonly string Language;
         public readonly bool AllowTables;
         public readonly bool Verbose;
@@ -60,6 +63,7 @@ namespace CodeFormatter
             ImmutableDictionary<string, bool> ruleMap,
             ImmutableArray<string> formatTargets,
             ImmutableArray<string> fileNames,
+            bool useEditorConfig,
             string language,
             bool allowTables,
             bool verbose)
@@ -70,6 +74,7 @@ namespace CodeFormatter
             RuleMap = ruleMap;
             FileNames = fileNames;
             FormatTargets = formatTargets;
+            UseEditorConfig = useEditorConfig;
             Language = language;
             AllowTables = allowTables;
             Verbose = verbose;
@@ -137,7 +142,7 @@ namespace CodeFormatter
         private const string RuleDisabledSwitch = "/rule-:";
         private const string Usage =
 @"CodeFormatter [/file:<filename>] [/lang:<language>] [/c:<config>[,<config>...]>]
-    [/copyright(+|-):[<file>]] [/tables] [/nounicode] 
+    [/copyright(+|-):[<file>]] [/tables] [/nounicode] [/noEditorConfig] 
     [/rule(+|-):rule1,rule2,...]  [/verbose]
     <project, solution or response file>
 
@@ -153,6 +158,7 @@ namespace CodeFormatter
     /tables         - Let tables opt out of formatting by defining
                       DOTNET_FORMATTER
     /nounicode      - Do not convert unicode strings to escape sequences
+    /noEditorConfig - Do not use the .editorConfig file to configure the formatting options
     /rule(+|-)      - Enable (default) or disable the specified rule
     /rules          - List the available rules
     /verbose        - Verbose output
@@ -183,6 +189,7 @@ namespace CodeFormatter
             var language = LanguageNames.CSharp;
             var allowTables = false;
             var verbose = false;
+            var useEditorConfig = true;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -220,6 +227,10 @@ namespace CodeFormatter
                 {   // We still check /nocopyright for backwards compat
 
                     ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, false);
+                }
+                else if (comparer.Equals(args, "/noEditorConfig"))
+                {
+                    useEditorConfig = false;
                 }
                 else if (arg.StartsWith(LanguageSwitch, comparison))
                 {
@@ -283,6 +294,7 @@ namespace CodeFormatter
                 ruleMap,
                 formatTargets.ToImmutableArray(),
                 fileNames.ToImmutableArray(),
+                useEditorConfig,
                 language,
                 allowTables,
                 verbose);

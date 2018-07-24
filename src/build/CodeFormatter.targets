@@ -5,7 +5,7 @@
   <Target Name="_FormatCode">
     <PropertyGroup>
       <CodeFormatterToolWithArgs>$(CodeFormatterTool)</CodeFormatterToolWithArgs>
-      <CodeFormatterToolWithArgs Condition="'$(CodeFormatterUseTabs)' == 'true'">$(CodeFormatterToolWithArgs) /usetabs</CodeFormatterToolWithArgs>
+      <CodeFormatterToolWithArgs Condition="'$(EditorConfigPath)' != ''">$(CodeFormatterToolWithArgs)</CodeFormatterToolWithArgs>
     </PropertyGroup>
 
     <Exec Command="$(CodeFormatterToolWithArgs) %(FormatSolution.Identity)" />

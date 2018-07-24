@@ -22,9 +22,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="editorconfig" Version="0.12.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="CommandLineParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\Dynamic\DynamicReflection.cs" />
+    <Compile Include="System\Dynamic\OutValue.cs" />
+    <Compile Include="System\Dynamic\RefValue.cs" />
+    <Compile Include="System\Dynamic\TypeParameter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CopyrightHeader.md">
@@ -43,6 +50,7 @@
       <Name>Microsoft.DotNet.CodeFormatting</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CopyMSBuildForMono" AfterTargets="AfterBuild" Condition=" '$(OS)' == 'Unix' ">
     <ItemGroup>
