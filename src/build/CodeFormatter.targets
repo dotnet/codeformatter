@@ -1,45 +1,14 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Target Name="FormatSources" DependsOnTargets="_FormatCode;_FormatXml" />
+  <Target Name="FormatSources">
 
-  <Target Name="_FormatCode">
     <PropertyGroup>
       <CodeFormatterToolWithArgs>$(CodeFormatterTool)</CodeFormatterToolWithArgs>
-      <CodeFormatterToolWithArgs Condition="'$(EditorConfigPath)' != ''">$(CodeFormatterToolWithArgs)</CodeFormatterToolWithArgs>
+      <CodeFormatterToolWithArgs Condition="'$(AdditionalFileItemNames)' != ''">$(CodeFormatterToolWithArgs) /additionalFileItemNames:$(AdditionalFileItemNames)</CodeFormatterToolWithArgs>
+      <CodeFormatterToolWithArgs Condition="'$(CodeFormatterAdditionalArgs)' != ''">$(CodeFormatterToolWithArgs) $(CodeFormatterAdditionalArgs)</CodeFormatterToolWithArgs>
     </PropertyGroup>
 
-    <Exec Command="$(CodeFormatterToolWithArgs) %(FormatSolution.Identity)" />
+    <Exec Command="$(CodeFormatterToolWithArgs) %(CodeFormatterSolution.Identity)" />
   </Target>
-
-  <Target Name="_FormatXml">
-    <Message Text="Formatting %(FormatXml.Identity)..." Importance="high" />
-    <FormatXmlDocument DocumentPath="%(FormatXml.Identity)" UseTabs="true" />
-  </Target>
-
-  <UsingTask TaskName="FormatXmlDocument" TaskFactory="CodeTaskFactory" AssemblyFile="$(CodeTaskAssembly)" Condition=" '$(CodeTaskAssembly)' != '' ">
-    <ParameterGroup>
-      <DocumentPath Required="true" />
-      <UseTabs ParameterType="System.Boolean" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.Xml" />
-      <Reference Include="System.Xml.Linq" />
-      <Using Namespace="System.Xml" />
-      <Using Namespace="System.Xml.Linq" />
-      <Code Type="Fragment" Language="cs">
-        var document = XDocument.Load(DocumentPath);
-        var settings = new XmlWriterSettings();
-
-        if(UseTabs)
-        {
-        settings.Indent = true;
-        settings.IndentChars = "\t";
-        }
-
-        using (var writer = XmlTextWriter.Create(DocumentPath, settings))
-        document.WriteTo(writer);
-      </Code>
-    </Task>
-  </UsingTask>
 
 </Project>

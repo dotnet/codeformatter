@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <CodeFormatterTool>$(MSBuildThisFileDirectory)..\tools\CodeFormatter.exe</CodeFormatterTool>
-    <CodeFormatterUseTabs Condition="'$(CodeFormatterUseTabs)' == ''">true</CodeFormatterUseTabs>
   </PropertyGroup>
 
 </Project>
