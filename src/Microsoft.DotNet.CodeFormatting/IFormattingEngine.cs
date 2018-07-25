@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
+using Microsoft.CodeAnalysis.Options;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -19,6 +21,7 @@ namespace Microsoft.DotNet.CodeFormatting
         ImmutableArray<IRuleMetadata> AllRules { get; }
         bool AllowTables { get; set; }
         bool Verbose { get; set; }
+        bool UseEditorConfig { get; set; }
         void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled);
         Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken);
         Task FormatProjectAsync(Project project, CancellationToken cancellationToken);

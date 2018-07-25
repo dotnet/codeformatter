@@ -1,0 +1,14 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="FormatSources">
+
+    <PropertyGroup>
+      <CodeFormatterToolWithArgs>$(CodeFormatterTool)</CodeFormatterToolWithArgs>
+      <CodeFormatterToolWithArgs Condition="'$(AdditionalFileItemNames)' != ''">$(CodeFormatterToolWithArgs) /additionalFileItemNames:$(AdditionalFileItemNames)</CodeFormatterToolWithArgs>
+      <CodeFormatterToolWithArgs Condition="'$(CodeFormatterAdditionalArgs)' != ''">$(CodeFormatterToolWithArgs) $(CodeFormatterAdditionalArgs)</CodeFormatterToolWithArgs>
+    </PropertyGroup>
+
+    <Exec Command="$(CodeFormatterToolWithArgs) %(CodeFormatterSolution.Identity)" />
+  </Target>
+
+</Project>

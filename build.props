@@ -6,9 +6,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MsBuildThisFileDirectory)obj\$(MSBuildProjectName)\$(Configuration)\</IntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)' == ''">$(MsBuildThisFileDirectory)bin\$(MSBuildProjectName)\$(Configuration)\</OutputPath>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <RestorePackages>true</RestorePackages>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   
   <!-- Configuration specific properties -->
@@ -27,4 +29,18 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
+  <!-- Package references -->
+  <ItemGroup Condition=" '$(IncludeMSBuild)' == 'true' ">
+    <PackageReference Include="Microsoft.Build" Version="15.7.179" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.7.179" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(IncludeRoslyn)' == 'true' ">
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.8.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic.Workspaces" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(IncludeXunit)' == 'true' ">
+    <PackageReference Include="xunit" Version="2.3.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+  </ItemGroup>
 </Project>

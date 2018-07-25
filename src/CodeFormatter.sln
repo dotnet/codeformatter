@@ -1,18 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27110.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.CodeFormatting", "Microsoft.DotNet.CodeFormatting\Microsoft.DotNet.CodeFormatting.csproj", "{D535641F-A2D7-481C-930D-96C02F052B95}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeFormatter", "CodeFormatter\CodeFormatter.csproj", "{B0E1A988-F762-459D-AD0D-56A3CF4FFF3F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.CodeFormatting.Tests", "Microsoft.DotNet.CodeFormatting.Tests\Microsoft.DotNet.CodeFormatting.Tests.csproj", "{D4D6FF88-0586-43C7-BDE4-D336EB25E7AA}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{34034F12-9FB5-4154-91DA-7914B7D013BD}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitConverter", "XUnitConverter\XUnitConverter.csproj", "{81B0FF57-C128-4F6B-83C7-94DBAF261582}"
 EndProject
@@ -23,6 +18,16 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.DeadRegionAnalysis.Tests", "Microsoft.DotNet.DeadRegionAnalysis.Tests\Microsoft.DotNet.DeadRegionAnalysis.Tests.csproj", "{7C57FD95-030E-48B2-B369-6694BB922C8C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeadRegions", "DeadRegions\DeadRegions.csproj", "{B65D5F61-64BF-4219-863C-74C2744AE8FC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{67C4DCF1-00E7-4045-89F5-3C751D2DAA4E}"
+	ProjectSection(SolutionItems) = preProject
+		..\build.props = ..\build.props
+		..\build.yaml = ..\build.yaml
+		build\CodeFormatter.props = build\CodeFormatter.props
+		build\CodeFormatter.targets = build\CodeFormatter.targets
+		..\LICENSE = ..\LICENSE
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,5 +70,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6E53F137-7FE5-4FB6-A9D5-DF4476061451}
 	EndGlobalSection
 EndGlobal

@@ -113,21 +113,21 @@ namespace Microsoft.DotNet.CodeFormatting.Tests
         public void Help()
         {
             var options = Parse("/help");
-            Assert.Equal(options.Operation, Operation.ShowHelp);
+            Assert.Equal(Operation.ShowHelp, options.Operation);
         }
 
         [Fact]
         public void HelpShortForm()
         {
             var options = Parse("/?");
-            Assert.Equal(options.Operation, Operation.ShowHelp);
+            Assert.Equal(Operation.ShowHelp, options.Operation);
         }
 
         [Fact]
         public void HelpWithOtherwiseValidArguments()
         {
             var options = Parse("test.csproj", "/nocopyright", "/help");
-            Assert.Equal(options.Operation, Operation.ShowHelp);
+            Assert.Equal(Operation.ShowHelp, options.Operation);
         }
 
         [Fact]

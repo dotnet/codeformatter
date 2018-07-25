@@ -3,15 +3,22 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Dynamic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using EditorConfig.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.DotNet.CodeFormatting;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace CodeFormatter
 {
@@ -57,7 +64,7 @@ namespace CodeFormatter
             Console.WriteLine("==============================================");
             foreach (var rule in rules)
             {
-                Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
+                Console.WriteLine("{0,-20} :{1} {2}", rule.Name, rule.Description, !rule.IsDefaultEnabled ? "(disabled by default)" : string.Empty);
             }
         }
 
@@ -97,6 +104,7 @@ namespace CodeFormatter
             engine.CopyrightHeader = options.CopyrightHeader;
             engine.AllowTables = options.AllowTables;
             engine.Verbose = options.Verbose;
+            engine.UseEditorConfig = options.UseEditorConfig;
 
             if (!SetRuleMap(engine, options.RuleMap))
             {
@@ -105,27 +113,27 @@ namespace CodeFormatter
 
             foreach (var item in options.FormatTargets)
             {
-                await RunFormatItemAsync(engine, item, options.Language, cancellationToken);
+                await RunFormatItemAsync(engine, item, options, cancellationToken);
             }
 
             return 0;
         }
 
-        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
-        { 
+        private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, CommandLineOptions options, CancellationToken cancellationToken)
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
                 using (var workspace = ResponseFileWorkspace.Create())
                 {
-                    Project project = workspace.OpenCommandLineProject(item, language);
+                    Project project = workspace.OpenCommandLineProject(item, options.Language);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
             else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateMSBuildWorkspace(options))
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
@@ -134,13 +142,23 @@ namespace CodeFormatter
             }
             else
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateMSBuildWorkspace(options))
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
+        }
+
+        static MSBuildWorkspace CreateMSBuildWorkspace(CommandLineOptions options)
+        {
+            var props = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(options.AdditionalFileItemNames))
+                props.Add("AdditionalFileItemNames", options.AdditionalFileItemNames);
+
+            return MSBuildWorkspace.Create(props);
         }
 
         private static bool SetRuleMap(IFormattingEngine engine, ImmutableDictionary<string, bool> ruleMap)

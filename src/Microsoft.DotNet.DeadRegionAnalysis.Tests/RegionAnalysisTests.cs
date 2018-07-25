@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
@@ -11,7 +12,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
     public class RegionAnalysisTests : TestBase
     {
         [Fact]
-        public void IdentifySharedIf()
+        public async Task IdentifySharedIfAsync()
         {
             var source = @"
 #if true
@@ -26,11 +27,11 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 Tristate.Varying
             };
 
-            Verify(source, expectedStates);
+            await Verify(source, expectedStates);
         }
 
         [Fact]
-        public void IdentifySharedElse()
+        public async Task IdentifySharedElseAsync()
         {
             var source = @"
 #if false
@@ -47,11 +48,11 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 Tristate.Varying
             };
 
-            Verify(source, expectedStates);
+            await Verify(source, expectedStates);
         }
 
         [Fact]
-        public void IdentifySharedElif()
+        public async Task IdentifySharedElifAsync()
         {
             var source = @"
 #if false
@@ -68,11 +69,11 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 Tristate.False
             };
 
-            Verify(source, expectedStates);
+            await Verify(source, expectedStates);
         }
 
         [Fact]
-        public void IdentifySharedNestedIf()
+        public async Task IdentifySharedNestedIfAsync()
         {
             var source = @"
 #if true
@@ -93,11 +94,11 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 Tristate.False
             };
 
-            Verify(source, expectedStates);
+            await Verify(source, expectedStates);
         }
 
         [Fact]
-        public void IdentifySharedNestedDisabledIfs()
+        public async Task IdentifySharedNestedDisabledIfsAsync()
         {
             var source = @"
 #if false
@@ -121,13 +122,13 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 Tristate.Varying
             };
 
-            Verify(source, expectedStates);
+            await Verify(source, expectedStates);
         }
 
         private static readonly string[] s_defaultPreprocessorSymbolsA = new[] { "A" };
         private static readonly string[] s_defaultPreprocessorSymbolsB = new[] { "B" };
 
-        private void Verify(string source, Tristate[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
+        private async Task Verify(string source, Tristate[] expectedStates, string[] preprocessorSymbolsA = null, string[] preprocessorSymbolsB = null)
         {
             if (preprocessorSymbolsA == null)
             {
@@ -143,7 +144,7 @@ namespace Microsoft.DotNet.DeadRegionAnalysis.Tests
                 new[] { projectA },
                 symbolConfigurations: new[] { preprocessorSymbolsA, preprocessorSymbolsB });
 
-            var regionInfo = engine.GetConditionalRegionInfo().Result.Single();
+            var regionInfo = (await engine.GetConditionalRegionInfo().ConfigureAwait(false)).Single();
             var regions = regionInfo.Chains.SelectMany(c => c.Regions).ToArray();
             Array.Sort(regions);
 

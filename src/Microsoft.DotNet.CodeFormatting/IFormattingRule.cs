@@ -3,10 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
+using EditorConfig.Core;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
@@ -42,5 +44,10 @@ namespace Microsoft.DotNet.CodeFormatting
     internal interface IGlobalSemanticFormattingRule : IFormattingRule
     {
         Task<Solution> ProcessAsync(Document document, SyntaxNode syntaxRoot, CancellationToken cancellationToken);
+    }
+
+    internal interface ITextDocumentFormattingRule : IFormattingRule
+    {
+        Task<Solution> ProcessAsync(TextDocument document, FileConfiguration config, CancellationToken cancellationToken);
     }
 }

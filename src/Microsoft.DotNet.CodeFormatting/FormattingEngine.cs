@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.CodeFormatting
             AppendRules<ISyntaxFormattingRule>(list, container);
             AppendRules<ILocalSemanticFormattingRule>(list, container);
             AppendRules<IGlobalSemanticFormattingRule>(list, container);
+            AppendRules<ITextDocumentFormattingRule>(list, container);
             return list;
         }
 

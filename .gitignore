@@ -7,6 +7,7 @@ syntax: glob
 *.user
 *.userosscache
 *.sln.docstates
+src/.vs
 
 # Build results
 [Dd]ebug/
@@ -15,8 +16,8 @@ syntax: glob
 [Rr]eleases/
 x64/
 x86/
-build/
 bld/
+tools/
 [Bb]in/
 [Oo]bj/
 msbuild.log

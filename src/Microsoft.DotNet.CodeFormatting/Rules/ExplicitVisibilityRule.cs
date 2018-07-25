@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
-    [LocalSemanticRule(ExplicitVisibilityRule.Name, ExplicitVisibilityRule.Description, LocalSemanticRuleOrder.ExplicitVisibilityRule)]
+    [LocalSemanticRule(ExplicitVisibilityRule.Name, ExplicitVisibilityRule.Description, LocalSemanticRuleOrder.ExplicitVisibilityRule, IsDefaultEnabled = false)]
     internal sealed partial class ExplicitVisibilityRule : ILocalSemanticFormattingRule
     {
         internal const string Name = "ExplicitVisibility";
