@@ -16,11 +16,14 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Options;
+using System.Collections.Concurrent;
+using EditorConfig.Core;
 
 namespace Microsoft.DotNet.CodeFormatting
 {
     [Export(typeof(IFormattingEngine))]
-    internal sealed class FormattingEngineImplementation : IFormattingEngine
+    internal sealed class FormattingEngineImplementation : IFormattingEngine, IEditorConfigProvider
     {
         /// <summary>
         /// Developers who want to opt out of the code formatter for items like unicode
@@ -28,11 +31,13 @@ namespace Microsoft.DotNet.CodeFormatting
         /// </summary>
         internal const string TablePreprocessorSymbolName = "DOTNET_FORMATTER";
 
+        private readonly Lazy<EditorConfigParser> _editorConfigParser;
         private readonly Options _options;
         private readonly IEnumerable<IFormattingFilter> _filters;
         private readonly IEnumerable<Lazy<ISyntaxFormattingRule, IRuleMetadata>> _syntaxRules;
         private readonly IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> _localSemanticRules;
         private readonly IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> _globalSemanticRules;
+        private readonly IEnumerable<Lazy<ITextDocumentFormattingRule, IRuleMetadata>> _textDocumentRules;
         private readonly Stopwatch _watch = new Stopwatch();
         private readonly Dictionary<string, bool> _ruleMap = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private bool _allowTables;
@@ -74,6 +79,8 @@ namespace Microsoft.DotNet.CodeFormatting
             set { _verbose = value; }
         }
 
+        public bool UseEditorConfig { get; set; }
+
         public ImmutableArray<IRuleMetadata> AllRules
         {
             get
@@ -82,6 +89,7 @@ namespace Microsoft.DotNet.CodeFormatting
                 list.AddRange(_syntaxRules.Select(x => x.Metadata));
                 list.AddRange(_localSemanticRules.Select(x => x.Metadata));
                 list.AddRange(_globalSemanticRules.Select(x => x.Metadata));
+                list.AddRange(_textDocumentRules.Select(x => x.Metadata));
                 return list.ToImmutableArray();
             }
         }
@@ -92,13 +100,16 @@ namespace Microsoft.DotNet.CodeFormatting
             [ImportMany] IEnumerable<IFormattingFilter> filters,
             [ImportMany] IEnumerable<Lazy<ISyntaxFormattingRule, IRuleMetadata>> syntaxRules,
             [ImportMany] IEnumerable<Lazy<ILocalSemanticFormattingRule, IRuleMetadata>> localSemanticRules,
-            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> globalSemanticRules)
+            [ImportMany] IEnumerable<Lazy<IGlobalSemanticFormattingRule, IRuleMetadata>> globalSemanticRules,
+            [ImportMany] IEnumerable<Lazy<ITextDocumentFormattingRule, IRuleMetadata>> textDocumentRules)
         {
             _options = options;
             _filters = filters;
             _syntaxRules = syntaxRules;
             _localSemanticRules = localSemanticRules;
             _globalSemanticRules = globalSemanticRules;
+            _textDocumentRules = textDocumentRules;
+            _editorConfigParser = new Lazy<EditorConfigParser>(() => new EditorConfigParser());
 
             foreach (var rule in AllRules)
             {
@@ -119,12 +130,13 @@ namespace Microsoft.DotNet.CodeFormatting
         public Task FormatSolutionAsync(Solution solution, CancellationToken cancellationToken)
         {
             var documentIds = solution.Projects.SelectMany(x => x.DocumentIds).ToList();
-            return FormatAsync(solution.Workspace, documentIds, cancellationToken);
+            var additionalDocumentIds = solution.Projects.SelectMany(x => x.AdditionalDocumentIds).ToList();
+            return FormatAsync(solution.Workspace, documentIds, additionalDocumentIds, cancellationToken);
         }
 
         public Task FormatProjectAsync(Project project, CancellationToken cancellationToken)
         {
-            return FormatAsync(project.Solution.Workspace, project.DocumentIds, cancellationToken);
+            return FormatAsync(project.Solution.Workspace, project.DocumentIds, project.AdditionalDocumentIds, cancellationToken);
         }
 
         public void ToggleRuleEnabled(IRuleMetadata ruleMetaData, bool enabled)
@@ -132,13 +144,21 @@ namespace Microsoft.DotNet.CodeFormatting
             _ruleMap[ruleMetaData.Name] = enabled;
         }
 
-        private async Task FormatAsync(Workspace workspace, IReadOnlyList<DocumentId> documentIds, CancellationToken cancellationToken)
+        private async Task FormatAsync(
+            Workspace workspace,
+            IReadOnlyList<DocumentId> documentIds,
+            IReadOnlyList<DocumentId> additionalDocumentIds,
+            CancellationToken cancellationToken)
         {
+            FormatLogger.WriteLine($"Found {documentIds.Count} documents to be formatted...");
+            FormatLogger.WriteLine($"Found {additionalDocumentIds.Count} additional documents to be formatted...");
+
             var watch = new Stopwatch();
             watch.Start();
 
             var originalSolution = workspace.CurrentSolution;
             var solution = await FormatCoreAsync(originalSolution, documentIds, cancellationToken);
+            solution = await FormatAdditionalDocumentsAsync(solution, additionalDocumentIds, cancellationToken);
 
             watch.Stop();
 
@@ -208,6 +228,27 @@ namespace Microsoft.DotNet.CodeFormatting
             return solution;
         }
 
+        internal async Task<Solution> FormatAdditionalDocumentsAsync(Solution originalSolution, IReadOnlyList<DocumentId> additionalDocumentIds, CancellationToken cancellationToken)
+        {
+            FormatLogger.WriteLine($"\tAdditional Documents Pass");
+
+            var solution = originalSolution;
+
+            foreach (var documentId in additionalDocumentIds)
+            {
+                using (var textDocument = new ConfiguredAdditionalDocument(originalSolution, documentId, this))
+                {
+                    foreach (var rule in GetOrderedRules(_textDocumentRules))
+                    {
+                        if (rule.SupportsLanguage(textDocument.Value.Project.Language))
+                            solution = await rule.ProcessAsync(textDocument.Value, textDocument.Configuration, cancellationToken);
+                    }
+                }
+            }
+
+            return solution;
+        }
+
         private bool ShouldBeProcessed(Document document)
         {
             foreach (var filter in _filters)
@@ -267,20 +308,22 @@ namespace Microsoft.DotNet.CodeFormatting
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
             {
-                var document = originalSolution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(document, cancellationToken);
-                if (syntaxRoot == null)
+                using (var document = new ConfiguredDocument(originalSolution, documentId, this))
                 {
-                    continue;
-                }
+                    var syntaxRoot = await GetSyntaxRootAndFilter(document.Value, cancellationToken);
+                    if (syntaxRoot == null)
+                    {
+                        continue;
+                    }
 
-                StartDocument();
-                var newRoot = RunSyntaxPass(syntaxRoot, document.Project.Language);
-                EndDocument(document);
+                    StartDocument();
+                    var newRoot = RunSyntaxPass(syntaxRoot, document.Value.Project.Language);
+                    EndDocument(document.Value);
 
-                if (newRoot != syntaxRoot)
-                {
-                    currentSolution = currentSolution.WithDocumentSyntaxRoot(document.Id, newRoot);
+                    if (newRoot != syntaxRoot)
+                    {
+                        currentSolution = currentSolution.WithDocumentSyntaxRoot(document.Value.Id, newRoot);
+                    }
                 }
             }
 
@@ -321,20 +364,22 @@ namespace Microsoft.DotNet.CodeFormatting
             var currentSolution = originalSolution;
             foreach (var documentId in documentIds)
             {
-                var document = originalSolution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(localSemanticRule, document, cancellationToken);
-                if (syntaxRoot == null)
+                using (var document = new ConfiguredDocument(originalSolution, documentId, this))
                 {
-                    continue;
-                }
+                    var syntaxRoot = await GetSyntaxRootAndFilter(localSemanticRule, document.Value, cancellationToken);
+                    if (syntaxRoot == null)
+                    {
+                        continue;
+                    }
 
-                StartDocument();
-                var newRoot = await localSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
-                EndDocument(document);
+                    StartDocument();
+                    var newRoot = await localSemanticRule.ProcessAsync(document.Value, syntaxRoot, cancellationToken);
+                    EndDocument(document.Value);
 
-                if (syntaxRoot != newRoot)
-                {
-                    currentSolution = currentSolution.WithDocumentSyntaxRoot(documentId, newRoot);
+                    if (syntaxRoot != newRoot)
+                    {
+                        currentSolution = currentSolution.WithDocumentSyntaxRoot(documentId, newRoot);
+                    }
                 }
             }
 
@@ -361,19 +406,30 @@ namespace Microsoft.DotNet.CodeFormatting
 
             foreach (var documentId in documentIds)
             {
-                var document = solution.GetDocument(documentId);
-                var syntaxRoot = await GetSyntaxRootAndFilter(globalSemanticRule, document, cancellationToken);
-                if (syntaxRoot == null)
+                using (var document = new ConfiguredDocument(solution, documentId, this))
                 {
-                    continue;
-                }
+                    var syntaxRoot = await GetSyntaxRootAndFilter(globalSemanticRule, document.Value, cancellationToken);
+                    if (syntaxRoot == null)
+                    {
+                        continue;
+                    }
 
-                StartDocument();
-                solution = await globalSemanticRule.ProcessAsync(document, syntaxRoot, cancellationToken);
-                EndDocument(document);
+                    StartDocument();
+                    solution = await globalSemanticRule.ProcessAsync(document.Value, syntaxRoot, cancellationToken);
+                    EndDocument(document.Value);
+                }
             }
 
             return solution;
         }
+
+        public FileConfiguration GetConfiguration(Document document) =>
+            GetConfiguration(document.FilePath);
+
+        public FileConfiguration GetConfiguration(TextDocument document) =>
+            GetConfiguration(document.FilePath);
+
+        FileConfiguration GetConfiguration(string file) =>
+            UseEditorConfig ? _editorConfigParser.Value.Parse(file).FirstOrDefault() : null;
     }
 }

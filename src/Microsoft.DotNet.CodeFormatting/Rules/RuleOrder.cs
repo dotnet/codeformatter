@@ -37,4 +37,9 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         public const int PrivateFieldNamingRule = 1;
         public const int MarkReadonlyFieldsRule = 2;
     }
+
+    internal static class TextDocumentRuleOrder
+    {
+        public const int FormatXmlDocumentRule = 1;
+    }
 }

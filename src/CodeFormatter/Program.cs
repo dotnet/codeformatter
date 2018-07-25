@@ -104,6 +104,7 @@ namespace CodeFormatter
             engine.CopyrightHeader = options.CopyrightHeader;
             engine.AllowTables = options.AllowTables;
             engine.Verbose = options.Verbose;
+            engine.UseEditorConfig = options.UseEditorConfig;
 
             if (!SetRuleMap(engine, options.RuleMap))
             {
@@ -126,18 +127,14 @@ namespace CodeFormatter
             {
                 using (var workspace = ResponseFileWorkspace.Create())
                 {
-                    ConfigureWorkspace(workspace, options, item);
-
                     Project project = workspace.OpenCommandLineProject(item, options.Language);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
             else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateMSBuildWorkspace(options))
                 {
-                    ConfigureWorkspace(workspace, options, item);
-
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
                     await engine.FormatSolutionAsync(solution, cancellationToken);
@@ -145,15 +142,23 @@ namespace CodeFormatter
             }
             else
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateMSBuildWorkspace(options))
                 {
-                    ConfigureWorkspace(workspace, options, item);
-
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
             }
+        }
+
+        static MSBuildWorkspace CreateMSBuildWorkspace(CommandLineOptions options)
+        {
+            var props = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(options.AdditionalFileItemNames))
+                props.Add("AdditionalFileItemNames", options.AdditionalFileItemNames);
+
+            return MSBuildWorkspace.Create(props);
         }
 
         private static bool SetRuleMap(IFormattingEngine engine, ImmutableDictionary<string, bool> ruleMap)
@@ -172,92 +177,6 @@ namespace CodeFormatter
             }
 
             return true;
-        }
-
-        static void ConfigureWorkspace(Workspace workspace, CommandLineOptions options, string item)
-        {
-            if(options.UseEditorConfig)
-                ConfigureWorkspaceWithEditorConfig(workspace, options, item);
-        }
-
-        static void ConfigureWorkspaceWithEditorConfig(Workspace workspace, CommandLineOptions options, string item)
-        {
-            // Save the current directory to restore it after using the EditorConfigParser
-            var previousCurrentDirectory = Directory.GetCurrentDirectory();
-            try
-            {
-                // Since the EditorConfigParser nuget searches for the .editorconfig hierarchy using
-                // the current directory, we need to change it to the item path in order for it to find it
-                Directory.SetCurrentDirectory(Path.GetDirectoryName(item));
-
-                var editorConfigParser = new EditorConfigParser();
-                var editorConfigItems = default(IEnumerable<FileConfiguration>);
-
-                if (options.Language == LanguageNames.CSharp)
-                    editorConfigItems = editorConfigParser.Parse(".cs");
-                else if (options.Language == LanguageNames.VisualBasic)
-                    editorConfigItems = editorConfigParser.Parse(".vb");
-                else
-                    return;
-
-                // Microsoft.CodeAnalysis.Options.IOptionService
-                var optionService = workspace
-                    .AsDynamicReflection()
-                    ._workspaceOptionService;
-
-                // Get the registered options in the roslyn workspace
-                IEnumerable<IOption> registeredOptions = optionService.GetRegisteredOptions();
-
-                foreach (var option in registeredOptions.Where(x => x.StorageLocations != null))
-                {
-                    // Get the EditorConfig storage of the option
-                    OptionStorageLocation editorConfigStorageLocation = option
-                        .StorageLocations
-                        .FirstOrDefault(x => x.GetType().Name == "EditorConfigStorageLocation`1");
-
-                    // If it's null, it means that the option in the workspace does not have a corresponding storage in the .editorconfig file.
-                    if (editorConfigStorageLocation != null)
-                    {
-                        string editorConfigKey = editorConfigStorageLocation.AsDynamicReflection().KeyName;
-
-                        // Get the value in the .editorconfig associated with the editorConfig storage key
-                        string editorConfigValue =
-                            (from editorConfigItem in editorConfigItems
-                             from prop in editorConfigItem.Properties
-                             where prop.Key == editorConfigKey
-                             select prop.Value).FirstOrDefault();
-
-                        if (!string.IsNullOrEmpty(editorConfigValue))
-                        {
-                            // Map the value in the .editorconfig file to the Option value in the roslyn workspace
-                            // by invoking Microsoft.CodeAnalysis.Options.EditorConfigStorageLocation<T>.TryOption(...) 
-                            object optionValue = default(object);
-                            if (editorConfigStorageLocation.AsDynamicReflection().TryGetOption(
-                                    option,
-                                    new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
-                                    {
-                                        { editorConfigKey, editorConfigValue }
-                                    }),
-                                    option.Type,
-                                    OutValue.Create<object>(x => optionValue = x)))
-                            {
-                                var optionKey = new OptionKey(
-                                    option,
-                                    option.IsPerLanguage ? options.Language : null);
-
-                                Console.WriteLine($"Applying {editorConfigKey}={editorConfigValue} setting into {option.Name}={optionValue}...");
-                                // And finally set the option value in the workspace
-                                workspace.Options = workspace.Options.WithChangedOption(optionKey, optionValue);
-                            }
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                // And restore the original current directory
-                Directory.SetCurrentDirectory(previousCurrentDirectory);
-            }
         }
     }
 }

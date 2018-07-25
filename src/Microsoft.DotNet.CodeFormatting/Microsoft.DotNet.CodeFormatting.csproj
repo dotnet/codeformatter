@@ -22,8 +22,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="editorconfig" Version="0.12.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ConfiguredAdditionalDocument.cs" />
+    <Compile Include="ConfiguredDocument.cs" />
+    <Compile Include="IEditorConfigProvider.cs" />
     <Compile Include="NameHelper.cs" />
     <Compile Include="ResponseFileWorkspace.cs" />
+    <Compile Include="Rules\FormatXmlDocumentRule.cs" />
     <Compile Include="Rules\MarkReadonlyFieldsRule.cs" />
     <Compile Include="SemaphoreLock.cs" />
     <Compile Include="SyntaxUtil.cs" />
@@ -59,6 +66,10 @@
     <Compile Include="Rules\NonAsciiCharactersAreEscapedInLiteralsRule.cs" />
     <Compile Include="Rules\ExplicitThisRule.cs" />
     <Compile Include="Rules\RuleOrder.cs" />
+    <Compile Include="System\Dynamic\DynamicReflection.cs" />
+    <Compile Include="System\Dynamic\OutValue.cs" />
+    <Compile Include="System\Dynamic\RefValue.cs" />
+    <Compile Include="System\Dynamic\TypeParameter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

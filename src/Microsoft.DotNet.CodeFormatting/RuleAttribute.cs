@@ -89,4 +89,30 @@ namespace Microsoft.DotNet.CodeFormatting
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
     }
+
+    [MetadataAttribute]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    internal sealed class TextDocumentRuleAttribute : ExportAttribute, IRuleMetadata
+    {
+        public TextDocumentRuleAttribute(string name, string description, int order)
+            : base(typeof(ITextDocumentFormattingRule))
+        {
+            Name = name;
+            Description = description;
+            Order = order;
+            DefaultRule = true;
+        }
+
+        [DefaultValue("")]
+        public string Name { get; private set; }
+
+        [DefaultValue("")]
+        public string Description { get; private set; }
+
+        [DefaultValue(int.MaxValue)]
+        public int Order { get; private set; }
+
+        [DefaultValue(true)]
+        public bool DefaultRule { get; set; }
+    }
 }

@@ -29,6 +29,7 @@ namespace CodeFormatter
             ImmutableArray<string>.Empty,
             true,
             null,
+            null,
             allowTables: false,
             verbose: false);
 
@@ -41,6 +42,7 @@ namespace CodeFormatter
             ImmutableArray<string>.Empty,
             true,
             null,
+            null,
             allowTables: false,
             verbose: false);
 
@@ -52,6 +54,7 @@ namespace CodeFormatter
         public readonly ImmutableArray<string> FormatTargets;
         public readonly ImmutableArray<string> FileNames;
         public readonly bool UseEditorConfig;
+        public readonly string AdditionalFileItemNames;
         public readonly string Language;
         public readonly bool AllowTables;
         public readonly bool Verbose;
@@ -64,6 +67,7 @@ namespace CodeFormatter
             ImmutableArray<string> formatTargets,
             ImmutableArray<string> fileNames,
             bool useEditorConfig,
+            string additionalFileItemNames,
             string language,
             bool allowTables,
             bool verbose)
@@ -75,6 +79,7 @@ namespace CodeFormatter
             FileNames = fileNames;
             FormatTargets = formatTargets;
             UseEditorConfig = useEditorConfig;
+            AdditionalFileItemNames = additionalFileItemNames;
             Language = language;
             AllowTables = allowTables;
             Verbose = verbose;
@@ -140,29 +145,32 @@ namespace CodeFormatter
         private const string RuleEnabledSwitch1 = "/rule+:";
         private const string RuleEnabledSwitch2 = "/rule:";
         private const string RuleDisabledSwitch = "/rule-:";
+        private const string AdditionalFileItenNamesSwitch = "/additionalFileItemNames:";
         private const string Usage =
 @"CodeFormatter [/file:<filename>] [/lang:<language>] [/c:<config>[,<config>...]>]
-    [/copyright(+|-):[<file>]] [/tables] [/nounicode] [/noEditorConfig] 
-    [/rule(+|-):rule1,rule2,...]  [/verbose]
+    [/copyright(+|-):[<file>]] [/tables] [/nounicode] [/noEditorConfig]
+    [/additionalFileItemNames:<itemNames>] [/rule(+|-):rule1,rule2,...]  [/verbose]
     <project, solution or response file>
 
-    /file           - Only apply changes to files with specified name
-    /lang           - Specifies the language to use when a responsefile is
-                      specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
-    /c              - Additional preprocessor configurations the formatter
-                      should run under.
-    /copyright(+|-) - Enables or disables (default) updating the copyright 
-                      header in files, optionally specifying a file 
-                      containing a custom copyright header.                   
-    /nocopyright    - Do not update the copyright message.
-    /tables         - Let tables opt out of formatting by defining
-                      DOTNET_FORMATTER
-    /nounicode      - Do not convert unicode strings to escape sequences
-    /noEditorConfig - Do not use the .editorConfig file to configure the formatting options
-    /rule(+|-)      - Enable (default) or disable the specified rule
-    /rules          - List the available rules
-    /verbose        - Verbose output
-    /help           - Displays this usage message (short form: /?)
+    /file                    - Only apply changes to files with specified name
+    /lang                    - Specifies the language to use when a responsefile is
+                               specified. i.e. 'C#', 'Visual Basic', ... (default: 'C#')
+    /c                       - Additional preprocessor configurations the formatter
+                               should run under.
+    /copyright(+|-)          - Enables or disables (default) updating the copyright 
+                               header in files, optionally specifying a file 
+                               containing a custom copyright header.                   
+    /nocopyright             - Do not update the copyright message.
+    /tables                  - Let tables opt out of formatting by defining
+                               DOTNET_FORMATTER
+    /nounicode               - Do not convert unicode strings to escape sequences
+    /additionalFileItemNames - Specifies the additional item names to be formatted.
+                               i.e. None;Content;Page
+    /noEditorConfig          - Do not use the .editorConfig file to configure the formatting options
+    /rule(+|-)               - Enable (default) or disable the specified rule
+    /rules                   - List the available rules
+    /verbose                 - Verbose output
+    /help                    - Displays this usage message (short form: /?)
 ";
 
         public static void PrintUsage()
@@ -190,6 +198,7 @@ namespace CodeFormatter
             var allowTables = false;
             var verbose = false;
             var useEditorConfig = true;
+            var additionalFileItemNames = default(string);
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -223,7 +232,7 @@ namespace CodeFormatter
                         return CommandLineParseResult.CreateError(error);
                     }
                 }
-                else if (comparer.Equals(arg, "/copyright-") || comparer.Equals(arg, "/nocopyright")) 
+                else if (comparer.Equals(arg, "/copyright-") || comparer.Equals(arg, "/nocopyright"))
                 {   // We still check /nocopyright for backwards compat
 
                     ruleMap = ruleMap.SetItem(FormattingDefaults.CopyrightRuleName, false);
@@ -231,6 +240,10 @@ namespace CodeFormatter
                 else if (comparer.Equals(args, "/noEditorConfig"))
                 {
                     useEditorConfig = false;
+                }
+                else if (arg.StartsWith(AdditionalFileItenNamesSwitch, comparison))
+                {
+                    additionalFileItemNames = arg.Substring(AdditionalFileItenNamesSwitch.Length);
                 }
                 else if (arg.StartsWith(LanguageSwitch, comparison))
                 {
@@ -295,6 +308,7 @@ namespace CodeFormatter
                 formatTargets.ToImmutableArray(),
                 fileNames.ToImmutableArray(),
                 useEditorConfig,
+                additionalFileItemNames,
                 language,
                 allowTables,
                 verbose);
