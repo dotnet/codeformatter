@@ -200,6 +200,9 @@ namespace CodeFormatter
             var useEditorConfig = true;
             var additionalFileItemNames = default(string);
 
+            foreach (var rule in FormattingEngine.GetFormattingRules())
+                UpdateRuleMap(ref ruleMap, rule.Name, rule.IsDefaultEnabled);
+
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     /// <summary>
     /// Mark any fields that can provably be marked as readonly.
     /// </summary>
-    [GlobalSemanticRule(MarkReadonlyFieldsRule.Name, MarkReadonlyFieldsRule.Description, GlobalSemanticRuleOrder.MarkReadonlyFieldsRule, DefaultRule = false)]
+    [GlobalSemanticRule(MarkReadonlyFieldsRule.Name, MarkReadonlyFieldsRule.Description, GlobalSemanticRuleOrder.MarkReadonlyFieldsRule, DefaultRule = false, IsDefaultEnabled = false)]
     internal sealed class MarkReadonlyFieldsRule : IGlobalSemanticFormattingRule
     {
         internal const string Name = "ReadonlyFields";

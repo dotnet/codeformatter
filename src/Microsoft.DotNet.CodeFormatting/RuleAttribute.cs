@@ -36,6 +36,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        [DefaultValue(true)]
+        public bool IsDefaultEnabled { get; set; } = true;
     }
 
     [MetadataAttribute]
@@ -62,6 +65,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        [DefaultValue(true)]
+        public bool IsDefaultEnabled { get; set; } = true;
     }
 
     [MetadataAttribute]
@@ -88,6 +94,9 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        [DefaultValue(true)]
+        public bool IsDefaultEnabled { get; set; } = true;
     }
 
     [MetadataAttribute]
@@ -114,5 +123,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(true)]
         public bool DefaultRule { get; set; }
+
+        [DefaultValue(true)]
+        public bool IsDefaultEnabled { get; set; } = true;
     }
 }

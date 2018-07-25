@@ -64,7 +64,7 @@ namespace CodeFormatter
             Console.WriteLine("==============================================");
             foreach (var rule in rules)
             {
-                Console.WriteLine("{0,-20} :{1}", rule.Name, rule.Description);
+                Console.WriteLine("{0,-20} :{1} {2}", rule.Name, rule.Description, !rule.IsDefaultEnabled ? "(disabled by default)" : string.Empty);
             }
         }
 

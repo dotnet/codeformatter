@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,8 +6,6 @@ using System.Xml;
 using System.Xml.Linq;
 using EditorConfig.Core;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Options;
 
 namespace Microsoft.DotNet.CodeFormatting.Rules
 {
@@ -17,7 +13,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
     class FormatXmlDocumentRule : ITextDocumentFormattingRule
     {
         internal const string Name = "FormatXmlDocument";
-        internal const string Description = "Format XML Documents";
+        internal const string Description = "Format XML-based additional documents";
 
         public async Task<Solution> ProcessAsync(TextDocument document, FileConfiguration config, CancellationToken cancellationToken)
         {

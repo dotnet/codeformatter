@@ -19,5 +19,8 @@ namespace Microsoft.DotNet.CodeFormatting
 
         [DefaultValue(true)]
         bool DefaultRule { get; }
+
+        [DefaultValue(true)]
+        bool IsDefaultEnabled { get; }
     }
 }
