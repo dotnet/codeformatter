@@ -353,6 +353,8 @@ namespace Microsoft.Build.UnitTests
     }
 }";
 
+            // Using location rule is off by default.
+            ToggleRule(UsingLocationRule.Name, enabled: true);
             Verify(source, expected);
         }
     }
