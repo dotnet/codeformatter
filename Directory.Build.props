@@ -3,7 +3,6 @@
   <PropertyGroup>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
-    <TargetFramework Condition="'$(TargetFramework)' == ''">net46</TargetFramework>
     <Authors Condition="'$(Authors)' == ''">Microsoft Corporation</Authors>
   </PropertyGroup>
 </Project>

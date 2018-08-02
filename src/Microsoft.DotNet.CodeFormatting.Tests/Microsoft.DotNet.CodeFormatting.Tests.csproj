@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="..\CodeFormatter\IllegalHeaders.md">
       <Link>IllegalHeaders.md</Link>

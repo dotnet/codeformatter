@@ -22,6 +22,8 @@ bld/
 msbuild.log
 *.binlog
 
+.vs/
+
 # Roslyn stuff
 *.sln.ide
 *.ide/
