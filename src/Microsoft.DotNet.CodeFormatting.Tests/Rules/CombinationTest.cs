@@ -353,7 +353,73 @@ namespace Microsoft.Build.UnitTests
     }
 }";
 
+            // Using location rule is off by default.
+            ToggleRule(UsingLocationRule.Name, enabled: true);
             Verify(source, expected);
+        }
+
+        [Fact]
+        public void Issue268()
+        {
+            var text = @"
+using System.Collections.Generic;
+
+internal class C
+{
+    private void M<TValue>()
+    {
+        Dictionary<string, Stack<TValue>> dict = new Dictionary<string, Stack<TValue>>();
+        dict.TryGetValue(""key"", out Stack<TValue> stack);
+    }
+}";
+
+            Verify(text, expected:text);
+        }
+
+        [Fact]
+        public void Issue272()
+        {
+            var text = @"
+using System.Collections.Generic;
+
+internal class C
+{
+
+        private object myVariable;
+
+        private void M()
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>()
+            {
+                { ""key"", new object() }
+            };
+
+            dict.TryGetValue(""key"", out object myVariable);
+
+            this.myVariable = myVariable;
+        }
+}";
+            var expected = @"
+using System.Collections.Generic;
+
+internal class C
+{
+    private object _myVariable;
+
+    private void M()
+    {
+        Dictionary<string, object> dict = new Dictionary<string, object>()
+            {
+                { ""key"", new object() }
+            };
+
+        dict.TryGetValue(""key"", out object myVariable);
+
+        _myVariable = myVariable;
+    }
+}";
+
+            Verify(text, expected);
         }
     }
 }

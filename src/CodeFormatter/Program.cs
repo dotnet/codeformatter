@@ -81,6 +81,7 @@ namespace CodeFormatter
                     throw;
 
                 Console.WriteLine("ERROR: Type loading error detected. In order to run this tool you need either Visual Studio 2015 or Microsoft Build Tools 2015 tools installed.");
+                Console.WriteLine(typeLoadException.StackTrace);
                 var messages = typeLoadException.LoaderExceptions.Select(e => e.Message).Distinct();
                 foreach (var message in messages)
                     Console.WriteLine("- {0}", message);

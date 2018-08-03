@@ -44,10 +44,8 @@ class T
     // some trivia
     private int _k = 1, _s = 2, _rsk_yz = 3, _y_z;
     // some trivia
-    [ThreadStatic]
-    static int t_r;
-    [ThreadStaticAttribute]
-    static int t_r;
+    [ThreadStatic] static int t_r;
+    [ThreadStaticAttribute] static int t_r;
 }";
                 Verify(text, expected);
             }
@@ -212,6 +210,58 @@ class C
 }";
 
                 Verify(text, expected);
+            }
+
+            [Fact]
+            public void Issue258()
+            {
+                var text = @"
+class C
+{
+    private (string name, string value) myTuple;
+}
+";
+                var expected = @"
+class C
+{
+    private (string name, string value) _myTuple;
+}
+";
+
+                Verify(text, expected, runFormatter: false);
+            }
+
+            [Fact]
+            public void Issue241()
+            {
+                var text = @"
+class C
+{
+        private bool streamObjects;
+
+        /// <summary>
+        /// A collection in which objects that are written using the WriteError
+        /// method are accumulated if <see cref=""streamObjects"" /> is false.
+        /// </summary>
+        private List<string> errors;
+        
+}
+";
+                var expected = @"
+class C
+{
+        private bool _streamObjects;
+
+        /// <summary>
+        /// A collection in which objects that are written using the WriteError
+        /// method are accumulated if <see cref=""_streamObjects"" /> is false.
+        /// </summary>
+        private List<string> _errors;
+        
+}
+";
+
+                Verify(text, expected, runFormatter: false);
             }
         }
 

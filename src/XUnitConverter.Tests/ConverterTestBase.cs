@@ -5,14 +5,10 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using XUnitConverter;
 
 namespace XUnitConverter.Tests
 {
@@ -21,7 +17,8 @@ namespace XUnitConverter.Tests
         private static readonly MetadataReference s_CorlibReference = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
         private static readonly MetadataReference s_SystemCoreReference = MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
         private static readonly MetadataReference s_MSTestReference = MetadataReference.CreateFromFile(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.Location);
-        private static readonly MetadataReference s_XunitReference = MetadataReference.CreateFromFile(typeof(FactAttribute).Assembly.Location);
+        private static readonly MetadataReference s_XunitCoreReference = MetadataReference.CreateFromFile(typeof(Xunit.FactAttribute).Assembly.Location);
+        private static readonly MetadataReference s_XunitAssertReference = MetadataReference.CreateFromFile(typeof(Xunit.Assert).Assembly.Location);
 
         protected abstract ConverterBase CreateConverter();
 
@@ -53,7 +50,8 @@ namespace XUnitConverter.Tests
                     s_CorlibReference,
                     s_SystemCoreReference,
                     s_MSTestReference,
-                    s_XunitReference
+                    s_XunitCoreReference,
+                    s_XunitAssertReference
                 };
 
             var solution = new AdhocWorkspace()

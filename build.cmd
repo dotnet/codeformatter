@@ -4,35 +4,31 @@ SETLOCAL
 
 SET CACHED_NUGET=%LocalAppData%\NuGet\NuGet.exe
 SET SOLUTION_PATH="%~dp0src\CodeFormatter.sln"
-SET MSBUILD14_TOOLS_PATH="%ProgramFiles(x86)%\MSBuild\14.0\bin\MSBuild.exe"
-SET MSBUILD12_TOOLS_PATH="%ProgramFiles(x86)%\MSBuild\12.0\bin\MSBuild.exe"
-SET BUILD_TOOLS_PATH=%MSBUILD14_TOOLS_PATH%
-
-IF NOT EXIST %MSBUILD14_TOOLS_PATH% (
-  echo In order to run this tool you need either Visual Studio 2015 or
-  echo Microsoft Build Tools 2015 tools installed.
-  echo.
-  echo Visit this page to download either:
-  echo.
-  echo http://www.visualstudio.com/en-us/downloads/visual-studio-2015-downloads-vs
-  echo.
-  echo Attempting to fall back to MSBuild 12 for building only
-  echo.
-  IF NOT EXIST %MSBUILD12_TOOLS_PATH% (
-    echo Could not find MSBuild 12.  Please install build tools ^(See above^)
-    exit /b 1
-  ) else (
-    set BUILD_TOOLS_PATH=%MSBUILD12_TOOLS_PATH%
-  )
+SET VSWHERELOCATION="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+ 
+IF NOT EXIST %VSWHERELOCATION% (
+  goto :error
 )
 
-IF EXIST %CACHED_NUGET% goto restore
-echo Downloading latest version of NuGet.exe...
-IF NOT EXIST %LocalAppData%\NuGet md %LocalAppData%\NuGet
-@powershell -NoProfile -ExecutionPolicy unrestricted -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest 'https://www.nuget.org/nuget.exe' -OutFile '%CACHED_NUGET%'"
+for /f "usebackq tokens=*" %%i in (`%VSWHERELOCATION% -latest -prerelease -products * -requires Microsoft.Component.MSBuild -property installationPath`) do (
+  set BUILD_TOOLS_PATH="%%i\MSBuild\15.0\Bin\MSBuild.exe"
+)
+
+if exist %BUILD_TOOLS_PATH% (
+  goto :restore   
+)
+
+:error
+echo In order to run this tool you need either Visual Studio 2017 Update 2 or
+echo Microsoft Build Tools 2017 Update 2 installed.
+echo.
+echo Visit this page to download either:
+echo.
+echo  https://go.microsoft.com/fwlink/?linkid=840931
+echo.
+exit /b 2
 
 :restore
-IF NOT EXIST src\packages md src\packages
-%CACHED_NUGET% restore %SOLUTION_PATH%
+%BUILD_TOOLS_PATH% %SOLUTION_PATH% /t:restore /nologo /m /v:m /bl:restore.binlog
 
-%BUILD_TOOLS_PATH% %SOLUTION_PATH% /p:OutDir="%~dp0bin" /nologo /m /v:m /flp:verbosity=normal %*
+%BUILD_TOOLS_PATH% %SOLUTION_PATH% /p:OutDir="%~dp0bin" /nologo /m /v:m /bl:build.binlog %*

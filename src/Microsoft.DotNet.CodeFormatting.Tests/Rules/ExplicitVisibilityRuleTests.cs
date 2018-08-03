@@ -555,10 +555,11 @@ internal class C
                 Verify(text, expected);
             }
 
+            [Fact]
             public void CommentAttributeAndMultipleField()
             {
                 var text = @"
-class C 
+class C
 {
     // Hello
     [Attr]
@@ -567,7 +568,7 @@ class C
 };";
 
                 var expected = @"
-internal class C 
+internal class C
 {
     // Hello
     [Attr]
