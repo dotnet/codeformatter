@@ -10,13 +10,12 @@ IF NOT EXIST %VSWHERELOCATION% (
   goto :error
 )
 
-for /f "usebackq tokens=*" %%i in (`%VSWHERELOCATION% -latest -products * -requires Microsoft.Component.MSBuild -property installationPath`) do (
-  set _vsDir=%%i
+for /f "usebackq tokens=*" %%i in (`%VSWHERELOCATION% -latest -prerelease -products * -requires Microsoft.Component.MSBuild -property installationPath`) do (
+  set BUILD_TOOLS_PATH="%%i\MSBuild\15.0\Bin\MSBuild.exe"
 )
 
-if exist "%_vsDir%\MSBuild\15.0\Bin\MSBuild.exe" (
-  set BUILD_TOOLS_PATH="%_vsDir%\MSBuild\15.0\Bin\MSBuild.exe"
-  goto :restore
+if exist %BUILD_TOOLS_PATH% (
+  goto :restore   
 )
 
 :error
