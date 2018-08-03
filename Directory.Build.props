@@ -5,4 +5,6 @@
     <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
     <Authors Condition="'$(Authors)' == ''">Microsoft Corporation</Authors>
   </PropertyGroup>
+
+  <Import Project="dependencies.props" />
 </Project>
