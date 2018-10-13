@@ -18,6 +18,7 @@ if exist %BUILD_TOOLS_PATH% (
   goto :restore   
 )
 
+rem When updating this message, update the readme, too!
 :error
 echo In order to run this tool you need either Visual Studio 2017 Update 2 or
 echo Microsoft Build Tools 2017 Update 2 installed.
