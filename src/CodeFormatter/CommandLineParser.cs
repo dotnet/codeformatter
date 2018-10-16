@@ -3,129 +3,10 @@ using Microsoft.DotNet.CodeFormatting;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CodeFormatter
 {
-    public enum Operation
-    {
-        Format,
-        ListRules,
-        ShowHelp
-    }
-
-    public sealed class CommandLineOptions
-    {
-        public static readonly CommandLineOptions ListRules = new CommandLineOptions(
-            Operation.ListRules,
-            ImmutableArray<string[]>.Empty,
-            ImmutableArray<string>.Empty,
-            ImmutableDictionary<string, bool>.Empty,
-            ImmutableArray<string>.Empty,
-            ImmutableArray<string>.Empty,
-            null,
-            allowTables: false,
-            verbose: false);
-
-        public static readonly CommandLineOptions ShowHelp = new CommandLineOptions(
-            Operation.ShowHelp,
-            ImmutableArray<string[]>.Empty,
-            ImmutableArray<string>.Empty,
-            ImmutableDictionary<string, bool>.Empty,
-            ImmutableArray<string>.Empty,
-            ImmutableArray<string>.Empty,
-            null,
-            allowTables: false,
-            verbose: false);
-
-
-        public readonly Operation Operation;
-        public readonly ImmutableArray<string[]> PreprocessorConfigurations;
-        public readonly ImmutableArray<string> CopyrightHeader;
-        public readonly ImmutableDictionary<string, bool> RuleMap;
-        public readonly ImmutableArray<string> FormatTargets;
-        public readonly ImmutableArray<string> FileNames;
-        public readonly string Language;
-        public readonly bool AllowTables;
-        public readonly bool Verbose;
-
-        public CommandLineOptions(
-            Operation operation,
-            ImmutableArray<string[]> preprocessorConfigurations,
-            ImmutableArray<string> copyrightHeader,
-            ImmutableDictionary<string, bool> ruleMap,
-            ImmutableArray<string> formatTargets,
-            ImmutableArray<string> fileNames,
-            string language,
-            bool allowTables,
-            bool verbose)
-        {
-            Operation = operation;
-            PreprocessorConfigurations = preprocessorConfigurations;
-            CopyrightHeader = copyrightHeader;
-            RuleMap = ruleMap;
-            FileNames = fileNames;
-            FormatTargets = formatTargets;
-            Language = language;
-            AllowTables = allowTables;
-            Verbose = verbose;
-        }
-    }
-
-    public sealed class CommandLineParseResult
-    {
-        private readonly CommandLineOptions _options;
-        private readonly string _error;
-
-        public bool IsSuccess
-        {
-            get { return _options != null; }
-        }
-
-        public bool IsError
-        {
-            get { return !IsSuccess; }
-        }
-
-        public CommandLineOptions Options
-        {
-            get
-            {
-                Debug.Assert(IsSuccess);
-                return _options;
-            }
-        }
-
-        public string Error
-        {
-            get
-            {
-                Debug.Assert(IsError);
-                return _error;
-            }
-        }
-
-        private CommandLineParseResult(CommandLineOptions options = null, string error = null)
-        {
-            _options = options;
-            _error = error;
-        }
-
-        public static CommandLineParseResult CreateSuccess(CommandLineOptions options)
-        {
-            return new CommandLineParseResult(options: options);
-        }
-
-        public static CommandLineParseResult CreateError(string error)
-        {
-            return new CommandLineParseResult(error: error);
-        }
-    }
-
     public static class CommandLineParser
     {
         private const string FileSwitch = "/file:";
@@ -184,9 +65,8 @@ namespace CodeFormatter
             var allowTables = false;
             var verbose = false;
 
-            for (int i = 0; i < args.Length; i++)
+            foreach (var arg in args)
             {
-                string arg = args[i];
                 if (arg.StartsWith(ConfigSwitch, comparison))
                 {
                     var all = arg.Substring(ConfigSwitch.Length);
@@ -209,10 +89,7 @@ namespace CodeFormatter
                     }
                     catch (Exception ex)
                     {
-                        string error = string.Format("Could not read {0}{1}{2}",
-                           fileName,
-                           Environment.NewLine,
-                           ex.Message);
+                        string error = $"Could not read {fileName}{Environment.NewLine}{ex.Message}";
                         return CommandLineParseResult.CreateError(error);
                     }
                 }
@@ -257,7 +134,8 @@ namespace CodeFormatter
                 {
                     return CommandLineParseResult.CreateSuccess(CommandLineOptions.ListRules);
                 }
-                else if (comparer.Equals(arg, "/?") || comparer.Equals(arg, "/help"))
+                else if (comparer.Equals(arg, "/?") || comparer.Equals(arg, "-?") || comparer.Equals(arg, "/help") ||
+                         comparer.Equals(arg, "-help") || comparer.Equals(arg, "--help"))
                 {
                     return CommandLineParseResult.CreateSuccess(CommandLineOptions.ShowHelp);
                 }
