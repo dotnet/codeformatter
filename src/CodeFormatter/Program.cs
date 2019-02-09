@@ -115,12 +115,12 @@ namespace CodeFormatter
         }
 
         private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
-        { 
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
-                using (var workspace = ResponseFileWorkspace.Create())
+                using (var workspace = CreateWorkspace(ResponseFileWorkspace.Create))
                 {
                     Project project = workspace.OpenCommandLineProject(item, language);
                     await engine.FormatProjectAsync(project, cancellationToken);
@@ -128,7 +128,7 @@ namespace CodeFormatter
             }
             else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateWorkspace(MSBuildWorkspace.Create))
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
@@ -137,12 +137,19 @@ namespace CodeFormatter
             }
             else
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateWorkspace(MSBuildWorkspace.Create))
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
+            }
+
+            T CreateWorkspace<T>(Func<T> workspaceFunc) where T : Workspace
+            {
+                var workspace = workspaceFunc();
+                workspace.WorkspaceFailed += (sender, args) => Console.WriteLine($"ERROR: {args.Diagnostic.Message}");
+                return workspace;
             }
         }
 
