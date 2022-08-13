@@ -63,30 +63,32 @@ namespace CodeFormatter
 
         private static int RunFormat(CommandLineOptions options)
         {
-            var cts = new CancellationTokenSource();
-            var ct = cts.Token;
-
-            Console.CancelKeyPress += delegate { cts.Cancel(); };
-
-            try
+            using (var cts = new CancellationTokenSource())
             {
-                RunFormatAsync(options, ct).Wait(ct);
-                Console.WriteLine("Completed formatting.");
-                return 0;
-            }
-            catch (AggregateException ex)
-            {
-                var typeLoadException = ex.InnerExceptions.FirstOrDefault() as ReflectionTypeLoadException;
-                if (typeLoadException == null)
-                    throw;
+                var ct = cts.Token;
 
-                Console.WriteLine("ERROR: Type loading error detected. In order to run this tool you need either Visual Studio 2015 or Microsoft Build Tools 2015 tools installed.");
-                Console.WriteLine(typeLoadException.StackTrace);
-                var messages = typeLoadException.LoaderExceptions.Select(e => e.Message).Distinct();
-                foreach (var message in messages)
-                    Console.WriteLine("- {0}", message);
+                Console.CancelKeyPress += delegate { cts.Cancel(); };
 
-                return 1;
+                try
+                {
+                    RunFormatAsync(options, ct).Wait(ct);
+                    Console.WriteLine("Completed formatting.");
+                    return 0;
+                }
+                catch (AggregateException ex)
+                {
+                    var typeLoadException = ex.InnerExceptions.FirstOrDefault() as ReflectionTypeLoadException;
+                    if (typeLoadException == null)
+                        throw;
+
+                    Console.WriteLine("ERROR: Type loading error detected. In order to run this tool you need either Visual Studio 2015 or Microsoft Build Tools 2015 tools installed.");
+                    Console.WriteLine(typeLoadException.StackTrace);
+                    var messages = typeLoadException.LoaderExceptions.Select(e => e.Message).Distinct();
+                    foreach (var message in messages)
+                        Console.WriteLine("- {0}", message);
+
+                    return 1;
+                }
             }
         }
 
@@ -113,12 +115,12 @@ namespace CodeFormatter
         }
 
         private static async Task RunFormatItemAsync(IFormattingEngine engine, string item, string language, CancellationToken cancellationToken)
-        { 
+        {
             Console.WriteLine(Path.GetFileName(item));
             string extension = Path.GetExtension(item);
             if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".rsp"))
             {
-                using (var workspace = ResponseFileWorkspace.Create())
+                using (var workspace = CreateWorkspace(ResponseFileWorkspace.Create))
                 {
                     Project project = workspace.OpenCommandLineProject(item, language);
                     await engine.FormatProjectAsync(project, cancellationToken);
@@ -126,7 +128,7 @@ namespace CodeFormatter
             }
             else if (StringComparer.OrdinalIgnoreCase.Equals(extension, ".sln"))
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateWorkspace(MSBuildWorkspace.Create))
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var solution = await workspace.OpenSolutionAsync(item, cancellationToken);
@@ -135,12 +137,19 @@ namespace CodeFormatter
             }
             else
             {
-                using (var workspace = MSBuildWorkspace.Create())
+                using (var workspace = CreateWorkspace(MSBuildWorkspace.Create))
                 {
                     workspace.LoadMetadataForReferencedProjects = true;
                     var project = await workspace.OpenProjectAsync(item, cancellationToken);
                     await engine.FormatProjectAsync(project, cancellationToken);
                 }
+            }
+
+            T CreateWorkspace<T>(Func<T> workspaceFunc) where T : Workspace
+            {
+                var workspace = workspaceFunc();
+                workspace.WorkspaceFailed += (sender, args) => Console.WriteLine($"ERROR: {args.Diagnostic.Message}");
+                return workspace;
             }
         }
 
