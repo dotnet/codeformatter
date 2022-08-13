@@ -77,10 +77,17 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
             foreach (var trivia in triviaList)
             {
                 if (!hasStart && IsBeginningOfXmlHeader(trivia, out start))
+                {
                     hasStart = true;
+                    continue; // we need to continue because start and end can be the same token
+                }
+
 
                 if (!hasEnd && IsEndOfXmlHeader(trivia, out end))
+                {
                     hasEnd = true;
+                    continue; // we need to continue because start and end can be the same token
+                }
             }
 
             return hasStart && hasEnd;
