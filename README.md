@@ -3,9 +3,9 @@
 ***NOTE: This repo is archived. The replacement is [dotnet/format](https://github.com/dotnet/format).***
 
 CodeFormatter is a tool that uses Roslyn to automatically rewrite the source to
-follow our coding styles, which are [documented here][corefx-coding-style].
+follow our coding styles, which are [documented here][dotnet-coding-style].
 
-[corefx-coding-style]: https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md
+[dotnet-coding-style]: https://github.com/dotnet/runtime/blob/master/docs/coding-guidelines/coding-style.md
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ CodeFormatter <project or solution> [<rule types>] [/file:<filename>] [/nocopyri
 
 ## Contributing
 
-We follow the same contribution process that 
-[corefx is using][corefx-contributing].
+We follow the same contribution process that the
+[dotnet runtime is using][dotnet-contributing].
 
-[corefx-contributing]: https://github.com/dotnet/corefx/wiki/Contributing
+[dotnet-contributing]: https://github.com/dotnet/runtime/blob/master/CONTRIBUTING.md
