@@ -190,15 +190,15 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
         {
             if (line.StartsWith("'"))
             {
-                return line.Substring(1).TrimStart();
+                return line.Substring(1);
             }
 
             if (line.StartsWith("//"))
             {
-                return line.Substring(2).TrimStart();
+                return line.Substring(2);
             }
 
-            return line;
+            return " " + line;
         }
 
         public override bool SupportsLanguage(string languageName)

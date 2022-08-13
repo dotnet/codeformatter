@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.CodeFormatting.Rules
 
             protected override SyntaxTrivia CreateLineComment(string commentText)
             {
-                return SyntaxFactory.CommentTrivia("' " + commentText);
+                return SyntaxFactory.CommentTrivia("'" + commentText);
             }
 
             protected override SyntaxTrivia CreateNewLine()
